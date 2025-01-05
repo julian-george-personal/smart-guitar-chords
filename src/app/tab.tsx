@@ -2,7 +2,11 @@
 
 import { createContext, useContext, useMemo } from "react";
 import { RxCircle, RxCross1 } from "react-icons/rx";
-import { getNumFrets, getChordNotesPerString } from "./music_util";
+import {
+  getNumFrets,
+  getChordNotesPerString,
+  getChordNameFromNotes,
+} from "./music_util";
 
 type TabContextType = {
   fretCount: number;
@@ -17,8 +21,11 @@ interface TabProps {
 
 export default function Tab({ fretCount, chordName }: TabProps) {
   const stringTunings = ["E", "A", "D", "G", "B", "E"];
-  const stringNotes = getChordNotesPerString(chordName, stringTunings);
-  console.log(stringNotes);
+  const stringNotes = getChordNotesPerString(
+    chordName,
+    stringTunings,
+    fretCount
+  );
   return (
     <TabContext.Provider value={{ fretCount }}>
       <div className="h-64 w-64 relative">
@@ -34,6 +41,14 @@ export default function Tab({ fretCount, chordName }: TabProps) {
           ))}
         </div>
       </div>
+      <div>
+        <div className="flex flex-row gap-1">
+          {stringNotes.map((note) => note && <div>{note}</div>)}
+        </div>
+        <div>
+          {getChordNameFromNotes(stringNotes.filter((note) => note != null))}
+        </div>
+      </div>
     </TabContext.Provider>
   );
 }
@@ -45,8 +60,17 @@ interface TunedStringProps {
 }
 
 function TunedString({ isOpen, baseNote, currNote }: TunedStringProps) {
+  const tabContext = useContext(TabContext);
+  if (!tabContext) return null;
+  const fretNumber = useMemo(() => {
+    const numSemitones = getNumFrets(baseNote, currNote);
+    if (numSemitones == null || numSemitones >= tabContext.fretCount) {
+      return null;
+    }
+    return numSemitones;
+  }, [baseNote, currNote]);
   return (
-    <String isOpen={isOpen} fretNumber={getNumFrets(baseNote, currNote)} />
+    <String isOpen={isOpen && fretNumber != null} fretNumber={fretNumber} />
   );
 }
 
@@ -59,22 +83,18 @@ interface StringProps {
 function String({ isOpen, fretNumber }: StringProps) {
   const tabContext = useContext(TabContext);
   if (!tabContext) return null;
-  const isDotDisplayed = useMemo(
-    () => fretNumber == null || fretNumber < tabContext.fretCount,
-    [fretNumber, tabContext]
-  );
   const dotSize = useMemo(
     () => Math.round((1 / tabContext.fretCount / 2) * 100),
     [fretNumber, tabContext]
   );
   const topPercent = useMemo(() => {
-    if (fretNumber == null) return 0;
+    if (!isOpen || fretNumber == null) return 0;
     const fingerBoardOffset = Math.round(
-      (fretNumber / tabContext.fretCount) * 100
+      ((fretNumber - 1) / tabContext.fretCount) * 100
     );
     const fretHeight = 100 / tabContext.fretCount;
     return fingerBoardOffset + (fretHeight - dotSize) / 2;
-  }, [fretNumber, tabContext, dotSize]);
+  }, [fretNumber, tabContext, dotSize, isOpen]);
   return (
     <div className="h-full centered flex-grow">
       <div className="h-[15%] w-full centered">
@@ -89,7 +109,7 @@ function String({ isOpen, fretNumber }: StringProps) {
           <div className="h-full flex-grow border-r border-solid border-black" />
           <div className="h-full flex-grow border-l border-solid border-black" />
         </div>
-        {isDotDisplayed && (
+        {isOpen && fretNumber != 0 && (
           <div
             style={{
               height: `${dotSize}%`,
