@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { RxCircle, RxCross1 } from "react-icons/rx";
+import { getNumFrets, getChordNotesPerString } from "./music_util";
 
 type TabContextType = {
   fretCount: number;
@@ -11,38 +12,69 @@ const TabContext = createContext<TabContextType | null>(null);
 
 interface TabProps {
   fretCount: number;
+  chordName: string;
 }
 
-export default function Tab({ fretCount }: TabProps) {
+export default function Tab({ fretCount, chordName }: TabProps) {
+  const stringTunings = ["E", "A", "D", "G", "B", "E"];
+  const stringNotes = getChordNotesPerString(chordName, stringTunings);
+  console.log(stringNotes);
   return (
     <TabContext.Provider value={{ fretCount }}>
       <div className="h-64 w-64 relative">
         <Box />
         <div className="absolute w-full h-full top-0 flex flex-row">
-          <String isOpen fretNumber={0} />
-          <String isOpen fretNumber={0} />
-          <String isOpen fretNumber={2} />
-          <String isOpen fretNumber={3} />
-          <String isOpen fretNumber={4} />
+          {stringTunings.map((tuning, i) => (
+            <TunedString
+              isOpen
+              baseNote={tuning}
+              currNote={stringNotes[i]}
+              key={i}
+            />
+          ))}
         </div>
       </div>
     </TabContext.Provider>
   );
 }
 
+interface TunedStringProps {
+  isOpen: boolean;
+  baseNote: string;
+  currNote: string | null;
+}
+
+function TunedString({ isOpen, baseNote, currNote }: TunedStringProps) {
+  return (
+    <String isOpen={isOpen} fretNumber={getNumFrets(baseNote, currNote)} />
+  );
+}
+
 interface StringProps {
   isOpen: boolean;
   // indexed at 0
-  fretNumber: number;
+  fretNumber: number | null;
 }
 
 function String({ isOpen, fretNumber }: StringProps) {
   const tabContext = useContext(TabContext);
   if (!tabContext) return null;
-  const sizePercent = Math.round((1 / tabContext.fretCount / 2) * 100);
-  const topPercent =
-    Math.round((fretNumber / tabContext.fretCount) * 100) +
-    (100 / tabContext.fretCount - sizePercent) / 2;
+  const isDotDisplayed = useMemo(
+    () => fretNumber == null || fretNumber < tabContext.fretCount,
+    [fretNumber, tabContext]
+  );
+  const dotSize = useMemo(
+    () => Math.round((1 / tabContext.fretCount / 2) * 100),
+    [fretNumber, tabContext]
+  );
+  const topPercent = useMemo(() => {
+    if (fretNumber == null) return 0;
+    const fingerBoardOffset = Math.round(
+      (fretNumber / tabContext.fretCount) * 100
+    );
+    const fretHeight = 100 / tabContext.fretCount;
+    return fingerBoardOffset + (fretHeight - dotSize) / 2;
+  }, [fretNumber, tabContext, dotSize]);
   return (
     <div className="h-full centered flex-grow">
       <div className="h-[15%] w-full centered">
@@ -57,13 +89,15 @@ function String({ isOpen, fretNumber }: StringProps) {
           <div className="h-full flex-grow border-r border-solid border-black" />
           <div className="h-full flex-grow border-l border-solid border-black" />
         </div>
-        <div
-          style={{
-            height: `${sizePercent}%`,
-            top: `${topPercent}%`,
-          }}
-          className={`rounded-full bg-black absolute aspect-square`}
-        />
+        {isDotDisplayed && (
+          <div
+            style={{
+              height: `${dotSize}%`,
+              top: `${topPercent}%`,
+            }}
+            className={`rounded-full bg-black absolute aspect-square`}
+          />
+        )}
       </div>
     </div>
   );
