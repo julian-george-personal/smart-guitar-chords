@@ -93,47 +93,45 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
           <div className="h-full flex-grow border-r border-solid border-black" />
           <div className="h-full flex-grow border-l border-solid border-black" />
         </div>
-        {fretNumber != null && (
-          <div className="centered w-full h-full">
-            {Array.from(Array(tabContext.fretCount).keys()).map((fretIdx) => {
-              const isTabbed = fretIdx == fretNumber - 1;
-              const isHovered = fretIdx == hoveredFretIdx;
-              return (
-                <div
-                  key={fretIdx}
-                  className="w-full centered"
-                  style={{
-                    height: `${Math.round(100 / tabContext.fretCount)}%`,
-                    cursor: isHovered ? "pointer" : "default",
-                  }}
-                  onMouseEnter={() => setHoveredFretIdxIfInteractive(fretIdx)}
-                  onMouseLeave={() => {
-                    if (isHovered) {
-                      setHoveredFretIdxIfInteractive(undefined);
-                    }
-                  }}
-                  onClick={() => {
-                    onFretChangeIfInteractive(isTabbed ? 0 : fretIdx + 1);
+        <div className="centered w-full h-full">
+          {Array.from(Array(tabContext.fretCount).keys()).map((fretIdx) => {
+            const isTabbed = fretNumber != null && fretIdx == fretNumber - 1;
+            const isHovered = fretIdx == hoveredFretIdx;
+            return (
+              <div
+                key={fretIdx}
+                className="w-full centered"
+                style={{
+                  height: `${Math.round(100 / tabContext.fretCount)}%`,
+                  cursor: isHovered ? "pointer" : "default",
+                }}
+                onMouseEnter={() => setHoveredFretIdxIfInteractive(fretIdx)}
+                onMouseLeave={() => {
+                  if (isHovered) {
                     setHoveredFretIdxIfInteractive(undefined);
-                  }}
-                >
-                  {isTabbed &&
-                    (hoveredFretIdx === undefined ? (
-                      <div className="rounded-full aspect-square h-1/2 bg-black" />
-                    ) : (
-                      !isHovered && (
-                        <div className="rounded-full aspect-square h-1/2 bg-neutral-400" />
-                      )
-                    ))}
-                  {isHovered &&
-                    (!isTabbed || hoveredFretIdx != fretNumber - 1) && (
-                      <div className="rounded-full bg-neutral-500 aspect-square h-1/2" />
-                    )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+                  }
+                }}
+                onClick={() => {
+                  setHoveredFretIdxIfInteractive(undefined);
+                  onFretChangeIfInteractive(fretIdx + 1);
+                }}
+              >
+                {isTabbed &&
+                  (hoveredFretIdx === undefined ? (
+                    <div className="rounded-full aspect-square h-1/2 bg-black" />
+                  ) : (
+                    !isHovered && (
+                      <div className="rounded-full aspect-square h-1/2 bg-neutral-400" />
+                    )
+                  ))}
+                {isHovered &&
+                  (!isTabbed || hoveredFretIdx != fretNumber - 1) && (
+                    <div className="rounded-full bg-neutral-500 aspect-square h-1/2" />
+                  )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -43,7 +43,10 @@ function prioritizeChordNotes(chord: Chord.Chord) {
   return notes;
 }
 
-export function getNotesFromChordName(chordName: string, numStrings: number) {
+export function getGuitarNotesFromChordName(
+  chordName: string,
+  numStrings: number
+) {
   const chord = Chord.get(chordName);
   const prioritizedNotes = prioritizeChordNotes(chord);
   return prioritizedNotes.slice(0, numStrings);
@@ -63,7 +66,10 @@ export function getChordNotesPerString(
       unusedNotes = unusedNotes.filter((note) => note != noteName);
     }
   }
-  let unusedNotes = getNotesFromChordName(chordName, stringTunings.length);
+  let unusedNotes = getGuitarNotesFromChordName(
+    chordName,
+    stringTunings.length
+  );
   const usedNotes: string[] = [];
   return stringTunings.map((base, i) => {
     if (i in currentStringNotes) {
@@ -84,6 +90,15 @@ export function getChordNotesPerString(
   });
 }
 
-export function getChordNameFromNotes(notes: string[]) {
-  return Chord.detect(notes);
+export function getChordNameFromNotes(
+  notes: string[],
+  inputtedChordName: string
+) {
+  const chord = Chord.get(inputtedChordName);
+  const detectedChords = Chord.detect(notes);
+  return (
+    detectedChords.filter(
+      (chordName) => chordName.indexOf(chord?.tonic || "X") == 0
+    )?.[0] || detectedChords?.[0]
+  );
 }

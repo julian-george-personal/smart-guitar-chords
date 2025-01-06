@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useContext, useMemo, useState } from "react";
-import { getChordNotesPerString, getNoteFromNumFrets } from "./music_util";
+import {
+  getChordNameFromNotes,
+  getChordNotesPerString,
+  getNoteFromNumFrets,
+} from "./music_util";
 import { TabContext } from "./context";
 import { TunedString } from "./string";
 
@@ -85,6 +89,24 @@ export default function Tab({ fretCount, chordName }: TabProps) {
               </div>
             );
           })}
+        </div>
+        <div
+          className="w-full text-center"
+          style={
+            Object.keys(manualStringNotes).length > 0
+              ? {
+                  fontStyle: "italic",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }
+              : {}
+          }
+          onClick={() => setManualStringNotes({})}
+        >
+          {getChordNameFromNotes(
+            stringNotes.filter((note) => note != null),
+            chordName
+          ) ?? "???"}
         </div>
       </div>
     </TabContext.Provider>
