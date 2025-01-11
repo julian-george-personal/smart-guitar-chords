@@ -1,9 +1,7 @@
-"use client";
-
 import { useState } from "react";
 import Tab from "./tab";
 
-export default function Home() {
+export default function App() {
   const [chordNames, setChordNames] = useState("C");
   return (
     <main className="font-sans h-screen centered gap-8">
