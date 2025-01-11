@@ -113,7 +113,7 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
                 }}
                 onClick={() => {
                   setHoveredFretIdxIfInteractive(undefined);
-                  onFretChangeIfInteractive(fretIdx + 1);
+                  onFretChangeIfInteractive(isTabbed ? 0 : fretIdx + 1);
                 }}
               >
                 {isTabbed &&
