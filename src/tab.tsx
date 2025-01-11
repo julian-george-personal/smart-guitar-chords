@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useContext, useMemo, useState } from "react";
 import {
   getChordNameFromNotes,
