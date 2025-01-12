@@ -5,5 +5,3 @@ services:
       dockerfile: Dockerfile
     container_name: smart-guitar-chords
     image: smart-guitar-chords
-    ports:
-      - "8080:80"
