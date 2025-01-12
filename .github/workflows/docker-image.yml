@@ -16,7 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - uses: hoverkraft-tech/compose-action@v2.0.1
       - name: Install Bun
         run: bun install
       - name: Bundle the webapp
@@ -30,6 +29,8 @@ jobs:
       - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
+      - name: Build image
+        uses: hoverkraft-tech/compose-action@v2.0.1
       - name: Push to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
