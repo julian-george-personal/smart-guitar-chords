@@ -30,6 +30,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Login to ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
       - name: Push to ECR
         env:
@@ -37,4 +38,5 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker compose build --build-arg IMAGE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker compose push
