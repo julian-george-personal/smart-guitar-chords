@@ -22,9 +22,9 @@ jobs:
     - uses: oven-sh/setup-bun@v2
     - uses: hoverkraft-tech/compose-action@v2.0.1
     - name: Install Bun
-      run: sudo bun install
+      run: bun install
     - name: Bundle the webapp
-      run: sudo bun pack
+      run: sudo chown -R $USER:$USER ./dist; bun pack
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
