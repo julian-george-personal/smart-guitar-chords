@@ -9,7 +9,7 @@ env:
   AWS_REGION: "us-east-1"                  
   ECR_REPOSITORY: "smart-guitar-chords-repository"           
                                               
-  CONTAINER_NAME: "smart-guitar-chords"          
+  IMAGE_NAME: "smart-guitar-chords"          
                                                
 jobs:
 
@@ -32,12 +32,13 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
     - name: Login to ECR
-      uses: aws-actions/amazon-ecr-login@v1 
+      uses: aws-actions/amazon-ecr-login@v2.0.1
     - name: Push to ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        docker compose build --build-arg IMAGE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY --build-arg IMAGE_TAG=$IMAGE_TAG
+        docker compose push 
         
       
