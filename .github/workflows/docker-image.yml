@@ -7,9 +7,7 @@ on:
     branches: ["main"]
 env:
   AWS_REGION: "us-east-1"
-  ECR_REPOSITORY: "smart-guitar-chords-repository"
-
-  IMAGE_NAME: "smart-guitar-chords"
+  ECR_REPOSITORY: "smart-guitar-chords"
 
 jobs:
   build:
