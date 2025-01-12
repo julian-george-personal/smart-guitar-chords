@@ -39,6 +39,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       run: |
         docker compose build --build-arg IMAGE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY --build-arg IMAGE_TAG=$IMAGE_TAG
+        echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         docker compose push 
         
       
