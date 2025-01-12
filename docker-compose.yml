@@ -1,7 +1,0 @@
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: smart-guitar-chords
-    image: smart-guitar-chords
