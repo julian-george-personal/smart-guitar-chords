@@ -18,15 +18,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Clean up dist directory
-      run: rm -rf ./dist
     - uses: actions/checkout@v4
     - uses: oven-sh/setup-bun@v2
     - uses: hoverkraft-tech/compose-action@v2.0.1
     - name: Install Bun
-      run: bun install
+      run: sudo bun install
     - name: Bundle the webapp
-      run: bun pack
+      run: sudo bun pack
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
