@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Clean up dist directory
+      run: rm -rf ./dist
     - uses: actions/checkout@v4
     - uses: oven-sh/setup-bun@v2
     - uses: hoverkraft-tech/compose-action@v2.0.1
