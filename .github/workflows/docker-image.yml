@@ -29,8 +29,6 @@ jobs:
       - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2.0.1
-      - name: Build image
-        uses: hoverkraft-tech/compose-action@v2.0.1
       - name: Push to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
