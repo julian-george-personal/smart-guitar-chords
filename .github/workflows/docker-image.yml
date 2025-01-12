@@ -2,43 +2,39 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 env:
-  AWS_REGION: "us-east-1"                  
-  ECR_REPOSITORY: "smart-guitar-chords-repository"           
-                                              
-  IMAGE_NAME: "smart-guitar-chords"          
-                                               
+  AWS_REGION: "us-east-1"
+  ECR_REPOSITORY: "smart-guitar-chords-repository"
+
+  IMAGE_NAME: "smart-guitar-chords"
+
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: oven-sh/setup-bun@v2
-    - uses: hoverkraft-tech/compose-action@v2.0.1
-    - name: Install Bun
-      run: bun install
-    - name: Bundle the webapp
-      run: sudo chown -R $USER:$USER ./dist; bun pack
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4.0.2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-    - name: Login to ECR
-      uses: aws-actions/amazon-ecr-login@v2.0.1
-    - name: Push to ECR
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker compose build --build-arg IMAGE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY --build-arg IMAGE_TAG=$IMAGE_TAG
-        docker compose push 
-        
-      
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: hoverkraft-tech/compose-action@v2.0.1
+      - name: Install Bun
+        run: bun install
+      - name: Bundle the webapp
+        run: sudo chown -R $USER:$USER ./dist; bun pack
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2.0.1
+      - name: Push to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker compose build --build-arg IMAGE_NAME=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker compose push
