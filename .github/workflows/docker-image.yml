@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 env:
   AWS_REGION: "us-east-1"
-  ECR_REPOSITORY: "smart-guitar-chords"
+  IMAGE_NAME: "smart-guitar-chords"
 
 jobs:
   build:
@@ -16,10 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+      - uses: hoverkraft-tech/compose-action@v2.0.1
       - name: Install Bun
         run: bun install
       - name: Bundle the webapp
-        run: bun pack
+        run: sudo chown -R $USER:$USER ./dist; bun pack
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
@@ -34,7 +35,10 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker compose build
+
+          docker tag $IMAGE_NAME $ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+          docker tag $IMAGE_NAME $ECR_REGISTRY/$IMAGE_NAME:latest
+
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
