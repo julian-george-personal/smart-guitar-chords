@@ -21,7 +21,7 @@ jobs:
       - name: Install Bun
         run: bun install
       - name: Bundle the webapp
-        run: sudo chown -R $USER:$USER ./dist; bun pack
+        run: bun pack
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
