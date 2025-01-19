@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Tab from "./Tab.tsx";
+import Tab from "./Tab";
 
 export default function App() {
   const [chordNames, setChordNames] = useState("C");
