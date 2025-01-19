@@ -29,6 +29,13 @@ export default function Tab({
   const [startingFretNum, setStartingFretNum] = useState(
     defaultStartingFretNum
   );
+  const startingFretNotes = useMemo(
+    () =>
+      stringTunings.map((baseNote) =>
+        getNoteFromNumFrets(baseNote, startingFretNum)
+      ),
+    [stringTunings, startingFretNum]
+  );
   const [stringNotes, setStringNotes] = useState<(string | null)[] | null>(
     null
   );
@@ -39,7 +46,7 @@ export default function Tab({
       stringTunings.map((tuning) =>
         getNoteFromNumFrets(tuning, startingFretNum)
       ),
-    [startingFretNum]
+    [startingFretNum, stringTunings]
   );
   useEffect(() => {
     setStartingFretNum(defaultStartingFretNum);
@@ -59,19 +66,20 @@ export default function Tab({
     tabBaseNotes,
     setStringNotes,
     setRelativeFretNumToBar,
+    fretCount,
   ]);
   const setManualStringNote = useCallback(
-    (stringIdx: number, noteName: number | null) => {
+    (stringIdx: number, fretNum: number | null) => {
       setManualStringNotes((prev) => {
         const updatedNotes = { ...prev };
         updatedNotes[stringIdx] =
-          noteName == null
+          fretNum == null
             ? null
-            : getNoteFromNumFrets(stringTunings[stringIdx], noteName);
+            : getNoteFromNumFrets(startingFretNotes[stringIdx], fretNum);
         return updatedNotes;
       });
     },
-    [setManualStringNotes]
+    [setManualStringNotes, startingFretNotes]
   );
   const resetManualStringNote = useCallback(
     (stringIdx: number) => {
@@ -84,20 +92,19 @@ export default function Tab({
     [setManualStringNotes]
   );
   useEffect(() => {
-    if (relativeFretNumToBar == 0 || stringNotes == null) return;
+    if (stringNotes == null) return;
     if (
       stringNotes.filter(
         (stringNote, i) =>
           stringNote != null &&
-          getNumFrets(stringTunings[i], stringNote) < relativeFretNumToBar
+          getNumFrets(startingFretNotes[i], stringNote) < relativeFretNumToBar
       ).length > 0
     ) {
       setRelativeFretNumToBar(0);
     }
   }, [
     stringNotes,
-    stringTunings,
-    relativeFretNumToBar,
+    startingFretNotes,
     relativeFretNumToBar,
     setRelativeFretNumToBar,
   ]);
@@ -131,8 +138,8 @@ export default function Tab({
                   baseNote={baseNote}
                   currNote={stringNotes[i]}
                   key={i}
-                  onFretChange={(newFret) => {
-                    setManualStringNote(i, newFret);
+                  onFretChange={(newFretNum) => {
+                    setManualStringNote(i, newFretNum);
                   }}
                   interactive
                 />

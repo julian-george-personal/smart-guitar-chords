@@ -17,15 +17,15 @@ export function TunedString({
   interactive,
 }: TunedStringProps) {
   const tabContext = useContext(TabContext);
-  if (!tabContext) return null;
   const fretNumber = useMemo(() => {
-    if (currNote == null) return null;
+    if (currNote == null || !tabContext) return null;
     const numSemitones = getNumFrets(baseNote, currNote);
-    if (numSemitones >= tabContext.fretCount) {
+    if (numSemitones > tabContext.fretCount) {
       return null;
     }
     return numSemitones;
-  }, [baseNote, currNote]);
+  }, [baseNote, currNote, tabContext]);
+  if (!tabContext) return null;
   return (
     <String
       fretNumber={fretNumber}
@@ -43,7 +43,6 @@ interface StringProps {
 
 function String({ fretNumber, onFretChange, interactive }: StringProps) {
   const tabContext = useContext(TabContext);
-  if (!tabContext) return null;
   const [hoveredFretIdx, setHoveredFretIdx] = useState<
     number | null | undefined
   >();
@@ -59,6 +58,7 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
     },
     [interactive, onFretChange]
   );
+  if (!tabContext) return null;
   return (
     <div className="h-full centered-col grow">
       <div

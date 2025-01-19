@@ -65,13 +65,13 @@ export function getChordNotesPerString(
       unusedNotes = unusedNotes.filter((note) => note != noteName);
     }
   }
-  var relativeFretNumToBar = 0;
+  let relativeFretNumToBar = 0;
   let unusedNotes = getGuitarNotesFromChordName(
     chordName,
     baseStringTunings.length
   );
   const usedNotes: string[] = [];
-  while (relativeFretNumToBar + fretRange[0] < fretRange[1]) {
+  while (relativeFretNumToBar + fretRange[0] <= fretRange[1]) {
     const stringTunings = baseStringTunings.map((baseTuning) =>
       Note.transpose(baseTuning, Interval.fromSemitones(relativeFretNumToBar))
     );
@@ -85,7 +85,7 @@ export function getChordNotesPerString(
       for (const noteCandidate of [...unusedNotes, ...usedNotes]) {
         const fretNumber = getNumFrets(base, noteCandidate);
         if (fretNumber == null) continue;
-        if (fretNumber >= fretRange[0] && fretNumber < fretRange[1]) {
+        if (fretNumber >= fretRange[0] && fretNumber <= fretRange[1]) {
           markNoteAsUsed(noteCandidate);
           return noteCandidate;
         }
@@ -95,12 +95,17 @@ export function getChordNotesPerString(
     const numFingers = stringNotes.filter(
       (stringNote, i) => stringNote != null && stringNote != stringTunings[i]
     ).length;
+
     if (numFingers <= 4) {
+      console.log(numFingers, relativeFretNumToBar);
       return [stringNotes, relativeFretNumToBar];
     }
     relativeFretNumToBar++;
   }
-  return [baseStringTunings.map(() => null), 0];
+  return [
+    baseStringTunings.map((note, i) => (i in currentStringNotes ? note : null)),
+    0,
+  ];
 }
 
 export function getChordNameFromNotes(

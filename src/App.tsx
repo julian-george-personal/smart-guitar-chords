@@ -24,7 +24,7 @@ export default function App() {
             onChange={(newValue) => {
               setStartingFretNum(
                 newValue.target.value != ""
-                  ? parseInt(newValue.target.value)
+                  ? Math.max(0, parseInt(newValue.target.value))
                   : 0
               );
             }}
