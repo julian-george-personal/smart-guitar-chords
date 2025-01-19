@@ -4,14 +4,7 @@ import Tab from "./Tab";
 export default function App() {
   const [chordNames, setChordNames] = useState("C");
   const [startingFretNum, setStartingFretNum] = useState(0);
-  const [stringTunings, setStringTunings] = useState([
-    "E",
-    "A",
-    "D",
-    "G",
-    "B",
-    "E",
-  ]);
+  const [stringTunings, _] = useState(["E", "A", "D", "G", "B", "E"]);
   return (
     <main className="font-sans min-h-screen centered-col gap-4 grow">
       <div className="text-4xl font-medium">Smart Guitar Chords</div>
