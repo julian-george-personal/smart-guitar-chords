@@ -19,8 +19,9 @@ export function TunedString({
   const tabContext = useContext(TabContext);
   if (!tabContext) return null;
   const fretNumber = useMemo(() => {
+    if (currNote == null) return null;
     const numSemitones = getNumFrets(baseNote, currNote);
-    if (numSemitones == null || numSemitones >= tabContext.fretCount) {
+    if (numSemitones >= tabContext.fretCount) {
       return null;
     }
     return numSemitones;
@@ -59,9 +60,9 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
     [interactive, onFretChange]
   );
   return (
-    <div className="h-full centered flex-grow">
+    <div className="h-full centered-col grow">
       <div
-        className="h-[15%] w-full centered"
+        className="h-[15%] w-full centered-col"
         style={{
           cursor: hoveredFretIdx === null ? "pointer" : "default",
         }}
@@ -88,21 +89,20 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
           <RxCross1 className="h-4/5 w-4/5" />
         )}
       </div>
-      <div className="w-full flex-grow centered relative">
-        <div className="flex-grow w-full h-full flex flex-row absolute -z-10">
-          <div className="h-full flex-grow border-r border-solid border-black" />
-          <div className="h-full flex-grow border-l border-solid border-black" />
+      <div className="w-full h-[85%] centered-col relative">
+        <div className="w-full h-full centered-row absolute -z-10">
+          <div className="h-full grow border-r border-solid border-black" />
+          <div className="h-full grow border-l border-solid border-black" />
         </div>
-        <div className="centered w-full h-full">
+        <div className="centered-col w-full h-full">
           {Array.from(Array(tabContext.fretCount).keys()).map((fretIdx) => {
             const isTabbed = fretNumber != null && fretIdx == fretNumber - 1;
             const isHovered = fretIdx == hoveredFretIdx;
             return (
               <div
                 key={fretIdx}
-                className="w-full centered"
+                className="w-full centered-col grow"
                 style={{
-                  height: `${Math.round(100 / tabContext.fretCount)}%`,
                   cursor: isHovered ? "pointer" : "default",
                 }}
                 onMouseEnter={() => setHoveredFretIdxIfInteractive(fretIdx)}
@@ -118,10 +118,10 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
               >
                 {isTabbed &&
                   (hoveredFretIdx === undefined ? (
-                    <div className="rounded-full aspect-square h-1/2 bg-black" />
+                    <div className="rounded-full aspect-square h-1/2 bg-black z-3" />
                   ) : (
                     !isHovered && (
-                      <div className="rounded-full aspect-square h-1/2 bg-neutral-400" />
+                      <div className="rounded-full aspect-square h-1/2 bg-neutral-400 z-1" />
                     )
                   ))}
                 {isHovered &&

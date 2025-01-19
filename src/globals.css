@@ -3,7 +3,18 @@
 @tailwind utilities;
 
 @layer components {
-  .centered {
+  .centered-col {
     @apply flex justify-center items-center flex-col;
+  }
+  .centered-row {
+    @apply flex justify-center items-center flex-row;
+  }
+}
+
+@layer base {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 }
