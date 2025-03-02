@@ -4,12 +4,19 @@ import Tab from "./Tab";
 export default function App() {
   const [chordNames, setChordNames] = useState("C");
   const [startingFretNum, setStartingFretNum] = useState(0);
-  const [stringTunings, _] = useState(["E", "A", "D", "G", "B", "E"]);
+  const [stringTunings, setStringTunings] = useState([
+    "E",
+    "A",
+    "D",
+    "G",
+    "B",
+    "E",
+  ]);
   return (
     <main className="font-sans min-h-screen centered-col gap-4 grow">
       <div className="text-4xl font-medium">Smart Guitar Chords</div>
       <div className="centered-row gap-2">
-        <div className="flex flex-col basis-2/3">
+        <div className="flex flex-col basis-1/3">
           <span className="text-sm">Chord Names</span>
           <input
             value={chordNames}
@@ -29,6 +36,19 @@ export default function App() {
               );
             }}
             type="number"
+            className="bg-neutral-100 w-full px-1 py-1 rounded-md"
+          />
+        </div>
+        <div className="flex flex-col basis-1/3">
+          <span className="text-sm">String Tunings</span>
+          <input
+            value={stringTunings.join(",")}
+            onChange={(newValue) => {
+              console.log(newValue.target.value.split(","));
+              setStringTunings(
+                newValue.target.value.split(",").map((x) => x.trim())
+              );
+            }}
             className="bg-neutral-100 w-full px-1 py-1 rounded-md"
           />
         </div>
