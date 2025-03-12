@@ -55,7 +55,7 @@ export default function Tab({
     const [newStringNotes, newRelativeFretNumToBar] = getChordNotesPerString(
       chordName,
       tabBaseNotes,
-      [0, fretCount],
+      fretCount,
       manualStringNotes
     );
     setStringNotes(newStringNotes);
