@@ -4,6 +4,7 @@ import {
   getChordNotesPerString,
   getNoteFromNumFrets,
   getNumFrets,
+  StringObj,
 } from "./music_util";
 import { TabContext } from "./context";
 import { TunedString } from "./TunedString";
@@ -23,9 +24,7 @@ export default function Tab({
   interactiveStartingFretNum,
   stringTunings,
 }: TabProps) {
-  const [manualStringNotes, setManualStringNotes] = useState<{
-    [stringNum: number]: string | null;
-  }>({});
+  const [manualStringNotes, setManualStringNotes] = useState<StringObj>({});
   const [startingFretNum, setStartingFretNum] = useState(
     defaultStartingFretNum
   );
