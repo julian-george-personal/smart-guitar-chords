@@ -1,13 +1,12 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { getNoteFromNumFrets, getNumFrets, StringObj } from "./music_util";
 import {
   getChordNameFromNotes,
   getChordNotesPerString,
-  getNoteFromNumFrets,
-  getNumFrets,
-  StringObj,
-} from "./music_util";
+} from "./chord_calculator";
 import { TabContext } from "./context";
 import { TunedString } from "./TunedString";
+import { NoteLiteral } from "tonal";
 
 interface TabProps {
   fretCount: number;
@@ -35,7 +34,7 @@ export default function Tab({
       ),
     [stringTunings, startingFretNum]
   );
-  const [stringNotes, setStringNotes] = useState<(string | null)[] | null>(
+  const [stringNotes, setStringNotes] = useState<(NoteLiteral | null)[] | null>(
     null
   );
   const [relativeFretNumToBar, setRelativeFretNumToBar] = useState<number>(0);
@@ -159,7 +158,7 @@ export default function Tab({
                   }}
                   onClick={() => resetManualStringNote(stringIdx)}
                 >
-                  {note || "X"}
+                  {note?.toString() || "X"}
                 </div>
               );
             })}
