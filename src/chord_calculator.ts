@@ -17,7 +17,9 @@ export function getChordNotesPerString(
 ): [stringNotes: (NoteLiteral | null)[], fretNumToBar: number] {
   if (chordName == null || Chord.get(chordName).empty) {
     return [
-      baseNotes.map((baseNote, i) => manualStringNotes?.[i] ?? baseNote),
+      baseNotes.map((baseNote, i) =>
+        i in manualStringNotes ? manualStringNotes[i] : baseNote
+      ),
       0,
     ];
   }
