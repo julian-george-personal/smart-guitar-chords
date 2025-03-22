@@ -1,7 +1,6 @@
-import { Note, Chord, Interval, transpose, NoteLiteral, note } from "tonal";
-import { ICompare, PriorityQueue } from "@datastructures-js/priority-queue";
+import { Note, Interval, NoteLiteral } from "tonal";
 
-export type StringObj = {
+export type ChordTab = {
   [stringNum: number]: NoteLiteral | null;
 };
 
@@ -22,4 +21,23 @@ export function getNumFrets(baseNote: NoteLiteral, currNote: NoteLiteral) {
 
 export function getNoteFromNumFrets(baseNote: NoteLiteral, numFrets: number) {
   return Note.tr(baseNote, Interval.fromSemitones(numFrets));
+}
+
+export function chordTabToArray(chordTab: ChordTab) {
+  const notes: (NoteLiteral | null)[] = [];
+  for (const stringNum of Object.keys(chordTab)
+    .map((key) => parseInt(key))
+    .toSorted()) {
+    notes.push(chordTab[stringNum]);
+  }
+  return notes;
+}
+
+export function fillInMutedStrings(stringNotes: ChordTab, numStrings: number) {
+  for (let i = 0; i < numStrings; i++) {
+    if (!(i in stringNotes)) {
+      stringNotes[i] = null;
+    }
+  }
+  return stringNotes;
 }

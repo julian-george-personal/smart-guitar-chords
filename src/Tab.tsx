@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getNoteFromNumFrets, getNumFrets, StringObj } from "./music_util";
+import { getNoteFromNumFrets, getNumFrets, ChordTab } from "./music_util";
 import {
   getChordNameFromNotes,
   getChordNotesPerString,
@@ -23,7 +23,7 @@ export default function Tab({
   interactiveStartingFretNum,
   stringTunings,
 }: TabProps) {
-  const [manualStringNotes, setManualStringNotes] = useState<StringObj>({});
+  const [manualStringNotes, setManualStringNotes] = useState<ChordTab>({});
   const [startingFretNum, setStartingFretNum] = useState(
     defaultStartingFretNum
   );
