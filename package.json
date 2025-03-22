@@ -10,6 +10,8 @@
     "preview": "vite preview --config ./config/vite.config.ts"
   },
   "dependencies": {
+    "@datastructures-js/priority-queue": "^6.3.2",
+    "mobx": "^6.13.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.4.0",

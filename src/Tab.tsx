@@ -1,12 +1,12 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { getNoteFromNumFrets, getNumFrets, ChordTab } from "./music_util";
 import {
   getChordNameFromNotes,
   getChordNotesPerString,
-  getNoteFromNumFrets,
-  getNumFrets,
-} from "./music_util";
+} from "./chord_calculator";
 import { TabContext } from "./context";
 import { TunedString } from "./TunedString";
+import { NoteLiteral } from "tonal";
 
 interface TabProps {
   fretCount: number;
@@ -23,9 +23,7 @@ export default function Tab({
   interactiveStartingFretNum,
   stringTunings,
 }: TabProps) {
-  const [manualStringNotes, setManualStringNotes] = useState<{
-    [stringNum: number]: string | null;
-  }>({});
+  const [manualStringNotes, setManualStringNotes] = useState<ChordTab>({});
   const [startingFretNum, setStartingFretNum] = useState(
     defaultStartingFretNum
   );
@@ -36,7 +34,7 @@ export default function Tab({
       ),
     [stringTunings, startingFretNum]
   );
-  const [stringNotes, setStringNotes] = useState<(string | null)[] | null>(
+  const [stringNotes, setStringNotes] = useState<(NoteLiteral | null)[] | null>(
     null
   );
   const [relativeFretNumToBar, setRelativeFretNumToBar] = useState<number>(0);
@@ -55,7 +53,7 @@ export default function Tab({
     const [newStringNotes, newRelativeFretNumToBar] = getChordNotesPerString(
       chordName,
       tabBaseNotes,
-      [0, fretCount],
+      fretCount,
       manualStringNotes
     );
     setStringNotes(newStringNotes);
@@ -108,7 +106,7 @@ export default function Tab({
     relativeFretNumToBar,
     setRelativeFretNumToBar,
   ]);
-  if (stringNotes == null) return null;
+  if (stringNotes == null || stringTunings.length == 0) return null;
   return (
     <TabContext.Provider value={{ fretCount, stringCount }}>
       <div className="centered-row aspect-square w-full max-w-80">
@@ -160,7 +158,7 @@ export default function Tab({
                   }}
                   onClick={() => resetManualStringNote(stringIdx)}
                 >
-                  {note || "X"}
+                  {note?.toString() || "X"}
                 </div>
               );
             })}

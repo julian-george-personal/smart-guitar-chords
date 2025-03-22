@@ -2,10 +2,11 @@ import { useCallback, useContext, useMemo, useState } from "react";
 import { getNumFrets } from "./music_util";
 import { TabContext } from "./context";
 import { RxCircle, RxCross1 } from "react-icons/rx";
+import { NoteLiteral } from "tonal";
 
 interface TunedStringProps {
-  baseNote: string;
-  currNote: string | null;
+  baseNote: NoteLiteral;
+  currNote: NoteLiteral | null;
   onFretChange: (fretNum: number | null) => void;
   interactive?: boolean;
 }

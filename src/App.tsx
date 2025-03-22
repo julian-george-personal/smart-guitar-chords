@@ -44,7 +44,6 @@ export default function App() {
           <input
             value={stringTunings.join(",")}
             onChange={(newValue) => {
-              console.log(newValue.target.value.split(","));
               setStringTunings(
                 newValue.target.value.split(",").map((x) => x.trim())
               );
