@@ -106,7 +106,7 @@ export default function Tab({
     relativeFretNumToBar,
     setRelativeFretNumToBar,
   ]);
-  if (stringNotes == null) return null;
+  if (stringNotes == null || stringTunings.length == 0) return null;
   return (
     <TabContext.Provider value={{ fretCount, stringCount }}>
       <div className="centered-row aspect-square w-full max-w-80">

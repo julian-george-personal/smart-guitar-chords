@@ -10,13 +10,20 @@ import ChordNotePrioritizer from "./ChordNotePrioritizer";
 import ChordTabPrioritizer from "./ChordTabPrioritizer";
 
 export function getChordNotesPerString(
-  chordName: string,
+  chordName: string | null,
   baseNotes: NoteLiteral[],
   numFrets: number,
   manualStringNotes: ChordTab
 ): [stringNotes: (NoteLiteral | null)[], fretNumToBar: number] {
+  if (chordName == null || Chord.get(chordName).empty) {
+    return [
+      baseNotes.map((baseNote, i) => manualStringNotes?.[i] ?? baseNote),
+      0,
+    ];
+  }
   const tabNoteMatrix = generateNoteMatrix(baseNotes, numFrets);
   const chordNotes = getGuitarNotesFromChordName(chordName);
+
   const chordTabPrioritizer = new ChordTabPrioritizer(
     tabNoteMatrix,
     chordNotes
