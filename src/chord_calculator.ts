@@ -1,11 +1,11 @@
 import { NoteLiteral, Chord, Interval } from "tonal";
-import { ICompare, PriorityQueue } from "@datastructures-js/priority-queue";
 import {
   StringObj,
   getNoteFromNumFrets,
   normalizeNote,
   getNumFrets,
 } from "./music_util";
+import ChordNotePrioritizer from "./ChordNotePrioritizer";
 
 export function getChordNotesPerString(
   chordName: string,
@@ -14,21 +14,42 @@ export function getChordNotesPerString(
   manualStringNotes: StringObj
 ): [stringNotes: (NoteLiteral | null)[], fretNumToBar: number] {
   const tabNoteMatrix = generateNoteMatrix(baseNotes, numFrets);
-  const chordNotes = getGuitarNotesFromChordName(chordName, baseNotes.length);
+  const chordNotes = getGuitarNotesFromChordName(chordName);
 
-  const currentStringNotes = getNewChordNotesPerStringInner(
-    chordNotes,
-    tabNoteMatrix,
-    manualStringNotes
-  );
+  let stringNotesWithBarredFret: [(NoteLiteral | null)[], number] = [[], 0];
+  let minNumFingers = Infinity;
 
-  return [stringDictToArray(currentStringNotes), 0];
+  for (let fretToBar = 0; fretToBar < numFrets; fretToBar++) {
+    const barredMatrix = tabNoteMatrix.map((string) => string.slice(fretToBar));
+    const barredStringNotes = getNewChordNotesPerStringInner(
+      chordNotes,
+      barredMatrix,
+      manualStringNotes
+    );
+    const barredBaseNotes = barredMatrix.map((string) => string[0]);
+
+    const numFingers =
+      Object.values(barredStringNotes).filter(
+        (note, i) => note != null && note != barredBaseNotes[i]
+      ).length + (fretToBar > 0 ? 1 : 0);
+    if (
+      numFingers < minNumFingers &&
+      chordNotesAreValid(barredStringNotes, chordNotes, barredBaseNotes)
+    ) {
+      stringNotesWithBarredFret = [
+        stringObjToArray(barredStringNotes),
+        fretToBar,
+      ];
+      minNumFingers = numFingers;
+    }
+  }
+
+  console.log(stringNotesWithBarredFret);
+
+  return stringNotesWithBarredFret;
 }
 
-export function getGuitarNotesFromChordName(
-  chordName: string,
-  numStrings: number
-): NoteLiteral[] {
+export function getGuitarNotesFromChordName(chordName: string): NoteLiteral[] {
   const chord = Chord.get(chordName);
   const prioritizedNotes = prioritizeChordNotes(chord);
   return prioritizedNotes;
@@ -47,32 +68,6 @@ export function getChordNameFromNotes(
   );
 }
 
-type NotePosition = [stringNum: number, fretNum: number];
-
-const compareNotePositions: ICompare<NotePosition> = (
-  a: NotePosition,
-  b: NotePosition
-) => {
-  if (a[1] > b[1]) return 1;
-  if (a[1] < b[1]) return -1;
-  if (a[0] > b[0]) return 1;
-  if (a[0] < b[0]) return -1;
-  return 0;
-};
-
-const compareBassNotePositions: ICompare<NotePosition> = (
-  a: NotePosition,
-  b: NotePosition
-) => {
-  if (a[0] > b[0]) return 1;
-  if (a[0] < b[0]) return -1;
-  if (a[1] > b[1]) return 1;
-  if (a[1] < b[1]) return -1;
-  return 0;
-};
-
-// this should actually iterate thru the entire note matrix and generate note candidates on each string (as a kind of priority queue)
-// then iterate thru the strings and choose which candidate to use
 function getNewChordNotesPerStringInner(
   prioritizedChordNotes: NoteLiteral[],
   noteMatrix: NoteLiteral[][],
@@ -81,60 +76,37 @@ function getNewChordNotesPerStringInner(
 ) {
   const newStringNotes = { ...currentStringNotes };
   const numStrings = noteMatrix.length;
-  const prioritizedChordNotePositions: PriorityQueue<NotePosition>[] = [];
-  for (const chordNote of prioritizedChordNotes) {
-    prioritizedChordNotePositions.push(
-      chordNote == prioritizedChordNotes[0] && prioritizeVoicingBass
-        ? new PriorityQueue<NotePosition>(compareBassNotePositions)
-        : new PriorityQueue<NotePosition>(compareNotePositions)
-    );
-  }
-  for (let stringNum = 0; stringNum < numStrings; stringNum++) {
-    if (stringNum in newStringNotes) {
-      continue;
-    }
-    for (let fretNum = 0; fretNum < noteMatrix[stringNum].length; fretNum++) {
-      const currNote = noteMatrix[stringNum][fretNum];
-      const chordNotePriority = prioritizedChordNotes.indexOf(currNote);
-      if (chordNotePriority != -1) {
-        prioritizedChordNotePositions[chordNotePriority].enqueue([
-          stringNum,
-          fretNum,
-        ]);
+  const chordNotePrioritizer = new ChordNotePrioritizer(prioritizedChordNotes);
+  const chordNoteSet = new Set(prioritizedChordNotes);
+
+  for (let stringNum = 0; stringNum < noteMatrix.length; stringNum++) {
+    for (let fretNum = 0; fretNum < noteMatrix[0].length; fretNum++) {
+      const note = noteMatrix[stringNum][fretNum] as string;
+      if (chordNoteSet.has(noteMatrix[stringNum][fretNum])) {
+        chordNotePrioritizer.addGuitarNote({ note, stringNum, fretNum });
       }
     }
   }
 
-  let bassNeeded = prioritizeVoicingBass;
-  while (
-    Object.keys(newStringNotes).length < numStrings &&
-    prioritizedChordNotePositions.filter((x) => x.size() > 0).length > 0
-  ) {
-    for (
-      let chordNoteIdx = 0;
-      chordNoteIdx < prioritizedChordNotePositions.length;
-      chordNoteIdx++
-    ) {
-      const currentNotePriorities = prioritizedChordNotePositions[chordNoteIdx];
-      let notePosition: NotePosition | null = null;
-      while (notePosition == null) {
-        notePosition = currentNotePriorities.pop();
-        if (notePosition == null) break;
-        if (notePosition[0] in newStringNotes) {
-          notePosition = null;
-        }
-      }
-      if (notePosition == null) {
-        continue;
-      }
-      newStringNotes[notePosition[0]] = prioritizedChordNotes[chordNoteIdx];
+  let bassNeedsToBeSet = prioritizeVoicingBass;
 
-      if (chordNoteIdx == 0 && bassNeeded) {
-        for (let i = 0; i < notePosition[0]; i++) {
-          newStringNotes[i] ??= null;
+  while (Object.keys(newStringNotes).length < numStrings) {
+    const guitarNote = chordNotePrioritizer.popGuitarNote();
+    if (!guitarNote) {
+      break;
+    }
+    const { note, stringNum } = guitarNote;
+    if (!(stringNum in newStringNotes)) {
+      newStringNotes[stringNum] = note;
+      if (bassNeedsToBeSet && note == prioritizedChordNotes[0]) {
+        for (let stringIdx = 0; stringIdx < stringNum; stringIdx++) {
+          if (!(stringIdx in newStringNotes)) {
+            newStringNotes[stringIdx] = null;
+          }
         }
-        bassNeeded = false;
+        bassNeedsToBeSet = false;
       }
+      chordNotePrioritizer.useGuitarNote(guitarNote);
     }
   }
 
@@ -154,6 +126,16 @@ function generateNoteMatrix(
     noteMatrix.push(stringNotes);
   }
   return noteMatrix.map((string) => string.map(normalizeNote));
+}
+
+function stringObjToArray(stringObj: StringObj) {
+  const notes: (NoteLiteral | null)[] = [];
+  for (const stringNum of Object.keys(stringObj)
+    .map((key) => parseInt(key))
+    .toSorted()) {
+    notes.push(stringObj[stringNum]);
+  }
+  return notes;
 }
 
 const prioritizedIntervals: number[] = ["1P", "3m", "3M"].map(
@@ -190,20 +172,22 @@ function prioritizeChordNotes(chord: Chord.Chord): NoteLiteral[] {
   return notes;
 }
 
-function stringDictToArray(stringNotes: StringObj) {
-  return Object.entries(stringNotes)
-    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-    .map((a) => a[1]);
-}
-
 const InnerStringsCanBeMuted = false;
+const EnforceBassNote = true;
 
 function chordNotesAreValid(
   stringNotes: StringObj,
   chordNotes: NoteLiteral[],
   baseNotes: NoteLiteral[]
 ) {
-  const stringNoteValues = stringDictToArray(stringNotes);
+  const stringNoteValues = stringObjToArray(stringNotes);
+
+  if (
+    stringNoteValues.filter((note) => note != null)[0] != chordNotes[0] &&
+    EnforceBassNote
+  ) {
+    return false;
+  }
 
   // False if it takes more than 4 fingers
   if (
@@ -220,7 +204,7 @@ function chordNotesAreValid(
 
   // False if inner strings of the tab can be muted
   if (!InnerStringsCanBeMuted) {
-    const stringsMuted = stringDictToArray(
+    const stringsMuted = stringObjToArray(
       fillInMutedStrings(stringNotes, baseNotes.length)
     ).map((a) => (a === null ? true : false));
     // if there are more than one continuous region of true or false, return false
