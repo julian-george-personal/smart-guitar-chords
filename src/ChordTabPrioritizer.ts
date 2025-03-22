@@ -25,6 +25,7 @@ function getNumFingerPriority(chordTabEnvelope: ChordTabEnvelope) {
 export default class ChordTabPrioritizer {
   private noteMatrix: NoteLiteral[][];
   private prioritizedChordNotes: NoteLiteral[];
+  private avoidBar: boolean = true;
 
   private compareTabs: ICompare<ChordTabEnvelope> = (
     a: ChordTabEnvelope,
@@ -35,6 +36,14 @@ export default class ChordTabPrioritizer {
       this.isChordTabEnvelopeValid(b) ? 0 : 1
     );
     if (comparison != null) return comparison;
+
+    if (this.avoidBar) {
+      comparison = comparePriorities(
+        a.barredFret > 0 ? 1 : 0,
+        b.barredFret > 0 ? 1 : 0
+      );
+      if (comparison != null) return comparison;
+    }
 
     comparison = comparePriorities(
       getNumFingerPriority(a),
