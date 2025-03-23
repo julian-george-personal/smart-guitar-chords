@@ -68,13 +68,13 @@ export default class ChordTabPrioritizer {
           note != null &&
           note != this.noteMatrix[parseInt(stringNum)][barredFret]
       ).length,
-      totalFingerDistance: this.calculateTotalFingerDistance(chordTab),
+      totalFingerDistance: 0,
     };
   }
 
-  private calculateTotalFingerDistance(chordTab: ChordTab) {
-    return 0;
-  }
+  // private calculateTotalFingerDistance(chordTab: ChordTab) {
+  //   return 0;
+  // }
 
   private isChordTabEnvelopeValid(chordTabEnvelope: ChordTabEnvelope) {
     return chordNotesAreValid(
