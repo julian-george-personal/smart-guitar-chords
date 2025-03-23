@@ -97,7 +97,6 @@ export default class ChordTabPrioritizer {
     this.chordTabQueue.enqueue(
       this.buildChordTabEnvelope(chordTab, barredFret)
     );
-    console.log(this.chordTabQueue.toArray());
   }
 
   public popChordTab() {
