@@ -33,7 +33,7 @@ const accountSchema = z.object({
     .max(256, CreateAccountErrors.EmailTooLong),
   password: z
     .string({ message: CreateAccountErrors.PasswordInvalidFormat })
-    .min(4, CreateAccountErrors.PasswordTooShort)
+    .min(5, CreateAccountErrors.PasswordTooShort)
     .max(256, CreateAccountErrors.PasswordTooLong),
 });
 

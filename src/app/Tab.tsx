@@ -4,7 +4,7 @@ import {
   getChordNameFromNotes,
   getChordNotesPerString,
 } from "./chord_calculator";
-import { TabContext } from "./context";
+import { TabContext } from "./context/tab-context";
 import { TunedString } from "./TunedString";
 import { NoteLiteral } from "tonal";
 
