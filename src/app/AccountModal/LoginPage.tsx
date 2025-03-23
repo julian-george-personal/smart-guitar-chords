@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Dispatch, SetStateAction } from "react";
 import { AccountModalForms } from "./AccountModal";
@@ -26,7 +26,7 @@ export default function LoginPage({ setActiveForm }: LoginPageProps) {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(validationSchema),
+    resolver: zodResolver(validationSchema),
   });
 
   const onSubmit = (data: TLoginFormFields) => {

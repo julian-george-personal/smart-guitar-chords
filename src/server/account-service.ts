@@ -1,6 +1,6 @@
 import { z } from "zod";
 import Bun from "bun";
-import { putNewUser } from "./dynamo-client";
+import { putNewAccount as putNewAccount } from "./dynamo-client";
 import { TCreateAccountRequest } from "./requests";
 
 export enum CreateAccountStatus {
@@ -37,7 +37,7 @@ const accountSchema = z.object({
     .max(256, CreateAccountErrors.PasswordTooLong),
 });
 
-export async function createAccount(
+export async function signup(
   request: TCreateAccountRequest
 ): Promise<[CreateAccountStatus, CreateAccountErrors | null]> {
   const { success, error } = accountSchema.safeParse(request);
@@ -57,7 +57,7 @@ export async function createAccount(
 
   const hashedPassword = await Bun.password.hash(password);
 
-  await putNewUser(username, hashedPassword, email);
+  await putNewAccount(username, hashedPassword, email);
 
   return [CreateAccountStatus.Success, null];
 }

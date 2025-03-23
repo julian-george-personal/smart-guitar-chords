@@ -1,7 +1,8 @@
-import React from "react";
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
+import { toast } from "react-toastify";
+import { useAccountData } from "../context/account-context";
 
 type TSignUpFormFields = {
   username: string;
@@ -26,17 +27,29 @@ const validationSchema = z
     path: ["confirm"],
   });
 
-export default function SignUpPage() {
+interface SignUpPageProps {
+  onFinished: () => void;
+}
+
+export default function SignUpPage({ onFinished }: SignUpPageProps) {
+  const { signUp } = useAccountData();
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm({
-    resolver: yupResolver(validationSchema),
+    resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = (data: TSignUpFormFields) => {
-    console.log(data);
+  const onSubmit = async (data: TSignUpFormFields) => {
+    const response = await signUp(data.username, data.email, data.password);
+    if (response.isError) {
+      setError("root", { type: "server", message: response.errorMessage });
+    } else {
+      toast.success("Successfully created account. Log in to use it.");
+      onFinished();
+    }
   };
 
   return (

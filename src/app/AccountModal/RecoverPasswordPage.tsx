@@ -1,12 +1,11 @@
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Dispatch, SetStateAction } from "react";
 import { AccountModalForms } from "./AccountModal";
 
 type TRecoverPasswordFields = {
-  username: string;
-  password: string;
+  email: string;
 };
 
 const validationSchema = z.object({
@@ -21,7 +20,7 @@ export default function RecoverPasswordPage() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(validationSchema),
+    resolver: zodResolver(validationSchema),
   });
 
   const onSubmit = (data: TRecoverPasswordFields) => {

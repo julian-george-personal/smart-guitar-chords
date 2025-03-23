@@ -1,16 +1,16 @@
 export type TConfig = {
-  dynamoUserTableName: string;
+  dynamoAccountTableName: string;
   region: string;
   dynamoEndpoint: string | undefined;
 };
 
-const dynamoUserTableName = process.env.DYNAMO_USER_TABLE_NAME;
-if (!dynamoUserTableName) {
+const dynamoAccountTableName = process.env.DYNAMO_USER_TABLE_NAME;
+if (!dynamoAccountTableName) {
   throw new Error("No DYNAMO_USER_TABLE_NAME was found");
 }
 
 const config: TConfig = {
-  dynamoUserTableName,
+  dynamoAccountTableName,
   region: "us-east-1",
   dynamoEndpoint: process.env.DYNAMO_ENDPOINT,
 };

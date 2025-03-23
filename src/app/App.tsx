@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
+import { ToastContainer } from "react-toastify";
 import Tab from "./Tab";
-import { AccountContext, TAccount } from "./context/account-context";
+import { AccountProvider, TAccount } from "./context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
 
 export default function App() {
-  const [account, setAccount] = useState<TAccount | null>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const openAccountModal = useCallback(() => {
     setIsAccountModalOpen(true);
@@ -23,12 +23,12 @@ export default function App() {
     "E",
   ]);
   return (
-    <AccountContext.Provider value={{ account, setAccount }}>
+    <AccountProvider>
       <AccountModal
         isOpen={isAccountModalOpen}
         closeModal={closeAccountModal}
       />
-      <header className="bg-white px-4 flex flex-row items-center justify-items-stretch">
+      <header className="bg-white px-6 py-2 flex flex-row items-center justify-items-stretch">
         <div className="flex-1" />
         <div className="flex-1 flex flex-row justify-center">
           <div className="text-xl">Smart Guitar Chords</div>
@@ -98,6 +98,7 @@ export default function App() {
           ))}
         </div>
       </main>
-    </AccountContext.Provider>
+      <ToastContainer />
+    </AccountProvider>
   );
 }

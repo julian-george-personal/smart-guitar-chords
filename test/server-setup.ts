@@ -13,7 +13,7 @@ console.log("Creating account table...");
 
 await db.send(
   new CreateTableCommand({
-    TableName: config.dynamoUserTableName,
+    TableName: config.dynamoAccountTableName,
     KeySchema: [{ AttributeName: "username", KeyType: "HASH" }],
     AttributeDefinitions: [{ AttributeName: "username", AttributeType: "S" }],
     BillingMode: "PAY_PER_REQUEST",

@@ -14,14 +14,14 @@ const client = new DynamoDBClient({
 
 const db = DynamoDBDocumentClient.from(client);
 
-export async function putNewUser(
+export async function putNewAccount(
   username: string,
   hashedPassword: string,
   email: string
 ) {
   await db.send(
     new PutCommand({
-      TableName: config.dynamoUserTableName,
+      TableName: config.dynamoAccountTableName,
       Item: { username, hashedPassword, email },
     })
   );

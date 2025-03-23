@@ -1,8 +1,7 @@
-import { useContext } from "react";
-import { AccountContext } from "../context/account-context";
+import { useAccountData } from "../context/account-context";
 
 export default function AccountPage() {
-  const { account } = useContext(AccountContext);
+  const { account } = useAccountData();
   if (account == null) return null;
   return (
     <div className="centered-col">

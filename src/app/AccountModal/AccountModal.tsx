@@ -1,7 +1,7 @@
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import Modal from "react-modal";
 import { RxCross1, RxArrowLeft } from "react-icons/rx";
-import { AccountContext } from "../context/account-context";
+import { useAccountData } from "../context/account-context";
 import SignUpPage from "./SignUpPage";
 import LoginPage from "./LoginPage";
 import RecoverPasswordPage from "./RecoverPasswordPage";
@@ -22,7 +22,7 @@ export default function AccountModal({
   isOpen,
   closeModal,
 }: AccountModalProps) {
-  const { account, setAccount } = useContext(AccountContext);
+  const { account } = useAccountData();
   const [activeForm, setActiveForm] = useState<AccountModalForms>(
     AccountModalForms.Login
   );
@@ -32,7 +32,7 @@ export default function AccountModal({
       case AccountModalForms.Login:
         return <LoginPage setActiveForm={setActiveForm} />;
       case AccountModalForms.SignUp:
-        return <SignUpPage />;
+        return <SignUpPage onFinished={closeModal} />;
       case AccountModalForms.RecoverPassword:
         return <RecoverPasswordPage />;
     }
