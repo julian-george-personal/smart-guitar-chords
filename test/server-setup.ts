@@ -15,7 +15,17 @@ await db.send(
   new CreateTableCommand({
     TableName: config.dynamoAccountTableName,
     KeySchema: [{ AttributeName: "username", KeyType: "HASH" }],
-    AttributeDefinitions: [{ AttributeName: "username", AttributeType: "S" }],
+    AttributeDefinitions: [
+      { AttributeName: "username", AttributeType: "S" },
+      { AttributeName: "email", AttributeType: "S" },
+    ],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "EmailIndex",
+        KeySchema: [{ AttributeName: "email", KeyType: "HASH" }],
+        Projection: { ProjectionType: "ALL" },
+      },
+    ],
     BillingMode: "PAY_PER_REQUEST",
   })
 );

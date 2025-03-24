@@ -1,8 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Dispatch, SetStateAction } from "react";
-import { AccountModalForms } from "./AccountModal";
 
 type TRecoverPasswordFields = {
   email: string;

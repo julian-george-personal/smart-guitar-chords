@@ -5,6 +5,7 @@ import { useAccountData } from "../context/account-context";
 import SignUpPage from "./SignUpPage";
 import LoginPage from "./LoginPage";
 import RecoverPasswordPage from "./RecoverPasswordPage";
+import AccountPage from "./AccountPage";
 
 interface AccountModalProps {
   isOpen: boolean;
@@ -27,16 +28,18 @@ export default function AccountModal({
     AccountModalForms.Login
   );
   const getPage = useCallback(() => {
-    if (account != null) return AccountModalForms.Account;
+    if (account != null) return <AccountPage />;
     switch (activeForm) {
       case AccountModalForms.Login:
-        return <LoginPage setActiveForm={setActiveForm} />;
+        return (
+          <LoginPage onFinished={closeModal} setActiveForm={setActiveForm} />
+        );
       case AccountModalForms.SignUp:
         return <SignUpPage onFinished={closeModal} />;
       case AccountModalForms.RecoverPassword:
         return <RecoverPasswordPage />;
     }
-  }, [activeForm]);
+  }, [activeForm, account]);
 
   const getBackInfo = useCallback(() => {
     switch (activeForm) {

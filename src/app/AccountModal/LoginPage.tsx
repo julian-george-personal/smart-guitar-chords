@@ -3,9 +3,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Dispatch, SetStateAction } from "react";
 import { AccountModalForms } from "./AccountModal";
+import { useAccountData } from "../context/account-context";
 
 interface LoginPageProps {
   setActiveForm: Dispatch<SetStateAction<AccountModalForms>>;
+  onFinished: () => void;
 }
 
 type TLoginFormFields = {
@@ -20,17 +22,27 @@ const validationSchema = z.object({
     .min(6, "Password must be at least 6 characters"),
 });
 
-export default function LoginPage({ setActiveForm }: LoginPageProps) {
+export default function LoginPage({
+  setActiveForm,
+  onFinished,
+}: LoginPageProps) {
+  const { login } = useAccountData();
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm({
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = (data: TLoginFormFields) => {
-    console.log(data);
+  const onSubmit = async (data: TLoginFormFields) => {
+    const response = await login(data.username, data.password);
+    if (response.isError) {
+      setError("root", { type: "server", message: response.errorMessage });
+    } else {
+      onFinished();
+    }
   };
 
   return (

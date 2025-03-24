@@ -4,6 +4,7 @@ import {
   PutCommand,
   GetCommand,
   ScanCommand,
+  QueryCommand,
 } from "@aws-sdk/lib-dynamodb";
 import config from "./config";
 
@@ -13,6 +14,12 @@ const client = new DynamoDBClient({
 });
 
 const db = DynamoDBDocumentClient.from(client);
+
+type TAccount = {
+  username: string;
+  hashedPassword: string;
+  email: string;
+};
 
 export async function putNewAccount(
   username: string,
@@ -27,18 +34,31 @@ export async function putNewAccount(
   );
 }
 
-export async function getUser(userId: string) {
+export async function getAccountByUsername(
+  username: string
+): Promise<TAccount | null> {
   const result = await db.send(
     new GetCommand({
-      TableName: "users",
-      Key: { userId },
+      TableName: config.dynamoAccountTableName,
+      Key: { username },
     })
   );
-  return result.Item;
+  return (result.Item as TAccount | undefined) ?? null;
 }
 
-// Get all users
-export async function listUsers() {
-  const result = await db.send(new ScanCommand({ TableName: "users" }));
-  return result.Items;
+export async function getAccountByEmail(
+  email: string
+): Promise<TAccount | null> {
+  const result = await db.send(
+    new QueryCommand({
+      TableName: config.dynamoAccountTableName,
+      IndexName: "EmailIndex",
+      KeyConditionExpression: "email = :email",
+      ExpressionAttributeValues: {
+        ":email": email,
+      },
+    })
+  );
+
+  return (result.Items as TAccount[])?.[0] || null;
 }

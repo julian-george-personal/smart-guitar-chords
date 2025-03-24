@@ -3,6 +3,7 @@ import {
   useState,
   useCallback,
   useContext,
+  useEffect,
   ReactNode,
 } from "react";
 import * as accountStore from "../store/account-store";
@@ -11,12 +12,12 @@ import { StoreResponse } from "../store/store";
 export type TAccount = {
   username: string;
   email: string;
-  token: string;
 };
 
 export type TAccountContext = {
   account: TAccount | null;
   login: (username: string, password: string) => Promise<StoreResponse>;
+  logout: () => void;
   signUp: (
     username: string,
     email: string,
@@ -33,8 +34,20 @@ interface AccountProviderProps {
 }
 
 export function AccountProvider({ children }: AccountProviderProps) {
-  const [account, setAccount] = useState(null);
+  const [account, setAccount] = useState<TAccount | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    accountStore.getUser().then((response) => {
+      if (!response.isError) {
+        const getUserResponse = response as accountStore.GetUserResponse;
+        setAccount({
+          username: getUserResponse.username,
+          email: getUserResponse.email,
+        });
+      }
+    });
+  }, []);
 
   const signUp = useCallback(
     async (
@@ -50,9 +63,29 @@ export function AccountProvider({ children }: AccountProviderProps) {
     [setLoading]
   );
 
-  const login = useCallback(async () => {
-    return {} as StoreResponse;
-  }, []);
+  const login = useCallback(
+    async (username: string, password: string) => {
+      setLoading(true);
+      const response = await accountStore.login(username, password);
+      setLoading(false);
+      if (!response.isError) {
+        const loginResponse = response as accountStore.LoginResponse;
+        setAccount({
+          username: loginResponse.username,
+          email: loginResponse.email,
+        });
+      }
+      return response;
+    },
+    [setLoading, setAccount]
+  );
+
+  const logout = useCallback(async () => {
+    setLoading(true);
+    await accountStore.logout();
+    setLoading(false);
+    setAccount(null);
+  }, [setAccount]);
 
   const recoverPassword = useCallback(async () => {
     return {} as StoreResponse;
@@ -60,7 +93,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
 
   return (
     <AccountContext.Provider
-      value={{ account, loading, signUp, login, recoverPassword }}
+      value={{ account, loading, signUp, login, logout, recoverPassword }}
     >
       {children}
     </AccountContext.Provider>
@@ -70,7 +103,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
 export const useAccountData = () => {
   const context = useContext(AccountContext);
   if (context === null) {
-    throw new Error();
+    throw new Error("AccountContext is null");
   }
   return context;
 };

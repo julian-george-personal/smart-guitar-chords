@@ -1,6 +1,6 @@
 export const UnknownErrorMessage = "Unknown Server Error";
 
-export type ApiResponse = {
+export type ErrorResponse = {
   error?: string;
 };
 
