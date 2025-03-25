@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, ReactNode, useEffect } from "react";
 import Modal from "react-modal";
 import { RxCross1, RxArrowLeft } from "react-icons/rx";
 import { useAccountData } from "../context/account-context";
@@ -19,6 +19,13 @@ export enum AccountModalForms {
   Account,
 }
 
+type PageInfo = {
+  pageComponent: ReactNode;
+  title: string;
+  backText?: string;
+  backCallback?: () => void;
+};
+
 export default function AccountModal({
   isOpen,
   closeModal,
@@ -27,55 +34,87 @@ export default function AccountModal({
   const [activeForm, setActiveForm] = useState<AccountModalForms>(
     AccountModalForms.Login
   );
-  const getPage = useCallback(() => {
-    if (account != null) return <AccountPage />;
-    switch (activeForm) {
-      case AccountModalForms.Login:
-        return (
-          <LoginPage onFinished={closeModal} setActiveForm={setActiveForm} />
-        );
-      case AccountModalForms.SignUp:
-        return <SignUpPage onFinished={closeModal} />;
-      case AccountModalForms.RecoverPassword:
-        return <RecoverPasswordPage />;
-    }
-  }, [activeForm, account]);
+  const [currentPageInfo, setCurrentPageInfo] = useState<PageInfo>();
+  useEffect(() => {
+    if (account != null) setActiveForm(AccountModalForms.Account);
+    else setActiveForm(AccountModalForms.Login);
+  }, [account]);
 
-  const getBackInfo = useCallback(() => {
+  useEffect(() => {
     switch (activeForm) {
       case AccountModalForms.Account:
+        setCurrentPageInfo({
+          pageComponent: <AccountPage />,
+          title: "Account",
+        });
+        break;
       case AccountModalForms.Login:
-        return null;
-      case AccountModalForms.RecoverPassword:
+        setCurrentPageInfo({
+          pageComponent: (
+            <LoginPage onFinished={closeModal} setActiveForm={setActiveForm} />
+          ),
+          title: "Log In",
+        });
+        break;
       case AccountModalForms.SignUp:
-        return {
-          text: "Back to Login",
-          callback: () => setActiveForm(AccountModalForms.Login),
-        };
+        setCurrentPageInfo({
+          pageComponent: <SignUpPage onFinished={closeModal} />,
+          title: "Sign Up",
+          backText: "Back to Login",
+          backCallback: () => setActiveForm(AccountModalForms.Login),
+        });
+        break;
+      case AccountModalForms.RecoverPassword:
+        setCurrentPageInfo({
+          pageComponent: <RecoverPasswordPage />,
+          title: "Recover Password",
+          backText: "Back to Login",
+          backCallback: () => setActiveForm(AccountModalForms.Login),
+        });
+        break;
     }
   }, [activeForm]);
+  if (!currentPageInfo) return null;
   return (
     <>
       {/*@ts-ignore */}
-      <Modal isOpen={isOpen} onRequestClose={closeModal}>
-        <div className="centered-col w-full">
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={closeModal}
+        style={{
+          overlay: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
+          content: {
+            width: "auto",
+            position: "relative",
+          },
+        }}
+      >
+        <div className="centered-col w-[48rem]">
           <header className="flex flex-row justify-between w-full">
             <div>
-              {getBackInfo() ? (
+              {currentPageInfo.backCallback && (
                 <div
                   className="cursor-pointer flex flex-row items-center gap-1"
-                  onClick={getBackInfo()?.callback}
+                  onClick={currentPageInfo.backCallback}
                 >
                   <RxArrowLeft />
-                  {getBackInfo()?.text}
+                  {currentPageInfo.backText}
                 </div>
-              ) : null}
+              )}
             </div>
             <div className="cursor-pointer" onClick={closeModal}>
               <RxCross1 />
             </div>
           </header>
-          <div className="w-full max-w-lg">{getPage()}</div>
+
+          <div className="w-full max-w-lg">
+            <div className="text-xl w-full py-2">{currentPageInfo.title}</div>
+            {currentPageInfo?.pageComponent}
+          </div>
         </div>
       </Modal>
     </>
