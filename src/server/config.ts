@@ -2,6 +2,7 @@ export type TConfig = {
   dynamoAccountTableName: string;
   region: string;
   dynamoEndpoint: string | undefined;
+  sesEndpoint: string | undefined;
   jwtSecret: string;
 };
 
@@ -19,6 +20,7 @@ const config: TConfig = {
   dynamoAccountTableName,
   region: "us-east-1",
   dynamoEndpoint: process.env.DYNAMO_ENDPOINT,
+  sesEndpoint: process.env.SES_ENDPOINT,
   jwtSecret: jwtSecret,
 };
 export default config;

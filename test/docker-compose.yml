@@ -19,6 +19,11 @@ services:
     depends_on:
       - dynamodb
 
+  ses:
+    image: kamranahmed/local-ses:latest
+    ports:
+      - "8282:8282"
+
   app:
     image: oven/bun:latest
     depends_on:
@@ -32,6 +37,7 @@ services:
     environment:
       - DYNAMO_USER_TABLE_NAME=smartguitarchords-accounts
       - DYNAMO_ENDPOINT=http://dynamodb:8000
+      - SES_ENDPOINT=http://ses:8282
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=local
       - AWS_SECRET_ACCESS_KEY=local

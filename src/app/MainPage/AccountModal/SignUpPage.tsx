@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { toast } from "react-toastify";
-import { useAccountData } from "../context/account-context";
+import { useAccountData } from "../../context/account-context";
 
 type TSignUpFormFields = {
   username: string;

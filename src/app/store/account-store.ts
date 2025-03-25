@@ -91,3 +91,30 @@ export async function logout(): Promise<StoreResponse> {
     };
   }
 }
+
+export async function recoverPassword(email: string): Promise<StoreResponse> {
+  try {
+    await axios.post(accountUrl + "/recoverPassword", { email });
+    return { isError: false };
+  } catch (e) {
+    return {
+      isError: true,
+      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
+    };
+  }
+}
+
+export async function setNewPassword(
+  newPassword: string,
+  token: string
+): Promise<StoreResponse> {
+  try {
+    await axios.post(accountUrl + "/setNewPassword", { newPassword, token });
+    return { isError: false };
+  } catch (e) {
+    return {
+      isError: true,
+      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
+    };
+  }
+}

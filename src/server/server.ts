@@ -1,6 +1,15 @@
 import Bun from "bun";
-import { signup, AccountStatus, login } from "./account-service";
-import { TCreateAccountRequest, TLoginRequest } from "./requests";
+import {
+  signup,
+  AccountStatus,
+  login,
+  setNewPassword,
+} from "./account-service";
+import {
+  TCreateAccountRequest,
+  TLoginRequest,
+  TSetNewPasswordRequest,
+} from "./requests";
 import { verifyToken } from "./auth-client";
 import { getAccountByUsername } from "./dynamo-client";
 
@@ -37,7 +46,7 @@ const verifyAuthorization = (req: Bun.BunRequest): string | null => {
   if (!token) return null;
 
   try {
-    return verifyToken(token)?.username ?? null;
+    return verifyToken<{ username: string }>(token)?.username ?? null;
   } catch (err) {
     return null;
   }
@@ -102,6 +111,25 @@ Bun.serve({
     "/api/account/logout": {
       DELETE: async (req) => {
         return processResponse(Response.json({}, { status: 200 }), null);
+      },
+    },
+    "/api/account/setNewPassword": {
+      POST: async (req) => {
+        const request: TSetNewPasswordRequest = await req.json();
+        const [status] = await setNewPassword(request);
+        let response;
+        switch (status) {
+          case AccountStatus.Success:
+            response = Response.json({}, { status: 200 });
+          case AccountStatus.InvalidRequest:
+          case AccountStatus.InvalidToken:
+            response = Response.json({}, { status: 400 });
+            break;
+          case AccountStatus.UnknownError:
+            response = Response.json({}, { status: 500 });
+            break;
+        }
+        return processResponse(response);
       },
     },
     "/*": {

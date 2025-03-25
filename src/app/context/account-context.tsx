@@ -23,7 +23,9 @@ export type TAccountContext = {
     email: string,
     password: string
   ) => Promise<StoreResponse>;
-  recoverPassword: (email: string) => Promise<StoreResponse>;
+  recoverPassword: (email: string, token: string) => Promise<StoreResponse>;
+  recoverPasswordToken: string | null;
+  setNewPassword: (newPassword: string) => Promise<StoreResponse>;
   loading: boolean;
 };
 
@@ -32,6 +34,10 @@ const AccountContext = createContext<TAccountContext | null>(null);
 interface AccountProviderProps {
   children: ReactNode;
 }
+
+const recoverPasswordToken = new URLSearchParams(window.location.search).get(
+  "recoverPasswordToken"
+);
 
 export function AccountProvider({ children }: AccountProviderProps) {
   const [account, setAccount] = useState<TAccount | null>(null);
@@ -87,13 +93,27 @@ export function AccountProvider({ children }: AccountProviderProps) {
     setAccount(null);
   }, [setAccount]);
 
-  const recoverPassword = useCallback(async () => {
-    return {} as StoreResponse;
+  const recoverPassword = useCallback(async (email: string) => {
+    return await accountStore.recoverPassword(email);
+  }, []);
+
+  const setNewPassword = useCallback(async (newPassword: string) => {
+    if (!recoverPasswordToken) throw new Error();
+    return await accountStore.setNewPassword(newPassword, recoverPasswordToken);
   }, []);
 
   return (
     <AccountContext.Provider
-      value={{ account, loading, signUp, login, logout, recoverPassword }}
+      value={{
+        account,
+        loading,
+        signUp,
+        login,
+        logout,
+        recoverPassword,
+        recoverPasswordToken,
+        setNewPassword,
+      }}
     >
       {children}
     </AccountContext.Provider>

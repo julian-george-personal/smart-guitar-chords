@@ -1,12 +1,15 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import Tab from "./Tab";
-import { useAccountData } from "./context/account-context";
+import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
 
 export default function MainPage() {
-  const { account } = useAccountData();
+  const { account, recoverPasswordToken } = useAccountData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
+  useEffect(() => {
+    if (recoverPasswordToken != null) setIsAccountModalOpen(true);
+  }, [recoverPasswordToken]);
   const openAccountModal = useCallback(() => {
     setIsAccountModalOpen(true);
   }, [setIsAccountModalOpen]);

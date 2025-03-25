@@ -5,10 +5,10 @@ export function generateToken(username: string) {
   return jwt.sign({ username }, config.jwtSecret, { expiresIn: "1h" });
 }
 
-export const verifyToken = (token: string) => {
+export function verifyToken<T>(token: string): T | null {
   try {
-    return jwt.verify(token, config.jwtSecret) as { username: string };
+    return jwt.verify(token, config.jwtSecret) as T;
   } catch (err) {
     return null;
   }
-};
+}

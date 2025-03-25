@@ -19,3 +19,8 @@ export type TGetAccountResponse = {
   username: string;
   email: string;
 };
+
+export type TSetNewPasswordRequest = {
+  newPassword: string;
+  token: string;
+};

@@ -4,6 +4,7 @@ import {
   PutCommand,
   GetCommand,
   ScanCommand,
+  UpdateCommand,
   QueryCommand,
 } from "@aws-sdk/lib-dynamodb";
 import config from "./config";
@@ -61,4 +62,37 @@ export async function getAccountByEmail(
   );
 
   return (result.Items as TAccount[])?.[0] || null;
+}
+
+export async function setAccountNewPassword(
+  email: string,
+  hashedPassword: string
+) {
+  const queryResult = await client.send(
+    new QueryCommand({
+      TableName: config.dynamoAccountTableName,
+      IndexName: "EmailIndex",
+      KeyConditionExpression: "email = :email",
+      ExpressionAttributeValues: {
+        ":email": email,
+      },
+    })
+  );
+
+  if (!queryResult.Items || queryResult.Items.length === 0) {
+    throw new Error("User not found");
+  }
+
+  const username = queryResult.Items[0].username;
+
+  await client.send(
+    new UpdateCommand({
+      TableName: config.dynamoAccountTableName,
+      Key: { username },
+      UpdateExpression: "SET password = :password",
+      ExpressionAttributeValues: {
+        ":password": hashedPassword,
+      },
+    })
+  );
 }

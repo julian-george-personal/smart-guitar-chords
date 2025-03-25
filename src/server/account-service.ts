@@ -3,17 +3,20 @@ import Bun from "bun";
 import {
   getAccountByUsername,
   putNewAccount as putNewAccount,
+  setAccountNewPassword,
 } from "./dynamo-client";
 import {
   TCreateAccountRequest,
   TLoginRequest,
   TLoginResponse,
+  TSetNewPasswordRequest,
 } from "./requests";
-import { generateToken } from "./auth-client";
+import { generateToken, verifyToken } from "./auth-client";
 
 export enum AccountStatus {
   Success,
   InvalidRequest,
+  InvalidToken,
   UnknownError,
 }
 
@@ -85,4 +88,18 @@ export async function login(
     { username: user.username, email: user.email, token },
     AccountStatus.Success,
   ];
+}
+
+export async function setNewPassword(
+  request: TSetNewPasswordRequest
+): Promise<[AccountStatus]> {
+  const { success, error } = accountSchema
+    .pick({ password: true })
+    .safeParse(request);
+  if (!success) return [AccountStatus.InvalidRequest];
+  const parsedToken = verifyToken<{ email: string }>(request.token);
+  if (!parsedToken) return [AccountStatus.InvalidToken];
+  const hashedPassword = await Bun.password.hash(request.newPassword);
+  await setAccountNewPassword(parsedToken.email, hashedPassword);
+  return [AccountStatus.Success];
 }

@@ -1,11 +1,12 @@
-import { useCallback, useState, ReactNode, useEffect } from "react";
+import { useState, ReactNode, useEffect } from "react";
 import Modal from "react-modal";
 import { RxCross1, RxArrowLeft } from "react-icons/rx";
-import { useAccountData } from "../context/account-context";
+import { useAccountData } from "../../context/account-context";
 import SignUpPage from "./SignUpPage";
 import LoginPage from "./LoginPage";
 import RecoverPasswordPage from "./RecoverPasswordPage";
 import AccountPage from "./AccountPage";
+import SetNewPasswordPage from "./SetNewPasswordPage";
 
 interface AccountModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export enum AccountModalForms {
   Login,
   RecoverPassword,
   Account,
+  SetNewPassword,
 }
 
 type PageInfo = {
@@ -30,15 +32,17 @@ export default function AccountModal({
   isOpen,
   closeModal,
 }: AccountModalProps) {
-  const { account } = useAccountData();
+  const { account, recoverPasswordToken } = useAccountData();
   const [activeForm, setActiveForm] = useState<AccountModalForms>(
     AccountModalForms.Login
   );
   const [currentPageInfo, setCurrentPageInfo] = useState<PageInfo>();
   useEffect(() => {
     if (account != null) setActiveForm(AccountModalForms.Account);
+    else if (recoverPasswordToken != null)
+      setActiveForm(AccountModalForms.SetNewPassword);
     else setActiveForm(AccountModalForms.Login);
-  }, [account]);
+  }, [account, recoverPasswordToken]);
 
   useEffect(() => {
     switch (activeForm) {
@@ -70,6 +74,12 @@ export default function AccountModal({
           title: "Recover Password",
           backText: "Back to Login",
           backCallback: () => setActiveForm(AccountModalForms.Login),
+        });
+        break;
+      case AccountModalForms.SetNewPassword:
+        setCurrentPageInfo({
+          pageComponent: <SetNewPasswordPage />,
+          title: "Set new password",
         });
         break;
     }

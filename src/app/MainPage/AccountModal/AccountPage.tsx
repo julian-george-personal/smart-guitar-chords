@@ -1,4 +1,4 @@
-import { useAccountData } from "../context/account-context";
+import { useAccountData } from "../../context/account-context";
 
 export default function AccountPage() {
   const { account, logout } = useAccountData();

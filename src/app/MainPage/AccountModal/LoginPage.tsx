@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Dispatch, SetStateAction } from "react";
 import { AccountModalForms } from "./AccountModal";
-import { useAccountData } from "../context/account-context";
+import { useAccountData } from "../../context/account-context";
 
 interface LoginPageProps {
   setActiveForm: Dispatch<SetStateAction<AccountModalForms>>;
