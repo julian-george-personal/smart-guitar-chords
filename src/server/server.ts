@@ -4,10 +4,12 @@ import {
   AccountStatus,
   login,
   setNewPassword,
+  recoverPassword,
 } from "./account-service";
 import {
   TCreateAccountRequest,
   TLoginRequest,
+  TRecoverPasswordRequest,
   TSetNewPasswordRequest,
 } from "./requests";
 import { verifyToken } from "./auth-client";
@@ -52,6 +54,7 @@ const verifyAuthorization = (req: Bun.BunRequest): string | null => {
   }
 };
 
+// TODO: this needs top-level try-catch for 500s
 Bun.serve({
   routes: {
     "/api/account/signup": {
@@ -113,15 +116,42 @@ Bun.serve({
         return processResponse(Response.json({}, { status: 200 }), null);
       },
     },
-    "/api/account/setNewPassword": {
+    "/api/account/recoverPassword": {
       POST: async (req) => {
-        const request: TSetNewPasswordRequest = await req.json();
-        const [status] = await setNewPassword(request);
+        const request: TRecoverPasswordRequest = await req.json();
+        const [status, error] = await recoverPassword(request);
         let response;
         switch (status) {
           case AccountStatus.Success:
             response = Response.json({}, { status: 200 });
+            break;
           case AccountStatus.InvalidRequest:
+            response = Response.json(
+              { error },
+              { status: 400, statusText: error?.toString() }
+            );
+          case AccountStatus.UnknownError:
+            response = Response.json({}, { status: 500 });
+            break;
+        }
+        return processResponse(response);
+      },
+    },
+    "/api/account/setNewPassword": {
+      POST: async (req) => {
+        const request: TSetNewPasswordRequest = await req.json();
+        const [status, error] = await setNewPassword(request);
+        let response;
+        switch (status) {
+          case AccountStatus.Success:
+            response = Response.json({}, { status: 200 });
+            break;
+          case AccountStatus.InvalidRequest:
+            response = Response.json(
+              { error },
+              { status: 400, statusText: error?.toString() }
+            );
+            break;
           case AccountStatus.InvalidToken:
             response = Response.json({}, { status: 400 });
             break;

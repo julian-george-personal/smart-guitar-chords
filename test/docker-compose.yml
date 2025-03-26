@@ -42,6 +42,8 @@ services:
       - AWS_ACCESS_KEY_ID=local
       - AWS_SECRET_ACCESS_KEY=local
       - JWT_SECRET=foo
+      - DOMAIN=localhost:3000
+      - ENVIRONMENT=Local
     command:
       [
         "sh",

@@ -20,6 +20,10 @@ export type TGetAccountResponse = {
   email: string;
 };
 
+export type TRecoverPasswordRequest = {
+  email: string;
+};
+
 export type TSetNewPasswordRequest = {
   newPassword: string;
   token: string;

@@ -23,7 +23,7 @@ export type TAccountContext = {
     email: string,
     password: string
   ) => Promise<StoreResponse>;
-  recoverPassword: (email: string, token: string) => Promise<StoreResponse>;
+  recoverPassword: (email: string) => Promise<StoreResponse>;
   recoverPasswordToken: string | null;
   setNewPassword: (newPassword: string) => Promise<StoreResponse>;
   loading: boolean;

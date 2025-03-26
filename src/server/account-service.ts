@@ -1,6 +1,7 @@
 import { z } from "zod";
 import Bun from "bun";
 import {
+  getAccountByEmail,
   getAccountByUsername,
   putNewAccount as putNewAccount,
   setAccountNewPassword,
@@ -9,9 +10,11 @@ import {
   TCreateAccountRequest,
   TLoginRequest,
   TLoginResponse,
+  TRecoverPasswordRequest,
   TSetNewPasswordRequest,
 } from "./requests";
 import { generateToken, verifyToken } from "./auth-client";
+import { sendRecoverPasswordEmail } from "./email-client";
 
 export enum AccountStatus {
   Success,
@@ -79,27 +82,56 @@ export async function login(
   request: TLoginRequest
 ): Promise<[TLoginResponse | null, AccountStatus]> {
   const { username, password } = request;
+  // TODO: do a getAccountByUsernameAndHashedPassword and do the password filtering in the DB instead of pulling it in
   const user = await getAccountByUsername(username);
   if (!user) return [null, AccountStatus.InvalidRequest];
   const isMatch = await Bun.password.verify(password, user.hashedPassword);
   if (!isMatch) return [null, AccountStatus.InvalidRequest];
-  const token = generateToken(user.username);
+  const token = generateToken({ username: user.username });
   return [
     { username: user.username, email: user.email, token },
     AccountStatus.Success,
   ];
 }
 
+export async function recoverPassword(
+  request: TRecoverPasswordRequest
+): Promise<[AccountStatus, AccountErrors | null]> {
+  const { success, error } = accountSchema
+    .pick({ email: true })
+    .safeParse(request);
+  if (!success)
+    return [
+      AccountStatus.InvalidRequest,
+      error.errors[0].message as AccountErrors,
+    ];
+  const account = await getAccountByEmail(request.email);
+  if (account != null) {
+    const token = generateToken({
+      username: account.username,
+      email: account.email,
+    });
+    await sendRecoverPasswordEmail(request.email, token);
+  }
+  return [AccountStatus.Success, null];
+}
+
 export async function setNewPassword(
   request: TSetNewPasswordRequest
-): Promise<[AccountStatus]> {
+): Promise<[AccountStatus, AccountErrors | null]> {
   const { success, error } = accountSchema
     .pick({ password: true })
-    .safeParse(request);
-  if (!success) return [AccountStatus.InvalidRequest];
-  const parsedToken = verifyToken<{ email: string }>(request.token);
-  if (!parsedToken) return [AccountStatus.InvalidToken];
+    .safeParse({ password: request.newPassword });
+  if (!success)
+    return [
+      AccountStatus.InvalidRequest,
+      error.errors[0].message as AccountErrors,
+    ];
+  const parsedToken = verifyToken<{ email: string; username: string }>(
+    request.token
+  );
+  if (!parsedToken) return [AccountStatus.InvalidToken, null];
   const hashedPassword = await Bun.password.hash(request.newPassword);
   await setAccountNewPassword(parsedToken.email, hashedPassword);
-  return [AccountStatus.Success];
+  return [AccountStatus.Success, null];
 }

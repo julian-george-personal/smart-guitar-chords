@@ -1,10 +1,17 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
+import { useAccountData } from "../../context/account-context";
+import { useCallback } from "react";
+import { toast } from "react-toastify";
 
 type TRecoverPasswordFields = {
   email: string;
 };
+
+interface RecoverPasswordPageProps {
+  onFinished: () => void;
+}
 
 const validationSchema = z.object({
   email: z
@@ -12,18 +19,33 @@ const validationSchema = z.object({
     .email("Invalid email format"),
 });
 
-export default function RecoverPasswordPage() {
+export default function RecoverPasswordPage({
+  onFinished,
+}: RecoverPasswordPageProps) {
+  const { recoverPassword } = useAccountData();
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm({
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = (data: TRecoverPasswordFields) => {
-    console.log(data);
-  };
+  const onSubmit = useCallback(
+    async (data: TRecoverPasswordFields) => {
+      const response = await recoverPassword(data.email);
+      if (response.isError) {
+        setError("root", { type: "server", message: response.errorMessage });
+      } else {
+        toast.success(
+          "Recovery instructions sent to that email if it belongs to a user."
+        );
+        onFinished();
+      }
+    },
+    [onFinished]
+  );
 
   return (
     <>

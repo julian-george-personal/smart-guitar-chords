@@ -70,7 +70,7 @@ export default function AccountModal({
         break;
       case AccountModalForms.RecoverPassword:
         setCurrentPageInfo({
-          pageComponent: <RecoverPasswordPage />,
+          pageComponent: <RecoverPasswordPage onFinished={closeModal} />,
           title: "Recover Password",
           backText: "Back to Login",
           backCallback: () => setActiveForm(AccountModalForms.Login),
