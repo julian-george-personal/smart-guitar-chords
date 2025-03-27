@@ -23,6 +23,3 @@ dist-ssr
 *.sln
 *.sw?
 node_modules
-
-#bun
-bun.lockb
