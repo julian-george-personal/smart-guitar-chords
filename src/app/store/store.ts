@@ -14,4 +14,4 @@ export type StoreResponse =
       errorMessage: string;
     };
 
-export const apiUrl = import.meta.env.VITE_API_URL;
+export const apiUrl = `${window.location.protocol}//${window.location.host}/api`;
