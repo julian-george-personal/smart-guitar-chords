@@ -5,6 +5,7 @@ export enum Environment {
 
 export type TConfig = {
   environment: Environment;
+  port: number;
   dynamoAccountTableName: string;
   region: string;
   dynamoEndpoint: string | undefined;
@@ -15,6 +16,11 @@ export type TConfig = {
 
 const environment =
   (process.env.ENVIRONMENT as Environment) || Environment.Production;
+
+const port = parseInt(process.env.PORT ?? "NaN");
+if (!port) {
+  throw new Error("No PORT was found");
+}
 
 const dynamoAccountTableName = process.env.DYNAMO_USER_TABLE_NAME;
 if (!dynamoAccountTableName) {
@@ -33,6 +39,7 @@ if (!domain) {
 
 const config: TConfig = {
   environment,
+  port,
   dynamoAccountTableName,
   region: "us-east-1",
   dynamoEndpoint: process.env.DYNAMO_ENDPOINT,
