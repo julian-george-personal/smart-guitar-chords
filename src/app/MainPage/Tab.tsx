@@ -1,10 +1,10 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getNoteFromNumFrets, getNumFrets, ChordTab } from "./music_util";
+import { getNoteFromNumFrets, getNumFrets, ChordTab } from "../music_util";
 import {
   getChordNameFromNotes,
   getChordNotesPerString,
-} from "./chord_calculator";
-import { TabContext } from "./context";
+} from "../chord_calculator";
+import { TabContext } from "../context/tab-context";
 import { TunedString } from "./TunedString";
 import { NoteLiteral } from "tonal";
 

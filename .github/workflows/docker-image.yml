@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 env:
   AWS_REGION: "us-east-1"
-  IMAGE_NAME: "smart-guitar-chords"
+  IMAGE_NAME: "smartguitarchords"
 
 jobs:
   build:
@@ -15,11 +15,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - name: Install Bun
-        run: bun install
-      - name: Bundle the webapp
-        run: bun pack
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:

@@ -1,0 +1,52 @@
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8000' || exit 1"]
+      retries: 0
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    ports:
+      - "8001:8001"
+    environment:
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=local
+      - AWS_SECRET_ACCESS_KEY=local
+      - DYNAMO_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - dynamodb
+
+  ses:
+    image: kamranahmed/local-ses:latest
+    ports:
+      - "8282:8282"
+
+  app:
+    image: oven/bun:latest
+    depends_on:
+      dynamodb:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ..:/app
+    working_dir: /app
+    environment:
+      - DYNAMO_USER_TABLE_NAME=smartguitarchords-accounts
+      - DYNAMO_ENDPOINT=http://dynamodb:8000
+      - SES_ENDPOINT=http://ses:8282
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=local
+      - AWS_SECRET_ACCESS_KEY=local
+      - JWT_SECRET=foo
+      - DOMAIN=localhost:3000
+      - ENVIRONMENT=Local
+    command:
+      [
+        "sh",
+        "-c",
+        "bun run ./test/server-setup.ts && bun run --hot ./src/server/server.ts",
+      ]
