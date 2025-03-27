@@ -15,11 +15,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - name: Install Bun
-        run: bun install
-      - name: Bundle the webapp
-        run: bun pack
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:

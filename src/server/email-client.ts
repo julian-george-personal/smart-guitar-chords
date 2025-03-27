@@ -1,9 +1,4 @@
-import {
-  SESClient,
-  SendEmailCommand,
-  ListIdentitiesCommand,
-  GetIdentityVerificationAttributesCommand,
-} from "@aws-sdk/client-ses";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import config, { Environment } from "./config";
 
 const client = new SESClient({
@@ -31,5 +26,5 @@ export async function sendRecoverPasswordEmail(email: string, token: string) {
   };
 
   const command = new SendEmailCommand(params);
-  const response = await client.send(command);
+  await client.send(command);
 }

@@ -1,3 +1,12 @@
-FROM --platform=linux/amd64 nginx:latest
+FROM oven/bun:latest
 
-COPY ./dist /usr/share/nginx/html
+WORKDIR /app
+
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
+
+COPY . .
+
+RUN bun pack
+
+CMD ["bun", "run", "./src/server/server.ts"]
