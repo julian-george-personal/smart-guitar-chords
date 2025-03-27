@@ -14,11 +14,12 @@ import {
 } from "./requests";
 import { verifyToken } from "./auth-client";
 import { getAccountByUsername } from "./dynamo-client";
+import config from "./config";
 
-const port = 3000;
+const port = config.port;
 
 const processResponse = (res: Response, setCookie?: string | null) => {
-  // res.headers.set("Access-Control-Allow-Origin", "*");
+  res.headers.set("Access-Control-Allow-Origin", "*");
   res.headers.set(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, OPTIONS"
