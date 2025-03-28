@@ -171,9 +171,13 @@ Bun.serve({
   },
   fetch(req) {
     const url = new URL(req.url);
-    return new Response(
-      Bun.file(`./dist${url.pathname === "/" ? "/index.html" : url.pathname}`)
-    );
+    try {
+      return new Response(
+        Bun.file(`./dist${url.pathname === "/" ? "/index.html" : url.pathname}`)
+      );
+    } catch (e) {
+      return new Response(null, { status: 404 });
+    }
   },
   port,
 });
