@@ -13,3 +13,7 @@ export function getCookie(name: string) {
   if (parts.length === 2) return parts.pop()?.split(";").shift();
   return null;
 }
+
+export function processInputString(input: string): string {
+  return input.trim();
+}

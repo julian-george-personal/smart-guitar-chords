@@ -1,11 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import Tab from "./Tab";
 import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
+import { useSongData } from "../context/song-context";
+import MultiStringInput from "./MultiStringInput";
+
+const MemoizedTab = memo(Tab);
 
 export default function MainPage() {
   const { account, recoverPasswordToken } = useAccountData();
+  const { song, setChordNames } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   useEffect(() => {
     if (recoverPasswordToken != null) setIsAccountModalOpen(true);
@@ -16,7 +21,6 @@ export default function MainPage() {
   const closeAccountModal = useCallback(() => {
     setIsAccountModalOpen(false);
   }, [setIsAccountModalOpen]);
-  const [chordNames, setChordNames] = useState("C");
   const [startingFretNum, setStartingFretNum] = useState(0);
   const [stringTunings, setStringTunings] = useState([
     "E",
@@ -50,14 +54,19 @@ export default function MainPage() {
         <div className="centered-row gap-2">
           <div className="flex flex-col basis-1/3">
             <span className="text-sm">Chord Names</span>
-            <input
+            {/* <input
               value={chordNames}
               onChange={(newValue) => setChordNames(newValue.target.value)}
               className="bg-neutral-100 w-full px-1 py-1 rounded-md"
+            /> */}
+            <MultiStringInput
+              onChange={setChordNames}
+              values={song.tabs.map((tab) => tab.chordName)}
             />
           </div>
           <div className="flex flex-col basis-1/3">
             <span className="text-sm">Starting Fret Number</span>
+
             <input
               value={startingFretNum}
               onChange={(newValue) => {
@@ -90,15 +99,8 @@ export default function MainPage() {
             gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))",
           }}
         >
-          {chordNames.split(",").map((chordName, i) => (
-            <Tab
-              fretCount={5}
-              chordName={chordName.trim()}
-              defaultStartingFretNum={startingFretNum}
-              interactiveStartingFretNum={false}
-              stringTunings={stringTunings}
-              key={i}
-            />
+          {song.tabs.map((_, i) => (
+            <MemoizedTab key={i} tabKey={i} />
           ))}
         </div>
       </main>

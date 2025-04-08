@@ -79,8 +79,9 @@ export function getGuitarNotesFromChordName(chordName: string): NoteLiteral[] {
 
 export function getChordNameFromNotes(
   notes: NoteLiteral[],
-  inputtedChordName: string
+  inputtedChordName: string | null
 ) {
+  if (!inputtedChordName) return null;
   const chord = Chord.get(inputtedChordName);
   const detectedChords = Chord.detect(notes as string[]);
   return (
