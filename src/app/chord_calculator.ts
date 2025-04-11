@@ -15,13 +15,16 @@ export function getChordNotesPerString(
   numFrets: number,
   manualStringNotes: ChordTab
 ): [stringNotes: (NoteLiteral | null)[], fretNumToBar: number] {
-  if (chordName == null || Chord.get(chordName).empty) {
+  if (chordName == null) {
     return [
       baseNotes.map((baseNote, i) =>
         i in manualStringNotes ? manualStringNotes[i] : baseNote
       ),
       0,
     ];
+  }
+  if (Chord.get(chordName).empty) {
+    return [baseNotes.map(() => null), 0];
   }
   const tabNoteMatrix = generateNoteMatrix(baseNotes, numFrets);
   const chordNotes = getGuitarNotesFromChordName(chordName);

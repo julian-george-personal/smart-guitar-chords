@@ -5,12 +5,14 @@ import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
 import { useSongData } from "../context/song-context";
 import MultiStringInput from "./MultiStringInput";
+import { sanitizeNoteName } from "../music_util";
 
 const MemoizedTab = memo(Tab);
 
 export default function MainPage() {
   const { account, recoverPasswordToken } = useAccountData();
-  const { song, setChordNames } = useSongData();
+  const { song, setChordNames, setSongStringTunings, setSongStartingFretNum } =
+    useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   useEffect(() => {
     if (recoverPasswordToken != null) setIsAccountModalOpen(true);
@@ -21,15 +23,6 @@ export default function MainPage() {
   const closeAccountModal = useCallback(() => {
     setIsAccountModalOpen(false);
   }, [setIsAccountModalOpen]);
-  const [startingFretNum, setStartingFretNum] = useState(0);
-  const [stringTunings, setStringTunings] = useState([
-    "E",
-    "A",
-    "D",
-    "G",
-    "B",
-    "E",
-  ]);
   return (
     <>
       <AccountModal
@@ -53,24 +46,11 @@ export default function MainPage() {
       >
         <div className="centered-row gap-2">
           <div className="flex flex-col basis-1/3">
-            <span className="text-sm">Chord Names</span>
-            {/* <input
-              value={chordNames}
-              onChange={(newValue) => setChordNames(newValue.target.value)}
-              className="bg-neutral-100 w-full px-1 py-1 rounded-md"
-            /> */}
-            <MultiStringInput
-              onChange={setChordNames}
-              values={song.tabs.map((tab) => tab.chordName)}
-            />
-          </div>
-          <div className="flex flex-col basis-1/3">
             <span className="text-sm">Starting Fret Number</span>
-
             <input
-              value={startingFretNum}
+              value={song.startingFretNum}
               onChange={(newValue) => {
-                setStartingFretNum(
+                setSongStartingFretNum(
                   newValue.target.value != ""
                     ? Math.max(0, parseInt(newValue.target.value))
                     : 0
@@ -83,13 +63,22 @@ export default function MainPage() {
           <div className="flex flex-col basis-1/3">
             <span className="text-sm">String Tunings</span>
             <input
-              value={stringTunings.join(",")}
+              value={song.stringTunings.join(",")}
               onChange={(newValue) => {
-                setStringTunings(
-                  newValue.target.value.split(",").map((x) => x.trim())
+                setSongStringTunings(
+                  newValue.target.value.split(",").map(sanitizeNoteName)
                 );
               }}
               className="bg-neutral-100 w-full px-1 py-1 rounded-md"
+            />
+          </div>
+        </div>
+        <div className="centered-row">
+          <div className="flex flex-col">
+            <span className="text-sm">Chord Names</span>
+            <MultiStringInput
+              onChange={setChordNames}
+              values={song.tabs.map((tab) => tab.chordName)}
             />
           </div>
         </div>

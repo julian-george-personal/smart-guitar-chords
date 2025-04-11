@@ -1,5 +1,5 @@
 import { NoteLiteral } from "tonal";
-import { ChordTab } from "../music_util";
+import { ChordTab, sanitizeChordName } from "../music_util";
 import {
   createContext,
   useContext,
@@ -13,27 +13,19 @@ import {
 } from "react";
 
 export type TTab = {
-  fretCount: number;
   chordName: string;
-  startingFretNum: number;
-  stringTunings: NoteLiteral[];
   manualStringNotes: ChordTab;
+  fretCount?: number;
+  startingFretNum?: number;
+  stringTunings?: NoteLiteral[];
 };
 
 export type TSong = {
-  title?: string;
   tabs: TTab[];
-  defaultTab: TTab;
-};
-
-const DefaultStringTunings = ["E", "A", "D", "G", "B", "E"];
-
-const DefaultTab: TTab = {
-  fretCount: 5,
-  chordName: "C",
-  startingFretNum: 0,
-  stringTunings: DefaultStringTunings,
-  manualStringNotes: {},
+  title?: string;
+  fretCount: number;
+  startingFretNum: number;
+  stringTunings: NoteLiteral[];
 };
 
 type TSongContext = {
@@ -41,6 +33,9 @@ type TSongContext = {
   setTitle: (title: string) => void;
   setChordNames: Dispatch<SetStateAction<string[]>>;
   updateTabByKey: (key: number, newTab: TTab) => void;
+  setSongStartingFretNum: (startingFretNum: number) => void;
+  setSongFretCount: (fretCount: number) => void;
+  setSongStringTunings: (stringTunings: NoteLiteral[]) => void;
 };
 
 const SongContext = createContext<TSongContext | null>(null);
@@ -49,10 +44,18 @@ interface SongProviderProps {
   children: ReactNode;
 }
 
+const defaultStringTunings: NoteLiteral[] = ["E", "A", "D", "G", "B", "E"];
+const defaultFretCount = 5;
+const defaultStartingFretNum = 0;
+
 export function SongProvider({ children }: SongProviderProps) {
-  const [defaultTab, setDefaultTab] = useState<TTab>(DefaultTab);
   const [chordNames, setChordNames] = useState<string[]>(["C"]);
-  const [song, setSong] = useState<TSong>({ tabs: [], defaultTab });
+  const [song, setSong] = useState<TSong>({
+    tabs: [],
+    startingFretNum: defaultStartingFretNum,
+    fretCount: defaultFretCount,
+    stringTunings: defaultStringTunings,
+  });
 
   const setTitle = useCallback(
     (newTitle: string) => {
@@ -66,7 +69,7 @@ export function SongProvider({ children }: SongProviderProps) {
         const newSong = { ...prev };
         for (let i = 0; i < chords.length; i++) {
           if (i >= newSong.tabs.length) {
-            newSong.tabs.push({ ...DefaultTab, chordName: chords[i] });
+            newSong.tabs.push({ chordName: chords[i], manualStringNotes: {} });
           } else {
             newSong.tabs[i].chordName = chords[i];
           }
@@ -78,10 +81,22 @@ export function SongProvider({ children }: SongProviderProps) {
     },
     [setSong]
   );
+  const setSongStartingFretNum = useCallback(
+    (startingFretNum: number) =>
+      setSong((prev) => ({ ...prev, startingFretNum })),
+    [setSong]
+  );
+  const setSongFretCount = useCallback(
+    (fretCount: number) => setSong((prev) => ({ ...prev, fretCount })),
+    [setSong]
+  );
+  const setSongStringTunings = useCallback(
+    (stringTunings: NoteLiteral[]) =>
+      setSong((prev) => ({ ...prev, stringTunings })),
+    [setSong]
+  );
   useEffect(() => {
-    setChords(
-      chordNames.map((chordName) => chordName.replace(/[^a-zA-G0-9#//]/g, ""))
-    );
+    setChords(chordNames.map(sanitizeChordName));
   }, [setChords, chordNames]);
   const updateTabByKey = useCallback(
     (key: number, changes: Partial<TTab>) => {
@@ -103,6 +118,9 @@ export function SongProvider({ children }: SongProviderProps) {
         setTitle,
         setChordNames,
         updateTabByKey,
+        setSongStartingFretNum,
+        setSongFretCount,
+        setSongStringTunings,
       }}
     >
       {children}
@@ -120,7 +138,26 @@ export const useSongData = () => {
 
 export function useTabByKey(key: number) {
   const { song, updateTabByKey } = useSongData();
-  const tab = useMemo(() => song.tabs[key], [song.tabs[key]]);
+
+  const tab = useMemo(
+    () =>
+      ({
+        ...song.tabs[key],
+        ...{
+          fretCount: song.fretCount,
+          // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
+          stringTunings: song.stringTunings.filter((s) => s !== ""),
+          startingFretNum: song.startingFretNum,
+        },
+      } as Required<TTab>),
+    [
+      song.tabs[key].chordName,
+      song.tabs[key].manualStringNotes,
+      song.fretCount,
+      song.stringTunings,
+      song.startingFretNum,
+    ]
+  );
   const updateTab = useCallback(
     (setter: (prev: TTab) => TTab) => {
       updateTabByKey(key, setter(tab));
