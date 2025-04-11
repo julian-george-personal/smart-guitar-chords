@@ -1,11 +1,14 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
+import { AiOutlineSave } from "react-icons/ai";
+import { RxPencil1 } from "react-icons/rx";
 import Tab from "./Tab";
 import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
 import { useSongData } from "../context/song-context";
 import MultiStringInput from "./MultiStringInput";
 import { sanitizeNoteName } from "../music_util";
+import SongModal from "./SongModal";
 
 const MemoizedTab = memo(Tab);
 
@@ -14,6 +17,7 @@ export default function MainPage() {
   const { song, setChordNames, setSongStringTunings, setSongStartingFretNum } =
     useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
+  const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
   useEffect(() => {
     if (recoverPasswordToken != null) setIsAccountModalOpen(true);
   }, [recoverPasswordToken]);
@@ -23,12 +27,19 @@ export default function MainPage() {
   const closeAccountModal = useCallback(() => {
     setIsAccountModalOpen(false);
   }, [setIsAccountModalOpen]);
+  const openSongModal = useCallback(() => {
+    setIsSongModalOpen(true);
+  }, [setIsSongModalOpen]);
+  const closeSongModal = useCallback(() => {
+    setIsSongModalOpen(false);
+  }, [setIsSongModalOpen]);
   return (
     <>
       <AccountModal
         isOpen={isAccountModalOpen}
         closeModal={closeAccountModal}
       />
+      <SongModal isOpen={isSongModalOpen} closeModal={closeSongModal} />
       <header className="bg-white px-6 py-2 flex flex-row items-center justify-items-stretch">
         <div className="flex-1" />
         <div className="flex-1 flex flex-row justify-center">
@@ -82,15 +93,31 @@ export default function MainPage() {
             />
           </div>
         </div>
-        <div
-          className="w-[80%] border-2 border-gray-300 border-solid rounded-md gap-8 p-8 grid justify-items-center"
-          style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))",
-          }}
-        >
-          {song.tabs.map((_, i) => (
-            <MemoizedTab key={i} tabKey={i} />
-          ))}
+        <div className="centered-col w-[80%]">
+          <div className="centered-row justify-between w-full px-1 py-1">
+            <div>
+              {song?.title && (
+                <>
+                  <div>{song.title}</div>
+                  <RxPencil1 />
+                </>
+              )}
+            </div>
+            <AiOutlineSave
+              className="text-gray-300 w-6 h-6 cursor-pointer"
+              onClick={openSongModal}
+            />
+          </div>
+          <div
+            className="w-full border-2 border-gray-300 border-solid rounded-md gap-8 p-8 grid justify-items-center"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))",
+            }}
+          >
+            {song.tabs.map((_, i) => (
+              <MemoizedTab key={i} tabKey={i} />
+            ))}
+          </div>
         </div>
       </main>
       <ToastContainer />

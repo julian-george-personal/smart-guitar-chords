@@ -71,6 +71,7 @@ export async function getUser(): Promise<
         Authorization: `Bearer ${getCookie("auth")}`,
       },
     });
+    if (!data.username) throw new Error();
     return { username: data.username, email: data.email, isError: false };
   } catch (e) {
     return {

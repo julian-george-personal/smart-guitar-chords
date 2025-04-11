@@ -46,6 +46,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
   useEffect(() => {
     accountStore.getUser().then((response) => {
       if (!response.isError) {
+        console.log(response);
         const getUserResponse = response as accountStore.GetUserResponse;
         setAccount({
           username: getUserResponse.username,
