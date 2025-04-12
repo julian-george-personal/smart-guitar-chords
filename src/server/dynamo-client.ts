@@ -1,4 +1,4 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, ReturnValue } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   PutCommand,
@@ -22,6 +22,14 @@ type TAccount = {
   email: string;
 };
 
+type TEmailUsername = {
+  username: string;
+};
+
+const buildUsernamePk = (username: string) => `NAME#${username}`;
+const buildEmailPk = (email: string) => `EMAIL#${email}`;
+const buildSongsPk = (username: string) => `SONGS#${username}`;
+
 export async function putNewAccount(
   username: string,
   hashedPassword: string,
@@ -30,7 +38,13 @@ export async function putNewAccount(
   await db.send(
     new PutCommand({
       TableName: config.dynamoAccountTableName,
-      Item: { username, hashedPassword, email },
+      Item: { PK: buildUsernamePk(username), username, hashedPassword, email },
+    })
+  );
+  await db.send(
+    new PutCommand({
+      TableName: config.dynamoAccountTableName,
+      Item: { PK: buildEmailPk(email), username },
     })
   );
 }
@@ -41,7 +55,7 @@ export async function getAccountByUsername(
   const result = await db.send(
     new GetCommand({
       TableName: config.dynamoAccountTableName,
-      Key: { username },
+      Key: { PK: buildUsernamePk(username) },
     })
   );
   return (result.Item as TAccount | undefined) ?? null;
@@ -49,49 +63,34 @@ export async function getAccountByUsername(
 
 export async function getAccountByEmail(
   email: string
-): Promise<TAccount | null> {
+): Promise<TEmailUsername | null> {
   const result = await db.send(
-    new QueryCommand({
+    new GetCommand({
       TableName: config.dynamoAccountTableName,
-      IndexName: "EmailIndex",
-      KeyConditionExpression: "email = :email",
-      ExpressionAttributeValues: {
-        ":email": email,
-      },
+      Key: { PK: buildEmailPk(email) },
     })
   );
-
-  return (result.Items as TAccount[])?.[0] || null;
+  return (result.Item as TEmailUsername | undefined) ?? null;
 }
 
 export async function setAccountNewPassword(
   email: string,
   hashedPassword: string
 ) {
-  const queryResult = await client.send(
-    new QueryCommand({
-      TableName: config.dynamoAccountTableName,
-      IndexName: "EmailIndex",
-      KeyConditionExpression: "email = :email",
-      ExpressionAttributeValues: {
-        ":email": email,
-      },
-    })
-  );
+  const hashedPasswordExpression = "hashedPassword";
+  const account = await getAccountByEmail(email);
 
-  if (!queryResult.Items || queryResult.Items.length === 0) {
+  if (!account) {
     throw new Error("User not found");
   }
-
-  const username = queryResult.Items[0].username;
 
   await client.send(
     new UpdateCommand({
       TableName: config.dynamoAccountTableName,
-      Key: { username },
-      UpdateExpression: "SET password = :password",
+      Key: { PK: buildUsernamePk(account.username) },
+      UpdateExpression: `SET ${hashedPasswordExpression} = :${hashedPasswordExpression}`,
       ExpressionAttributeValues: {
-        ":password": hashedPassword,
+        [`:${hashedPasswordExpression}`]: hashedPassword,
       },
     })
   );

@@ -24,7 +24,7 @@ services:
     ports:
       - "8282:8282"
 
-  app:
+  server:
     image: oven/bun:latest
     depends_on:
       dynamodb:
@@ -33,6 +33,7 @@ services:
       - "3000:3000"
     volumes:
       - ..:/app
+      - node_modules_volume:/app/node_modules
     working_dir: /app
     environment:
       - DYNAMO_USER_TABLE_NAME=smartguitarchords-accounts
@@ -49,5 +50,8 @@ services:
       [
         "sh",
         "-c",
-        "bun run ./test/server-setup.ts && bun run --hot ./src/server/server.ts",
+        'bun install --no-save --frozen-lockfile && bunx concurrently "bunx vite --config ./config/vite.config.ts --host" "bun run ./test/server-setup.ts && bun run --hot ./src/server/server.ts"',
       ]
+
+volumes:
+  node_modules_volume:

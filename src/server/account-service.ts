@@ -109,7 +109,7 @@ export async function recoverPassword(
   if (account != null) {
     const token = generateToken({
       username: account.username,
-      email: account.email,
+      email: request.email,
     });
     await sendRecoverPasswordEmail(request.email, token);
   }

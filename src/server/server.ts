@@ -14,7 +14,7 @@ import {
 } from "./requests";
 import { verifyToken } from "./auth-client";
 import { getAccountByUsername } from "./dynamo-client";
-import config from "./config";
+import config, { Environment } from "./config";
 
 const port = config.port;
 
@@ -169,13 +169,36 @@ Bun.serve({
       },
     },
   },
-  fetch(req) {
+  async fetch(req) {
     const url = new URL(req.url);
+
     try {
-      return new Response(
-        Bun.file(`./dist${url.pathname === "/" ? "/index.html" : url.pathname}`)
-      );
+      if (config.environment == Environment.Local) {
+        const viteUrl = new URL(
+          url.pathname + url.search,
+          "http://localhost:5173"
+        );
+        // Forward the original request method, headers, and body to Vite
+        const viteResponse = await fetch(viteUrl, {
+          method: req.method,
+          headers: req.headers,
+          body: req.body,
+        });
+
+        // Return the Vite response, preserving status code and headers
+        return new Response(viteResponse.body, {
+          status: viteResponse.status,
+          headers: viteResponse.headers,
+        });
+      } else if (config.environment == Environment.Production) {
+        return new Response(
+          Bun.file(
+            `./dist${url.pathname === "/" ? "/index.html" : url.pathname}`
+          )
+        );
+      }
     } catch (e) {
+      console.log(e);
       return new Response(null, { status: 404 });
     }
   },
