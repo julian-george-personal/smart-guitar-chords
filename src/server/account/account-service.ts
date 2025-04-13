@@ -1,20 +1,20 @@
 import { z } from "zod";
-import Bun from "bun";
 import {
   getAccountByEmail,
   getAccountByUsername,
   putNewAccount as putNewAccount,
   setAccountNewPassword,
-} from "./dynamo-client";
+} from "./account-repository";
 import {
   TCreateAccountRequest,
   TLoginRequest,
   TLoginResponse,
   TRecoverPasswordRequest,
   TSetNewPasswordRequest,
-} from "./requests";
-import { generateToken, verifyToken } from "./auth-client";
-import { sendRecoverPasswordEmail } from "./email-client";
+} from "./account-requests";
+import { generateToken, verifyToken } from "../clients/auth-client";
+import { sendRecoverPasswordEmail } from "../clients/email-client";
+import { TAccountInfo } from "./accountinfo-store";
 
 export enum AccountStatus {
   Success,
@@ -74,8 +74,14 @@ export async function signup(
   return [AccountStatus.Success, null];
 }
 
-async function getExistingUsers(username: string, email: string) {
-  const userByUsername = await getAccountByUsername(username);
+export async function getAccountInfo(
+  username: string | null
+): Promise<[TAccountInfo | null, AccountStatus]> {
+  if (username == null) {
+    return [null, AccountStatus.InvalidRequest];
+  }
+  const accountInfo = await getAccountByUsername(username);
+  return [accountInfo, AccountStatus.Success];
 }
 
 export async function login(

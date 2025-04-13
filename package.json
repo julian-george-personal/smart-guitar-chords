@@ -4,9 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun app-dev & bun server-dev",
-    "app-dev": "vite --config ./config/vite.config.ts",
-    "server-dev": "bun pack --mode development && docker-compose -f ./test/docker-compose.yml up --abort-on-container-exit",
+    "dev": "bun pack --mode development && docker-compose -f ./test/docker-compose.yml up --abort-on-container-exit",
     "pack": "tsc -b && vite build --config ./config/vite.config.ts",
     "lint": "eslint . --config ./config/eslint.config.js",
     "preview": "vite preview --config ./config/vite.config.ts",
@@ -43,6 +41,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react-swc": "^3.8.1",
     "autoprefixer": "^10.4.21",
+    "bun-types": "^1.2.9",
     "concurrently": "^9.1.2",
     "eslint": "^9.23.0",
     "eslint-plugin-react-hooks": "^5.2.0",

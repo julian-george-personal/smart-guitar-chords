@@ -1,5 +1,5 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import config, { Environment } from "./config";
+import config, { Environment } from "../config";
 
 const client = new SESClient({
   region: config.region,
