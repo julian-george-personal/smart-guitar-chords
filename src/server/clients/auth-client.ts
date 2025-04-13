@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import bun from "bun";
 import config from "../config";
 
 export function generateToken(object: object) {

@@ -1,11 +1,9 @@
-import { DynamoDBClient, ReturnValue } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   PutCommand,
   GetCommand,
-  ScanCommand,
   UpdateCommand,
-  QueryCommand,
   PutCommandInput,
   UpdateCommandInput,
 } from "@aws-sdk/lib-dynamodb";
@@ -13,7 +11,7 @@ import config from "../config";
 
 export enum PkType {
   AccountInfo = "USER",
-  AccountSongs = "SONG",
+  Songs = "SONG",
   EmailUsername = "EMAIL",
 }
 

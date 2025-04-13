@@ -15,11 +15,12 @@ import {
 import { generateToken, verifyToken } from "../clients/auth-client";
 import { sendRecoverPasswordEmail } from "../clients/email-client";
 import { TAccountInfo } from "./accountinfo-store";
+import { putNewSongs } from "../songs/songs-repository";
 
 export enum AccountStatus {
   Success,
   InvalidRequest,
-  InvalidToken,
+  Unauthorized,
   UnknownError,
 }
 
@@ -33,6 +34,7 @@ export enum AccountErrors {
   PasswordInvalidFormat = "PasswordInvalidFormat",
   PasswordTooShort = "PasswordTooShort",
   PasswordTooLong = "PasswordTooLong",
+  InvalidToken = "InvalidToken",
 }
 
 const accountSchema = z.object({
@@ -70,6 +72,7 @@ export async function signup(
   const hashedPassword = await Bun.password.hash(password);
 
   await putNewAccount(username, hashedPassword, email);
+  await putNewSongs(username);
 
   return [AccountStatus.Success, null];
 }
@@ -136,7 +139,8 @@ export async function setNewPassword(
   const parsedToken = verifyToken<{ email: string; username: string }>(
     request.token
   );
-  if (!parsedToken) return [AccountStatus.InvalidToken, null];
+  if (!parsedToken)
+    return [AccountStatus.InvalidRequest, AccountErrors.InvalidToken];
   const hashedPassword = await Bun.password.hash(request.newPassword);
   await setAccountNewPassword(parsedToken.email, hashedPassword);
   return [AccountStatus.Success, null];

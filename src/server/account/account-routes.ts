@@ -8,7 +8,6 @@ import {
 } from "./account-service";
 import {
   TCreateAccountRequest,
-  TGetAccountRequest,
   TLoginRequest,
   TRecoverPasswordRequest,
   TSetNewPasswordRequest,
@@ -33,22 +32,17 @@ const accountRoutes: TRoutes = {
     POST: async (req) => {
       const request = (await req.json()) as TCreateAccountRequest;
       const [status, error] = await signup(request);
-      let response;
       switch (status) {
         case AccountStatus.Success:
-          response = Response.json({}, { status: 200 });
-          break;
+          return Response.json({}, { status: 200 });
         case AccountStatus.InvalidRequest:
-          response = Response.json(
+          return Response.json(
             { error },
             { status: 400, statusText: error?.toString() }
           );
-          break;
         default:
-          response = Response.json({}, { status: 500 });
-          break;
+          return Response.json({}, { status: 500 });
       }
-      return response;
     },
   },
   "/api/account/login": {
@@ -103,47 +97,34 @@ const accountRoutes: TRoutes = {
     POST: async (req) => {
       const request = (await req.json()) as TRecoverPasswordRequest;
       const [status, error] = await recoverPassword(request);
-      let response;
       switch (status) {
         case AccountStatus.Success:
-          response = Response.json({}, { status: 200 });
-          break;
+          return Response.json({}, { status: 200 });
         case AccountStatus.InvalidRequest:
-          response = Response.json(
+          return Response.json(
             { error },
             { status: 400, statusText: error?.toString() }
           );
-          break;
         default:
-          response = Response.json({}, { status: 500 });
-          break;
+          return Response.json({}, { status: 500 });
       }
-      return response;
     },
   },
   "/api/account/setNewPassword": {
     POST: async (req) => {
       const request = (await req.json()) as TSetNewPasswordRequest;
       const [status, error] = await setNewPassword(request);
-      let response;
       switch (status) {
         case AccountStatus.Success:
-          response = Response.json({}, { status: 200 });
-          break;
+          return Response.json({}, { status: 200 });
         case AccountStatus.InvalidRequest:
-          response = Response.json(
+          return Response.json(
             { error },
             { status: 400, statusText: error?.toString() }
           );
-          break;
-        case AccountStatus.InvalidToken:
-          response = Response.json({}, { status: 400 });
-          break;
-        case AccountStatus.UnknownError:
-          response = Response.json({}, { status: 500 });
-          break;
+        default:
+          return Response.json({}, { status: 500 });
       }
-      return response;
     },
   },
 };

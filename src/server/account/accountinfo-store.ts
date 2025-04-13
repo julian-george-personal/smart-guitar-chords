@@ -15,26 +15,20 @@ export async function getAccountInfo(username: string) {
 
 export async function putAccountInfo(
   username: string,
-  accountInfo: TAccountInfo,
-  returnItem: boolean = false
+  accountInfo: TAccountInfo
 ) {
-  return (await dynamoClient.put(
-    PkType.AccountInfo,
-    username,
-    accountInfo,
-    returnItem
-  )) as TAccountInfo | undefined;
+  return (await dynamoClient.put(PkType.AccountInfo, username, accountInfo)) as
+    | TAccountInfo
+    | undefined;
 }
 
 export async function updateAccountInfo(
   username: string,
-  accountInfoUpdates: Partial<TAccountInfo>,
-  returnItem: boolean = false
+  accountInfoUpdates: Partial<TAccountInfo>
 ) {
   return (await dynamoClient.update(
     PkType.AccountInfo,
     username,
-    accountInfoUpdates,
-    returnItem
+    accountInfoUpdates
   )) as TAccountInfo | undefined;
 }
