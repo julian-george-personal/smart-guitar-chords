@@ -1,9 +1,11 @@
 import Bun from "bun";
 import config, { Environment } from "./config";
+import accountRoutes from "./account/account-routes";
+import { TRoutes } from "./types";
 
 const port = config.port;
 
-const processResponse = (res: Response, setCookie?: string | null) => {
+function addCorsHeaders(res: Response): Response {
   res.headers.set("Access-Control-Allow-Origin", "*");
   res.headers.set(
     "Access-Control-Allow-Methods",
@@ -14,24 +16,34 @@ const processResponse = (res: Response, setCookie?: string | null) => {
     "Content-Type, Authorization"
   );
   res.headers.set("Access-Control-Allow-Credentials", "true");
-  if (setCookie) {
-    res.headers.set("Set-Cookie", `auth=${setCookie}; SameSite=Strict; Path=/`);
-  } else if (setCookie === null) {
-    res.headers.set(
-      "Set-Cookie",
-      `auth=; SameSite=Strict; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
-    );
-  }
 
   return res;
-};
+}
+
+function processResponse(res: Response): Response {
+  res = addCorsHeaders(res);
+  return res;
+}
+
+function addResponseMiddleware(routes: TRoutes) {
+  const newRoutes: TRoutes = {};
+  Object.keys(routes).forEach((url) => {
+    newRoutes[url] = {};
+    Object.keys(routes[url]).forEach((verb) => {
+      newRoutes[url][verb] = async (req) =>
+        processResponse(await routes[url][verb](req));
+    });
+  });
+  return newRoutes;
+}
 
 // TODO: this needs top-level try-catch for 500s
 Bun.serve({
   routes: {
+    ...addResponseMiddleware(accountRoutes),
     "/*": {
       OPTIONS: async (req) => {
-        return processResponse(new Response(null, { status: 200 }));
+        return addCorsHeaders(new Response(null, { status: 200 }));
       },
     },
   },
@@ -49,7 +61,6 @@ Bun.serve({
           headers: req.headers,
           body: req.body,
         });
-
         // Return the Vite response, preserving status code and headers
         return new Response(viteResponse.body, {
           status: viteResponse.status,
@@ -62,6 +73,7 @@ Bun.serve({
           )
         );
       }
+      throw new Error();
     } catch (e) {
       console.log(e);
       return new Response(null, { status: 404 });

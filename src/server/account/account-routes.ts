@@ -4,15 +4,17 @@ import {
   login,
   setNewPassword,
   recoverPassword,
-  getAccountInfo,
+  getAccount,
 } from "./account-service";
 import {
   TCreateAccountRequest,
+  TGetAccountRequest,
   TLoginRequest,
   TRecoverPasswordRequest,
   TSetNewPasswordRequest,
 } from "./account-requests";
 import { verifyAuthorization } from "../clients/auth-client";
+import { TRoutes } from "../types";
 
 function addCookieHeader(res: Response, token: string | null) {
   if (token) {
@@ -26,10 +28,10 @@ function addCookieHeader(res: Response, token: string | null) {
   return res;
 }
 
-const accountRoutes = {
+const accountRoutes: TRoutes = {
   "/api/account/signup": {
     POST: async (req) => {
-      const request: TCreateAccountRequest = await req.json();
+      const request = (await req.json()) as TCreateAccountRequest;
       const [status, error] = await signup(request);
       let response;
       switch (status) {
@@ -42,7 +44,7 @@ const accountRoutes = {
             { status: 400, statusText: error?.toString() }
           );
           break;
-        case AccountStatus.UnknownError:
+        default:
           response = Response.json({}, { status: 500 });
           break;
       }
@@ -51,7 +53,7 @@ const accountRoutes = {
   },
   "/api/account/login": {
     POST: async (req) => {
-      const request: TLoginRequest = await req.json();
+      const request = (await req.json()) as TLoginRequest;
       const [loginResponse, status] = await login(request);
       let response: Response;
       switch (status) {
@@ -74,7 +76,7 @@ const accountRoutes = {
   "/api/account/get": {
     GET: async (req) => {
       const authorizedUsername = verifyAuthorization(req);
-      const [accountInfo, status] = await getAccountInfo(authorizedUsername);
+      const [accountInfo, status] = await getAccount(authorizedUsername);
       let response;
       switch (status) {
         case AccountStatus.Success:
@@ -99,7 +101,7 @@ const accountRoutes = {
   },
   "/api/account/recoverPassword": {
     POST: async (req) => {
-      const request: TRecoverPasswordRequest = await req.json();
+      const request = (await req.json()) as TRecoverPasswordRequest;
       const [status, error] = await recoverPassword(request);
       let response;
       switch (status) {
@@ -111,7 +113,8 @@ const accountRoutes = {
             { error },
             { status: 400, statusText: error?.toString() }
           );
-        case AccountStatus.UnknownError:
+          break;
+        default:
           response = Response.json({}, { status: 500 });
           break;
       }
@@ -120,7 +123,7 @@ const accountRoutes = {
   },
   "/api/account/setNewPassword": {
     POST: async (req) => {
-      const request: TSetNewPasswordRequest = await req.json();
+      const request = (await req.json()) as TSetNewPasswordRequest;
       const [status, error] = await setNewPassword(request);
       let response;
       switch (status) {

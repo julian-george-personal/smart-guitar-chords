@@ -74,7 +74,7 @@ export async function signup(
   return [AccountStatus.Success, null];
 }
 
-export async function getAccountInfo(
+export async function getAccount(
   username: string | null
 ): Promise<[TAccountInfo | null, AccountStatus]> {
   if (username == null) {
