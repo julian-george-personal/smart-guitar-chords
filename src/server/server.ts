@@ -2,6 +2,7 @@ import Bun from "bun";
 import config, { Environment } from "./config";
 import accountRoutes from "./account/account-routes";
 import { TRoutes } from "./types";
+import songRoutes from "./song/song-routes";
 
 const port = config.port;
 
@@ -41,6 +42,7 @@ function addResponseMiddleware(routes: TRoutes) {
 Bun.serve({
   routes: {
     ...addResponseMiddleware(accountRoutes),
+    ...addResponseMiddleware(songRoutes),
     "/*": {
       OPTIONS: async (req) => {
         return addCorsHeaders(new Response(null, { status: 200 }));
@@ -62,7 +64,7 @@ Bun.serve({
           body: req.body,
         });
         // Return the Vite response, preserving status code and headers
-        return new Response(viteResponse.body, {
+        return new Response(await viteResponse.text(), {
           status: viteResponse.status,
           headers: viteResponse.headers,
         });

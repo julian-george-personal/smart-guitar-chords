@@ -13,13 +13,11 @@ export async function getEmailUsername(email: string) {
 
 export async function putEmailUsername(
   email: string,
-  emailUsername: TEmailUsername,
-  returnItem: boolean = false
+  emailUsername: TEmailUsername
 ) {
   return (await dynamoClient.put(
     PkType.EmailUsername,
     email,
-    emailUsername,
-    returnItem
+    emailUsername
   )) as TEmailUsername | undefined;
 }

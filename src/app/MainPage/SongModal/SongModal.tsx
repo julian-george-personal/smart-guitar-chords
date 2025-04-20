@@ -1,6 +1,7 @@
 import Modal from "react-modal";
 import { RxCross1, RxArrowLeft } from "react-icons/rx";
-import { useAccountData } from "../context/account-context";
+import { useAccountData } from "../../context/account-context";
+import SaveSongPage from "./SongTitlePage";
 
 interface SongModalProps {
   isOpen: boolean;
@@ -35,7 +36,11 @@ export default function SongModal({ isOpen, closeModal }: SongModalProps) {
             </div>
           </header>
           <div className="w-full max-w-lg">
-            {account ? "" : "You must have an account to save."}
+            {account ? (
+              <SaveSongPage onFinished={closeModal} />
+            ) : (
+              "You must have an account to save."
+            )}
           </div>
         </div>
       </Modal>

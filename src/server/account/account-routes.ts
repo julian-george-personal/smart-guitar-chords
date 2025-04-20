@@ -49,41 +49,33 @@ const accountRoutes: TRoutes = {
     POST: async (req) => {
       const request = (await req.json()) as TLoginRequest;
       const [loginResponse, status] = await login(request);
-      let response: Response;
       switch (status) {
         case AccountStatus.Success:
-          response = Response.json(loginResponse, { status: 200 });
-          break;
+          return addCookieHeader(
+            Response.json(loginResponse, { status: 200 }),
+            loginResponse?.token as string
+          );
         case AccountStatus.InvalidRequest:
-          response = Response.json({}, { status: 400 });
-          break;
+          return Response.json({}, { status: 400 });
+        case AccountStatus.NotFound:
+          return Response.json({}, { status: 404 });
         default:
-          response = Response.json({}, { status: 500 });
-          break;
+          return Response.json({}, { status: 500 });
       }
-      if (loginResponse?.token) {
-        response = addCookieHeader(response, loginResponse.token);
-      }
-      return response;
     },
   },
   "/api/account/get": {
     GET: async (req) => {
       const authorizedUsername = verifyAuthorization(req);
       const [accountInfo, status] = await getAccount(authorizedUsername);
-      let response;
       switch (status) {
         case AccountStatus.Success:
-          response = Response.json(accountInfo, { status: 200 });
-          break;
+          return Response.json(accountInfo, { status: 200 });
         case AccountStatus.InvalidRequest:
-          response = Response.json({}, { status: 400 });
-          break;
+          return Response.json({}, { status: 400 });
         default:
-          response = Response.json({}, { status: 500 });
-          break;
+          return Response.json({}, { status: 500 });
       }
-      return response;
     },
   },
   "/api/account/logout": {

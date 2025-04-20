@@ -15,11 +15,11 @@ import {
 import { generateToken, verifyToken } from "../clients/auth-client";
 import { sendRecoverPasswordEmail } from "../clients/email-client";
 import { TAccountInfo } from "./accountinfo-store";
-import { putNewSongs } from "../songs/songs-repository";
 
 export enum AccountStatus {
   Success,
   InvalidRequest,
+  NotFound,
   Unauthorized,
   UnknownError,
 }
@@ -72,7 +72,6 @@ export async function signup(
   const hashedPassword = await Bun.password.hash(password);
 
   await putNewAccount(username, hashedPassword, email);
-  await putNewSongs(username);
 
   return [AccountStatus.Success, null];
 }
@@ -93,7 +92,7 @@ export async function login(
   const { username, password } = request;
   // TODO: do a getAccountByUsernameAndHashedPassword and do the password filtering in the DB instead of pulling it in
   const user = await getAccountByUsername(username);
-  if (!user) return [null, AccountStatus.InvalidRequest];
+  if (!user) return [null, AccountStatus.NotFound];
   const isMatch = await Bun.password.verify(password, user.hashedPassword);
   if (!isMatch) return [null, AccountStatus.InvalidRequest];
   const token = generateToken({ username: user.username });
