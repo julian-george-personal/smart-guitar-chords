@@ -52,34 +52,33 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
     try {
-      if (config.environment == Environment.Local) {
-        const viteUrl = new URL(
-          url.pathname + url.search,
-          "http://localhost:5173"
-        );
-        // Forward the original request method, headers, and body to Vite
-        const viteResponse = await fetch(viteUrl, {
-          method: req.method,
-          headers: req.headers,
-          body: req.body,
-        });
-        // Return the Vite response, preserving status code and headers
-        return new Response(await viteResponse.text(), {
-          status: viteResponse.status,
-          headers: viteResponse.headers,
-        });
-      } else if (config.environment == Environment.Production) {
-        return new Response(
-          Bun.file(
-            `./dist${url.pathname === "/" ? "/index.html" : url.pathname}`
-          )
-        );
-      }
-      throw new Error();
+      return new Response(
+        Bun.file(`./dist${url.pathname === "/" ? "/index.html" : url.pathname}`)
+      );
     } catch (e) {
-      console.log(e);
+      // console.error(e);
       return new Response(null, { status: 404 });
     }
+  },
+  websocket: {
+    message(ws, message) {
+      if (config.environment == Environment.Local) {
+        const destWs = new WebSocket("wss://localhost:5173");
+        destWs.onopen = () => {
+          destWs.send(message);
+        };
+
+        destWs.onmessage = (event) => {
+          ws.send(event.data.toString());
+        };
+      }
+    },
+    open(ws) {
+      console.log("Connection opened");
+    },
+    close(ws) {
+      console.log("Connection closed");
+    },
   },
   port,
 });

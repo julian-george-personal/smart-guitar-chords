@@ -1,3 +1,5 @@
+import { getCookie } from "../util";
+
 export const UnknownErrorMessage = "Unknown Server Error";
 
 export type ErrorResponse = {
@@ -15,3 +17,9 @@ export type StoreResponse =
     };
 
 export const apiUrl = `${window.location.protocol}//${window.location.host}/api`;
+
+export const authHeaders = {
+  headers: {
+    Authorization: `Bearer ${getCookie("auth")}`,
+  },
+};

@@ -11,3 +11,22 @@ export type TGetSongsResponse = {
 export type TCreateSongRequest = {
   songJson: string;
 };
+
+export type TCreateSongResponse = {
+  songId: string;
+  songJson: string;
+};
+
+export type TUpdateSongRequest = {
+  songId: string;
+  songJson: string;
+};
+
+export type TUpdateSongResponse = {
+  songId: string;
+  songJson: string;
+};
+
+export type TDeleteSongRequest = {
+  songId: string;
+};

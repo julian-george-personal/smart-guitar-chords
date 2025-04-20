@@ -1,6 +1,14 @@
 import { z } from "zod";
-import { TCreateSongRequest, TGetSongsResponse } from "./song-requests";
+import {
+  TCreateSongRequest,
+  TCreateSongResponse,
+  TDeleteSongRequest,
+  TGetSongsResponse,
+  TUpdateSongRequest,
+  TUpdateSongResponse,
+} from "./song-requests";
 import * as songRepository from "./song-repository";
+import { songIdLength } from "./song-store";
 
 export enum SongStatus {
   Success,
@@ -15,6 +23,8 @@ const maxJsonBytes = 2000;
 export enum SongErrors {
   SongJsonInvalidFormat = "Valid JSONified song data is required",
   SongJsonTooLong = `JSONified song data must be ${maxJsonBytes} or less`,
+  SongIdInvalidFormat = "A song ID is required",
+  SongIdInvalidLength = `A song ID's length must be ${songIdLength}`,
 }
 
 const songSchema = z.object({
@@ -22,6 +32,7 @@ const songSchema = z.object({
     .string({ message: SongErrors.SongJsonInvalidFormat })
     .max(maxJsonBytes)
     .transform((str, ctx) => {
+      // TODO: add validation here that the JSON has all the required song properties (title, tab, etc)
       try {
         return JSON.parse(str);
       } catch (e) {
@@ -32,10 +43,13 @@ const songSchema = z.object({
         return z.NEVER;
       }
     }),
+  songId: z
+    .string({ message: SongErrors.SongIdInvalidFormat })
+    .length(songIdLength, { message: SongErrors.SongIdInvalidLength }),
 });
 
-export async function createSong(
-  request: TCreateSongRequest,
+export async function updateSong(
+  request: TUpdateSongRequest,
   username: string
 ): Promise<[SongStatus, SongErrors | null]> {
   const { success, error } = songSchema.safeParse(request);
@@ -45,7 +59,46 @@ export async function createSong(
     }
     return [SongStatus.InvalidRequest, error.errors[0].message as SongErrors];
   }
-  await songRepository.createSong(username, { songJson: request.songJson });
+  const result = await songRepository.updateSong(username, {
+    songId: request.songId,
+    songJson: request.songJson,
+  });
+  return [SongStatus.Success, null];
+}
+
+const createSongSchema = songSchema.omit({ songId: true });
+
+export async function createSong(
+  request: TCreateSongRequest,
+  username: string
+): Promise<[SongStatus, SongErrors | null]> {
+  const { success, error } = createSongSchema.safeParse(request);
+  if (!success) {
+    if (!error) {
+      throw new Error();
+    }
+    return [SongStatus.InvalidRequest, error.errors[0].message as SongErrors];
+  }
+  const result = await songRepository.createSong(username, {
+    songJson: request.songJson,
+  });
+  return [SongStatus.Success, null];
+}
+
+const deleteSongSchema = songSchema.omit({ songJson: true });
+
+export async function deleteSong(
+  request: TDeleteSongRequest,
+  username: string
+): Promise<[SongStatus, SongErrors | null]> {
+  const { success, error } = deleteSongSchema.safeParse(request);
+  if (!success) {
+    if (!error) {
+      throw new Error();
+    }
+    return [SongStatus.InvalidRequest, error.errors[0].message as SongErrors];
+  }
+  await songRepository.deleteSong(username, request.songId);
   return [SongStatus.Success, null];
 }
 

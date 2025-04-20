@@ -14,8 +14,14 @@ console.log("Creating account table...");
 await db.send(
   new CreateTableCommand({
     TableName: config.dynamoAccountTableName,
-    KeySchema: [{ AttributeName: "PK", KeyType: "HASH" }],
-    AttributeDefinitions: [{ AttributeName: "PK", AttributeType: "S" }],
+    KeySchema: [
+      { AttributeName: "PK", KeyType: "HASH" },
+      { AttributeName: "SK", KeyType: "RANGE" },
+    ],
+    AttributeDefinitions: [
+      { AttributeName: "PK", AttributeType: "S" },
+      { AttributeName: "SK", AttributeType: "S" },
+    ],
     BillingMode: "PAY_PER_REQUEST",
   })
 );

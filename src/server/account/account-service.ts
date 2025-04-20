@@ -7,6 +7,7 @@ import {
 } from "./account-repository";
 import {
   TCreateAccountRequest,
+  TGetAccountResponse,
   TLoginRequest,
   TLoginResponse,
   TRecoverPasswordRequest,
@@ -78,12 +79,18 @@ export async function signup(
 
 export async function getAccount(
   username: string | null
-): Promise<[TAccountInfo | null, AccountStatus]> {
+): Promise<[TGetAccountResponse | null, AccountStatus]> {
   if (username == null) {
     return [null, AccountStatus.InvalidRequest];
   }
   const accountInfo = await getAccountByUsername(username);
-  return [accountInfo, AccountStatus.Success];
+  if (!accountInfo) {
+    return [null, AccountStatus.NotFound];
+  }
+  return [
+    { username: accountInfo.username, email: accountInfo.email },
+    AccountStatus.Success,
+  ];
 }
 
 export async function login(

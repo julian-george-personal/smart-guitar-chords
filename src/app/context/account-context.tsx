@@ -7,7 +7,9 @@ import {
   ReactNode,
 } from "react";
 import * as accountStore from "../store/account-store";
+import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
+import { SongData } from "../store/song-store";
 
 export type TAccount = {
   username: string;
@@ -16,6 +18,7 @@ export type TAccount = {
 
 export type TAccountContext = {
   account: TAccount | null;
+  songs: SongData[] | null;
   login: (username: string, password: string) => Promise<StoreResponse>;
   logout: () => void;
   signUp: (
@@ -41,12 +44,12 @@ const recoverPasswordToken = new URLSearchParams(window.location.search).get(
 
 export function AccountProvider({ children }: AccountProviderProps) {
   const [account, setAccount] = useState<TAccount | null>(null);
+  const [songs, setSongs] = useState<SongData[] | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     accountStore.getUser().then((response) => {
       if (!response.isError) {
-        console.log(response);
         const getUserResponse = response as accountStore.GetUserResponse;
         setAccount({
           username: getUserResponse.username,
@@ -55,6 +58,15 @@ export function AccountProvider({ children }: AccountProviderProps) {
       }
     });
   }, []);
+
+  useEffect(() => {
+    songStore.getSongs().then((response) => {
+      if (!response.isError) {
+        console.log(response);
+        setSongs(response.songs);
+      }
+    });
+  }, [account, setSongs]);
 
   const signUp = useCallback(
     async (
@@ -107,6 +119,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
     <AccountContext.Provider
       value={{
         account,
+        songs,
         loading,
         signUp,
         login,

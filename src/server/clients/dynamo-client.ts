@@ -1,4 +1,9 @@
-import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBClient,
+  QueryCommand,
+  DeleteItemCommand,
+  AttributeValue,
+} from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   PutCommand,
@@ -8,6 +13,7 @@ import {
   UpdateCommandInput,
 } from "@aws-sdk/lib-dynamodb";
 import config from "../config";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 
 export enum PkType {
   AccountInfo = "USER",
@@ -22,14 +28,26 @@ const client = new DynamoDBClient({
 
 const db = DynamoDBDocumentClient.from(client);
 
-export async function get(pkType: PkType, key: string) {
+const defaultSk = "0";
+
+function filterItem(item?: any) {
+  if (!item) return null;
+  const { PK, SK, ...filteredItem } = item;
+  return filteredItem;
+}
+function parseItem(item?: Record<string, AttributeValue>) {
+  if (!item) return null;
+  return filterItem(unmarshall(item));
+}
+
+export async function get(pkType: PkType, key: string, itemId?: string) {
   const result = await db.send(
     new GetCommand({
       TableName: config.dynamoAccountTableName,
-      Key: { PK: `${pkType}#${key}` },
+      Key: { PK: `${pkType}#${key}`, SK: itemId ?? defaultSk },
     })
   );
-  return result.Item;
+  return filterItem(result.Item);
 }
 
 export async function getRange(
@@ -40,28 +58,25 @@ export async function getRange(
   const result = await db.send(
     new QueryCommand({
       TableName: config.dynamoAccountTableName,
-      KeyConditionExpression: `begins_with(PK, ${prefixExpression})`,
+      KeyConditionExpression: `PK = ${prefixExpression}`,
       ExpressionAttributeValues: {
         [prefixExpression]: { S: `${pkType}#${keyPrefix}` },
       },
     })
   );
-  return result.Items;
+  return result.Items?.map(parseItem);
 }
 
 export async function put(
   pkType: PkType,
   key: string,
   item: object,
-  itemId?: string,
-  returnItem: boolean = false
+  itemId?: string
 ) {
-  const idSuffix = itemId ? `#${itemId}` : "";
   const commandObj: PutCommandInput = {
     TableName: config.dynamoAccountTableName,
-    Item: { PK: `${pkType}#${key}${idSuffix}`, ...item },
+    Item: { PK: `${pkType}#${key}`, SK: itemId ?? defaultSk, ...item },
   };
-  if (returnItem) commandObj.ReturnValues = "ALL_NEW";
   return (await db.send(new PutCommand(commandObj))).Attributes;
 }
 
@@ -72,10 +87,9 @@ export async function update(
   itemId?: string,
   returnItem: boolean = false
 ) {
-  const idSuffix = itemId ? `#${itemId}` : "";
   const commandObj: UpdateCommandInput = {
     TableName: config.dynamoAccountTableName,
-    Key: { PK: `${pkType}#${key}${idSuffix}` },
+    Key: { PK: `${pkType}#${key}`, SK: itemId ?? defaultSk },
     // {propertyA: valueA, propertyB: valueB} => SET propertyA=:propertyA; propertyB=:propertyB
     UpdateExpression: `SET ${Object.keys(itemUpdates)
       .map((key) => `${key}=:${key}`)
@@ -86,5 +100,17 @@ export async function update(
     ),
   };
   if (returnItem) commandObj.ReturnValues = "ALL_NEW";
-  return (await client.send(new UpdateCommand(commandObj))).Attributes;
+  return parseItem(
+    (await client.send(new UpdateCommand(commandObj))).Attributes
+  );
+}
+
+export async function remove(pkType: PkType, key: string, itemId?: string) {
+  const idSuffix = itemId ? `#${itemId}` : "";
+  return await db.send(
+    new DeleteItemCommand({
+      TableName: config.dynamoAccountTableName,
+      Key: { PK: { S: `${pkType}#${key}${idSuffix}` } },
+    })
+  );
 }
