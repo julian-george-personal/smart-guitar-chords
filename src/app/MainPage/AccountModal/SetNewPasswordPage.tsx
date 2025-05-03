@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { toast } from "react-toastify";
 import { useAccountData } from "../../context/account-context";
+import { useCallback } from "react";
 
 type TSetNewPasswordFields = {
   password: string;
@@ -31,7 +32,7 @@ export default function SetNewPasswordPage() {
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = async (data: TSetNewPasswordFields) => {
+  const onSubmit = useCallback(async (data: TSetNewPasswordFields) => {
     const response = await setNewPassword(data.password);
     if (response.isError) {
       setError("root", { type: "server", message: response.errorMessage });
@@ -41,7 +42,7 @@ export default function SetNewPasswordPage() {
         window.location.replace(window.location.href.split("?")[0]);
       }, 2500);
     }
-  };
+  }, []);
 
   return (
     <>

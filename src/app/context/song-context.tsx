@@ -1,5 +1,4 @@
 import { NoteLiteral } from "tonal";
-import { ChordTab, sanitizeChordName } from "../music_util";
 import {
   createContext,
   useContext,
@@ -11,6 +10,9 @@ import {
   Dispatch,
   SetStateAction,
 } from "react";
+import { ChordTab, sanitizeChordName } from "../music_util";
+import * as songStore from "../store/song-store";
+import { StoreResponse } from "../store/store";
 
 export type TTab = {
   chordName: string;
@@ -30,12 +32,15 @@ export type TSong = {
 
 type TSongContext = {
   song: TSong;
+  songId?: string;
   setTitle: (title: string) => void;
   setChordNames: Dispatch<SetStateAction<string[]>>;
   updateTabByKey: (key: number, newTab: TTab) => void;
   setSongStartingFretNum: (startingFretNum: number) => void;
   setSongFretCount: (fretCount: number) => void;
   setSongStringTunings: (stringTunings: NoteLiteral[]) => void;
+  saveSong: () => Promise<StoreResponse>;
+  deleteSong: () => Promise<StoreResponse>;
 };
 
 const SongContext = createContext<TSongContext | null>(null);
@@ -56,6 +61,7 @@ export function SongProvider({ children }: SongProviderProps) {
     fretCount: defaultFretCount,
     stringTunings: defaultStringTunings,
   });
+  const [songId, setSongId] = useState<string | undefined>();
 
   const setTitle = useCallback(
     (newTitle: string) => {
@@ -95,6 +101,18 @@ export function SongProvider({ children }: SongProviderProps) {
       setSong((prev) => ({ ...prev, stringTunings })),
     [setSong]
   );
+  const saveSong = useCallback(async () => {
+    const songJson = JSON.stringify(song);
+    if (songId) {
+      return await songStore.updateSong(songId, songJson);
+    } else {
+      return await songStore.createSong(songJson);
+    }
+  }, [song, songId]);
+  const deleteSong = useCallback(async () => {
+    if (!songId) throw new Error();
+    return await songStore.deleteSong(songId);
+  }, [song, songId]);
   useEffect(() => {
     setChords(chordNames.map(sanitizeChordName));
   }, [setChords, chordNames]);
@@ -111,6 +129,7 @@ export function SongProvider({ children }: SongProviderProps) {
     },
     [setSong]
   );
+
   return (
     <SongContext.Provider
       value={{
@@ -121,6 +140,8 @@ export function SongProvider({ children }: SongProviderProps) {
         setSongStartingFretNum,
         setSongFretCount,
         setSongStringTunings,
+        saveSong,
+        deleteSong,
       }}
     >
       {children}

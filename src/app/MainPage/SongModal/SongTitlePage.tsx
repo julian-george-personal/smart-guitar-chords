@@ -2,6 +2,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSongData } from "../../context/song-context";
+import { useCallback, useState } from "react";
 
 type TSaveSongFormFields = {
   title: string;
@@ -16,7 +17,7 @@ const validationSchema = z.object({
 });
 
 export default function SaveSongPage({ onFinished }: SaveSongPageProps) {
-  const { song } = useSongData();
+  const { song, setTitle, saveSong } = useSongData();
   const {
     register,
     handleSubmit,
@@ -25,23 +26,26 @@ export default function SaveSongPage({ onFinished }: SaveSongPageProps) {
   } = useForm({
     resolver: zodResolver(validationSchema),
   });
-
-  const onSubmit = async (data: TSaveSongFormFields) => {
-    // const response =
-    // if (response.isError) {
-    //   setError("root", { type: "server", message: response.errorMessage });
-    // } else {
-    //   onFinished();
-    // }
-  };
+  const onSubmit = useCallback(
+    async (data: TSaveSongFormFields) => {
+      setTitle(data.title);
+      const response = await saveSong();
+      if (response.isError) {
+        setError("root", { type: "server", message: response.errorMessage });
+      } else {
+        onFinished();
+      }
+    },
+    [setTitle, saveSong]
+  );
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="username" className="block">
-          Username
+        <label htmlFor="title" className="block">
+          Title
         </label>
         <input
-          id="username"
+          id="title"
           type="text"
           {...register("title")}
           className="border p-2 w-full"

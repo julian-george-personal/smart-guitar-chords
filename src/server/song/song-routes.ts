@@ -12,6 +12,7 @@ import {
   TDeleteSongRequest,
   TUpdateSongRequest,
 } from "./song-requests";
+import { BunRequest } from "bun";
 
 const songRoutes: TRoutes = {
   "/api/song/user": {
@@ -43,11 +44,15 @@ const songRoutes: TRoutes = {
       }
     },
   },
-  "/api/song/update": {
-    POST: async (req) => {
+  "/api/song/update/:songId": {
+    POST: async (req: BunRequest<"/api/song/update/:songId">) => {
       const authorizedUsername = verifyAuthorization(req);
       if (!authorizedUsername) return Response.json(null, { status: 401 });
-      const request = (await req.json()) as TUpdateSongRequest;
+
+      const songJson = ((await req.json()) as { songJson: string }).songJson;
+      const { songId } = req.params;
+
+      const request = { songJson, songId } as TUpdateSongRequest;
       const [status, error] = await updateSong(request, authorizedUsername);
       switch (status) {
         case SongStatus.Success:
@@ -59,11 +64,14 @@ const songRoutes: TRoutes = {
       }
     },
   },
-  "/api/song/delete": {
-    DELETE: async (req) => {
+  "/api/song/delete/:songId": {
+    DELETE: async (req: BunRequest<"/api/song/delete/:songId">) => {
       const authorizedUsername = verifyAuthorization(req);
       if (!authorizedUsername) return Response.json(null, { status: 401 });
-      const request = (await req.json()) as TDeleteSongRequest;
+
+      const { songId } = req.params;
+      const request = { songId } as TDeleteSongRequest;
+
       const [status, error] = await deleteSong(request, authorizedUsername);
       switch (status) {
         case SongStatus.Success:

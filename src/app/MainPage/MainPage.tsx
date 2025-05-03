@@ -95,7 +95,7 @@ export default function MainPage() {
         </div>
         <div className="centered-col w-[80%]">
           <div className="centered-row justify-between w-full px-1 py-1">
-            <div>
+            <div className="centered-row gap-2">
               {song?.title && (
                 <>
                   <div>{song.title}</div>

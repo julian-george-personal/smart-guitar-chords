@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useCallback } from "react";
 import { AccountModalForms } from "./AccountModal";
 import { useAccountData } from "../../context/account-context";
 
@@ -36,14 +36,14 @@ export default function LoginPage({
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = async (data: TLoginFormFields) => {
+  const onSubmit = useCallback(async (data: TLoginFormFields) => {
     const response = await login(data.username, data.password);
     if (response.isError) {
       setError("root", { type: "server", message: response.errorMessage });
     } else {
       onFinished();
     }
-  };
+  }, []);
 
   return (
     <>

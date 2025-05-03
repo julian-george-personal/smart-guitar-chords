@@ -52,11 +52,13 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
     try {
-      return new Response(
-        Bun.file(`./dist${url.pathname === "/" ? "/index.html" : url.pathname}`)
-      );
+      if (config.environment == Environment.Production)
+        return new Response(
+          Bun.file(
+            `./dist${url.pathname === "/" ? "/index.html" : url.pathname}`
+          )
+        );
     } catch (e) {
-      // console.error(e);
       return new Response(null, { status: 404 });
     }
   },
@@ -72,12 +74,6 @@ Bun.serve({
           ws.send(event.data.toString());
         };
       }
-    },
-    open(ws) {
-      console.log("Connection opened");
-    },
-    close(ws) {
-      console.log("Connection closed");
     },
   },
   port,

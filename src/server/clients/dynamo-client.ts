@@ -110,7 +110,10 @@ export async function remove(pkType: PkType, key: string, itemId?: string) {
   return await db.send(
     new DeleteItemCommand({
       TableName: config.dynamoAccountTableName,
-      Key: { PK: { S: `${pkType}#${key}${idSuffix}` } },
+      Key: {
+        PK: { S: `${pkType}#${key}${idSuffix}` },
+        SK: { S: itemId ?? defaultSk },
+      },
     })
   );
 }

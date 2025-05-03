@@ -36,3 +36,42 @@ export async function getSongs(): Promise<GetSongsResponse & StoreResponse> {
     };
   }
 }
+
+export async function createSong(songJson: string): Promise<StoreResponse> {
+  try {
+    await axios.post(songUrl + "/create", { songJson }, authHeaders);
+    return { isError: false };
+  } catch (e) {
+    return {
+      isError: true,
+      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
+    };
+  }
+}
+
+export async function updateSong(
+  songId: string,
+  songJson: string
+): Promise<StoreResponse> {
+  try {
+    await axios.post(songUrl + "/update/" + songId, { songJson }, authHeaders);
+    return { isError: false };
+  } catch (e) {
+    return {
+      isError: true,
+      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
+    };
+  }
+}
+
+export async function deleteSong(songId: string): Promise<StoreResponse> {
+  try {
+    await axios.delete(songUrl + "/delete/" + songId, authHeaders);
+    return { isError: false };
+  } catch (e) {
+    return {
+      isError: true,
+      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
+    };
+  }
+}
