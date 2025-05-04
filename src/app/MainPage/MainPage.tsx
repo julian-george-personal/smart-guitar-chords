@@ -19,6 +19,7 @@ export default function MainPage() {
     setSongStringTunings,
     setSongStartingFretNum,
     selectSong,
+    songId,
   } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
@@ -44,10 +45,12 @@ export default function MainPage() {
         closeModal={closeAccountModal}
       />
       <SongModal isOpen={isSongModalOpen} closeModal={closeSongModal} />
-      <header className="bg-white px-6 py-2 flex flex-row items-center justify-items-stretch">
-        <div className="flex-1" />
-        <div className="flex-1 flex flex-row justify-center">
-          <div className="text-xl">Smart Guitar Chords</div>
+      <header className="bg-white md:px-6 px-2 py-2 flex flex-row items-center justify-items-stretch">
+        <div className="md:flex-1" />
+        <div className="flex-1 flex flex-row md:justify-center">
+          <div className="md:text-xl sm:text-sm xs:text-xs">
+            Smart Guitar Chords
+          </div>
         </div>
         <div className="flex-1 flex flex-row justify-end">
           <div onClick={openAccountModal} className="cursor-pointer">
@@ -59,8 +62,8 @@ export default function MainPage() {
         className="font-sans min-h-screen centered-col gap-4 grow"
         id="main"
       >
-        <div className="centered-row gap-2">
-          <div className="flex flex-col basis-1/3">
+        <div className="centered-row gap-2 max-w-[80vw] flex-wrap">
+          <div className="flex flex-col basis-1/3 min-w-36">
             <span className="text-sm">Starting Fret Number</span>
             <input
               value={song.startingFretNum}
@@ -75,7 +78,7 @@ export default function MainPage() {
               className="bg-neutral-100 w-full px-1 py-1 rounded-md"
             />
           </div>
-          <div className="flex flex-col basis-1/3">
+          <div className="flex flex-col basis-1/3 min-w-36">
             <span className="text-sm">String Tunings</span>
             <input
               value={song.stringTunings.join(",")}
@@ -93,7 +96,7 @@ export default function MainPage() {
             <span className="text-sm">Chord Names</span>
             <MultiStringInput
               onChange={setChordNames}
-              values={song.tabs.map((tab) => tab.chordName)}
+              values={song.chordNames}
             />
           </div>
         </div>
@@ -107,6 +110,7 @@ export default function MainPage() {
                     const songId = e.target.value;
                     selectSong(songId);
                   }}
+                  value={songId}
                 >
                   <option value={""}>Unsaved Song</option>
                   {Object.entries(songs).map(([songId, song], i) => (

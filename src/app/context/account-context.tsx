@@ -117,7 +117,8 @@ export function AccountProvider({ children }: AccountProviderProps) {
     await accountStore.logout();
     setLoading(false);
     setAccount(null);
-  }, [setAccount]);
+    setSongs({});
+  }, [setAccount, setLoading, setSongs]);
 
   const recoverPassword = useCallback(async (email: string) => {
     return await accountStore.recoverPassword(email);

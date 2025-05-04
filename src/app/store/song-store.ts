@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { TSong } from "../context/song-context";
 import {
   apiUrl,
@@ -14,7 +14,7 @@ type GetSongsResponse = {
 };
 
 type CreateSongResponse = {
-  songId: string | null;
+  songId?: string;
 };
 
 type UnparsedSongData = { songId: string; songJson: string };
@@ -45,15 +45,13 @@ export async function createSong(
   songJson: string
 ): Promise<CreateSongResponse & StoreResponse> {
   try {
-    const result = await axios.post<{ songJson: string }, CreateSongResponse>(
-      songUrl + "/create",
-      { songJson },
-      authHeaders
-    );
-    return { songId: result.songId, isError: false };
+    const result = await axios.post<
+      { songJson: string },
+      AxiosResponse<CreateSongResponse>
+    >(songUrl + "/create", { songJson }, authHeaders);
+    return { songId: result.data.songId, isError: false };
   } catch (e) {
     return {
-      songId: null,
       isError: true,
       errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
     };

@@ -55,36 +55,26 @@ interface SongProviderProps {
 const defaultStringTunings: NoteLiteral[] = ["E", "A", "D", "G", "B", "E"];
 const defaultFretCount = 5;
 const defaultStartingFretNum = 0;
+const defaultSong = {
+  chordNames: ["C"],
+  tabs: [],
+  startingFretNum: defaultStartingFretNum,
+  fretCount: defaultFretCount,
+  stringTunings: defaultStringTunings,
+};
 
 export function SongProvider({ children }: SongProviderProps) {
-  const [song, setSong] = useState<TSong>({
-    chordNames: [],
-    tabs: [],
-    startingFretNum: defaultStartingFretNum,
-    fretCount: defaultFretCount,
-    stringTunings: defaultStringTunings,
-  });
+  const [song, setSong] = useState<TSong>(defaultSong);
   const [songId, setSongId] = useState<string | undefined>();
   const { songs, refreshSongs } = useAccountData();
 
-  const selectSong = useCallback(
-    (newSongId: string) => {
-      if (newSongId.length == 0) {
-        setSong({
-          chordNames: [],
-          tabs: [],
-          startingFretNum: defaultStartingFretNum,
-          fretCount: defaultFretCount,
-          stringTunings: defaultStringTunings,
-        });
-        setSongId(undefined);
-        return;
-      }
-      setSong(songs[newSongId]);
-      setSongId(newSongId);
-    },
-    [song, songId, songs, setSongId]
-  );
+  useEffect(() => {
+    if (!songId || !songs?.[songId]) {
+      setSong(defaultSong);
+      return;
+    }
+    setSong(songs[songId]);
+  }, [songId, songs, setSong]);
 
   const setTitle = useCallback(
     (newTitle: string) => {
@@ -92,63 +82,72 @@ export function SongProvider({ children }: SongProviderProps) {
     },
     [setSong]
   );
+
   const setChordNames = useCallback(
-    (chordNames: string[]) => {
-      setSong((prev) => {
-        const newSong = { ...prev, chordNames };
-        for (let i = 0; i < chordNames.length; i++) {
-          if (i >= newSong.tabs.length) {
-            newSong.tabs.push({
-              chordName: chordNames[i],
-              manualStringNotes: {},
-            });
-          } else {
-            newSong.tabs[i].chordName = chordNames[i];
-          }
-        }
-        // Delete any chords that no longer exist
-        newSong.tabs = newSong.tabs.slice(0, chordNames.length);
-        return newSong;
-      });
-    },
+    (chordNames: string[]) => setSong((prev) => ({ ...prev, chordNames })),
     [setSong]
   );
+
+  useEffect(() => {
+    setSong((prev) => {
+      const newSong = { ...prev };
+      for (let i = 0; i < prev.chordNames.length; i++) {
+        if (i >= newSong.tabs.length) {
+          newSong.tabs.push({
+            chordName: prev.chordNames[i],
+            manualStringNotes: {},
+          });
+        } else {
+          newSong.tabs[i].chordName = prev.chordNames[i];
+        }
+      }
+      // Delete any chords that no longer exist
+      newSong.tabs = newSong.tabs.slice(0, prev.chordNames.length);
+      return newSong;
+    });
+  }, [song.chordNames]);
+
   const setSongStartingFretNum = useCallback(
     (startingFretNum: number) =>
       setSong((prev) => ({ ...prev, startingFretNum })),
     [setSong]
   );
+
   const setSongFretCount = useCallback(
     (fretCount: number) => setSong((prev) => ({ ...prev, fretCount })),
     [setSong]
   );
+
   const setSongStringTunings = useCallback(
     (stringTunings: NoteLiteral[]) =>
       setSong((prev) => ({ ...prev, stringTunings })),
     [setSong]
   );
+
   const saveSong = useCallback(
     async (updates: Partial<TSong>) => {
       const newSong = { ...song, ...updates };
-      setSong(newSong);
       const songJson = JSON.stringify(newSong);
-      let response;
+      let response: StoreResponse & { songId?: string };
       if (songId) {
         response = await songStore.updateSong(songId, songJson);
       } else {
         response = await songStore.createSong(songJson);
       }
       refreshSongs();
+      if (response.songId) setSongId(response.songId);
       return response;
     },
     [song, songId, setSong, refreshSongs]
   );
+
   const deleteCurrentSong = useCallback(async () => {
     if (!songId) throw new Error();
     let response = await songStore.deleteSong(songId);
     refreshSongs();
     return response;
   }, [song, songId]);
+
   const updateTabByKey = useCallback(
     (key: number, changes: Partial<TTab>) => {
       setSong((prev) => {
@@ -163,16 +162,12 @@ export function SongProvider({ children }: SongProviderProps) {
     [setSong]
   );
 
-  useEffect(() => {
-    if (!songId) setChordNames([""]);
-  }, [songId]);
-
   return (
     <SongContext.Provider
       value={{
         song,
         songId,
-        selectSong,
+        selectSong: setSongId,
         setTitle,
         setChordNames,
         updateTabByKey,

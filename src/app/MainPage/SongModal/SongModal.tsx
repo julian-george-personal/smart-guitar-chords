@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccountData } from "../../context/account-context";
 import SaveSongPage from "./SaveSongPage";
 import Modal, { PageInfo } from "../Modal";
@@ -20,6 +20,10 @@ export default function SongModal({ isOpen, closeModal }: SongModalProps) {
     SongModalPages.Save
   );
   const [activePageInfo, setActivePageInfo] = useState<PageInfo>();
+  const onFinished = useCallback(() => {
+    setActivePage(SongModalPages.Save);
+    closeModal();
+  }, [setActivePage, closeModal]);
   useEffect(() => {
     switch (activePage) {
       case SongModalPages.Save:
@@ -27,7 +31,7 @@ export default function SongModal({ isOpen, closeModal }: SongModalProps) {
           title: "Save Song",
           pageComponent: (
             <SaveSongPage
-              onFinished={closeModal}
+              onFinished={onFinished}
               onDelete={() => setActivePage(SongModalPages.ConfirmDeletion)}
             />
           ),
@@ -36,19 +40,17 @@ export default function SongModal({ isOpen, closeModal }: SongModalProps) {
       case SongModalPages.ConfirmDeletion:
         setActivePageInfo({
           title: "Confirm Deletion",
-          pageComponent: (
-            <ConfirmSongDeletionPage
-              onFinished={() => setActivePage(SongModalPages.Save)}
-            />
-          ),
+          pageComponent: <ConfirmSongDeletionPage onFinished={onFinished} />,
         });
+        break;
     }
   }, [activePage, setActivePageInfo]);
   return (
     <>
       <Modal
         isOpen={isOpen}
-        closeModal={closeModal}
+        closeModal={onFinished}
+        title={activePageInfo?.title}
         onBack={
           activePage == SongModalPages.ConfirmDeletion
             ? () => setActivePage(SongModalPages.Save)

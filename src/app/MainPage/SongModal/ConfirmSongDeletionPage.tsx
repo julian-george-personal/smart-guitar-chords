@@ -8,9 +8,10 @@ interface ConfirmSongDeletionPageProps {
 export default function ConfirmSongDeletionPage({
   onFinished,
 }: ConfirmSongDeletionPageProps) {
-  const { deleteCurrentSong } = useSongData();
+  const { deleteCurrentSong, selectSong } = useSongData();
   const confirmDeletion = useCallback(async () => {
     await deleteCurrentSong();
+    selectSong("");
     onFinished();
   }, [deleteCurrentSong, onFinished]);
   return (
@@ -22,7 +23,9 @@ export default function ConfirmSongDeletionPage({
       >
         Confirm Deletion
       </button>
-      <button onClick={onFinished}>Cancel</button>
+      <button className="w-full p-1" onClick={onFinished}>
+        Cancel
+      </button>
     </>
   );
 }

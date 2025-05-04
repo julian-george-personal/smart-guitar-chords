@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccountData } from "../../context/account-context";
 import SignUpPage from "./SignUpPage";
 import LoginPage from "./LoginPage";
@@ -37,6 +37,11 @@ export default function AccountModal({
     else setActivePage(AccountModalPages.Login);
   }, [account, recoverPasswordToken]);
 
+  const onFinished = useCallback(() => {
+    setActivePage(AccountModalPages.Login);
+    closeModal();
+  }, [setActivePage, closeModal]);
+
   useEffect(() => {
     switch (activePage) {
       case AccountModalPages.Account:
@@ -48,14 +53,20 @@ export default function AccountModal({
       case AccountModalPages.Login:
         setActivePageInfo({
           pageComponent: (
-            <LoginPage onFinished={closeModal} setActiveForm={setActivePage} />
+            <LoginPage
+              onFinished={onFinished}
+              onForgotPassword={() =>
+                setActivePage(AccountModalPages.RecoverPassword)
+              }
+              onSignUp={() => setActivePage(AccountModalPages.SignUp)}
+            />
           ),
           title: "Log In",
         });
         break;
       case AccountModalPages.SignUp:
         setActivePageInfo({
-          pageComponent: <SignUpPage onFinished={closeModal} />,
+          pageComponent: <SignUpPage onFinished={onFinished} />,
           title: "Sign Up",
           backText: "Back to Login",
           backCallback: () => setActivePage(AccountModalPages.Login),
@@ -63,7 +74,7 @@ export default function AccountModal({
         break;
       case AccountModalPages.RecoverPassword:
         setActivePageInfo({
-          pageComponent: <RecoverPasswordPage onFinished={closeModal} />,
+          pageComponent: <RecoverPasswordPage onFinished={onFinished} />,
           title: "Recover Password",
           backText: "Back to Login",
           backCallback: () => setActivePage(AccountModalPages.Login),
@@ -80,8 +91,11 @@ export default function AccountModal({
   if (!activePageInfo) return null;
   return (
     <>
-      <Modal isOpen={isOpen} closeModal={closeModal}>
-        <div className="text-xl w-full py-2">{activePageInfo.title}</div>
+      <Modal
+        isOpen={isOpen}
+        closeModal={onFinished}
+        title={activePageInfo.title}
+      >
         {activePageInfo?.pageComponent}
       </Modal>
     </>

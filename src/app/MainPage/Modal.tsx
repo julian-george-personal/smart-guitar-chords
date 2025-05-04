@@ -13,6 +13,7 @@ interface ModalProps {
   isOpen: boolean;
   closeModal: () => void;
   onBack?: () => void;
+  title?: string;
   children: ReactNode;
 }
 
@@ -20,6 +21,7 @@ export default function Modal({
   isOpen,
   closeModal,
   onBack,
+  title,
   children,
 }: ModalProps) {
   return (
@@ -55,7 +57,10 @@ export default function Modal({
             <RxCross1 />
           </div>
         </header>
-        <div className="w-full max-w-lg">{children}</div>
+        <div className="w-full max-w-lg">
+          {title && <div className="text-xl w-full py-2">{title}</div>}
+          {children}
+        </div>
       </div>
     </ReactModal>
   );

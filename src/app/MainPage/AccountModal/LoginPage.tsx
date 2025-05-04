@@ -1,12 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Dispatch, SetStateAction, useCallback } from "react";
-import { AccountModalPages } from "./AccountModal";
+import { useCallback } from "react";
 import { useAccountData } from "../../context/account-context";
 
 interface LoginPageProps {
-  setActiveForm: Dispatch<SetStateAction<AccountModalPages>>;
+  onSignUp: () => void;
+  onForgotPassword: () => void;
   onFinished: () => void;
 }
 
@@ -23,7 +23,8 @@ const validationSchema = z.object({
 });
 
 export default function LoginPage({
-  setActiveForm,
+  onSignUp,
+  onForgotPassword,
   onFinished,
 }: LoginPageProps) {
   const { login } = useAccountData();
@@ -82,16 +83,10 @@ export default function LoginPage({
           Login
         </button>
       </form>
-      <button
-        onClick={() => setActiveForm(AccountModalPages.SignUp)}
-        className="p-2 w-full"
-      >
+      <button onClick={onSignUp} className="p-2 w-full">
         Sign Up
       </button>
-      <button
-        onClick={() => setActiveForm(AccountModalPages.RecoverPassword)}
-        className="p-2 w-full"
-      >
+      <button onClick={onForgotPassword} className="p-2 w-full">
         Forgot Password?
       </button>
     </>
