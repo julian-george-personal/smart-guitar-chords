@@ -81,9 +81,9 @@ export function getChordNameFromNotes(
   notes: NoteLiteral[],
   inputtedChordName: string | null
 ) {
-  if (!inputtedChordName) return null;
-  const chord = Chord.get(inputtedChordName);
   const detectedChords = Chord.detect(notes as string[]);
+  if (!inputtedChordName) return detectedChords[0];
+  const chord = Chord.get(inputtedChordName);
   return (
     detectedChords.filter(
       (chordName) => chordName.indexOf(chord?.tonic || "X") == 0
