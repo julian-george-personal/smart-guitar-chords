@@ -7,7 +7,7 @@ export async function createSong(
   song: Omit<TSong, "songId">
 ) {
   const songId = randomUUIDv7().replaceAll("-", "").slice(0, songIdLength);
-  return await songStore.putSong(username, { ...song, songId });
+  return (await songStore.putSong(username, { ...song, songId }, true))?.songId;
 }
 
 export async function updateSong(username: string, song: TSong) {

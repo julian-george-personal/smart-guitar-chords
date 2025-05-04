@@ -21,10 +21,30 @@ export enum SongStatus {
 const maxJsonBytes = 2000;
 
 export enum SongErrors {
-  SongJsonInvalidFormat = "Valid JSONified song data is required",
+  SongJsonInvalidFormat = "Song data must be valid JSON with all required fields",
   SongJsonTooLong = `JSONified song data must be ${maxJsonBytes} or less`,
   SongIdInvalidFormat = "A song ID is required",
   SongIdInvalidLength = `A song ID's length must be ${songIdLength}`,
+}
+
+function validateSongJson(songJson: string) {
+  const song = JSON.parse(songJson);
+  const requiredFields = new Set([
+    "tabs",
+    "title",
+    "fretCount",
+    "startingFretNum",
+    "stringTunings",
+    "chordNames",
+  ]);
+  const songFields = new Set(Object.keys(song));
+  if (songFields.intersection(requiredFields).size != requiredFields.size) {
+    throw new Error("Song data doesn't have the required set of fields");
+  }
+  if (song.title.length == 0) {
+    throw new Error("Song title can't be empty");
+  }
+  return songJson;
 }
 
 const songSchema = z.object({
@@ -34,7 +54,7 @@ const songSchema = z.object({
     .transform((str, ctx) => {
       // TODO: add validation here that the JSON has all the required song properties (title, tab, etc)
       try {
-        return JSON.parse(str);
+        validateSongJson(str);
       } catch (e) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -71,18 +91,22 @@ const createSongSchema = songSchema.omit({ songId: true });
 export async function createSong(
   request: TCreateSongRequest,
   username: string
-): Promise<[SongStatus, SongErrors | null]> {
+): Promise<[TCreateSongResponse | null, SongStatus, SongErrors | null]> {
   const { success, error } = createSongSchema.safeParse(request);
   if (!success) {
     if (!error) {
       throw new Error();
     }
-    return [SongStatus.InvalidRequest, error.errors[0].message as SongErrors];
+    return [
+      null,
+      SongStatus.InvalidRequest,
+      error.errors[0].message as SongErrors,
+    ];
   }
-  const result = await songRepository.createSong(username, {
+  const songId = await songRepository.createSong(username, {
     songJson: request.songJson,
   });
-  return [SongStatus.Success, null];
+  return [{ songId } as TCreateSongResponse, SongStatus.Success, null];
 }
 
 const deleteSongSchema = songSchema.omit({ songJson: true });

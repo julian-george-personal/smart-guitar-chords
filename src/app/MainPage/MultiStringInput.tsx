@@ -1,16 +1,10 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-  Dispatch,
-  SetStateAction,
-} from "react";
+import { useCallback } from "react";
 import { RxMinus, RxPlus } from "react-icons/rx";
 import { processInputString } from "../util";
 
 type MultiStringInputProps = {
   values: string[];
-  onChange: Dispatch<SetStateAction<string[]>>;
+  onChange: (values: string[]) => void;
 };
 
 export default function MultiStringInput({
@@ -18,20 +12,20 @@ export default function MultiStringInput({
   onChange,
 }: MultiStringInputProps) {
   const insertStringValue = useCallback(() => {
-    onChange((prev) => prev.concat([""]));
-  }, [onChange]);
+    onChange(values.concat([""]));
+  }, [onChange, values]);
   const updateStringValue = useCallback(
     (stringIdx: number, newValue: string) =>
-      onChange((prev) =>
-        prev.map((prevValue, i) =>
+      onChange(
+        values.map((prevValue, i) =>
           i == stringIdx ? processInputString(newValue) : prevValue
         )
       ),
-    [onChange]
+    [onChange, values]
   );
   const deleteString = useCallback(
-    (stringIdx: number) => onChange((prev) => prev.toSpliced(stringIdx, 1)),
-    [onChange]
+    (stringIdx: number) => onChange(values.toSpliced(stringIdx, 1)),
+    [onChange, values]
   );
   return (
     <div className="flex flex-row py-1 gap-2 items-center max-w-[32rem] flex-wrap">

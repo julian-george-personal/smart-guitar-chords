@@ -33,10 +33,13 @@ const songRoutes: TRoutes = {
       const authorizedUsername = verifyAuthorization(req);
       if (!authorizedUsername) return Response.json(null, { status: 401 });
       const request = (await req.json()) as TCreateSongRequest;
-      const [status, error] = await createSong(request, authorizedUsername);
+      const [response, status, error] = await createSong(
+        request,
+        authorizedUsername
+      );
       switch (status) {
         case SongStatus.Success:
-          return Response.json(null, { status: 200 });
+          return Response.json(response, { status: 200 });
         case SongStatus.InvalidRequest:
           return Response.json({ error }, { status: 400 });
         default:

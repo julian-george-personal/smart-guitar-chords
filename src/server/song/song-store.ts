@@ -8,8 +8,18 @@ export type TSong = {
 
 export const songIdLength = 8;
 
-export async function putSong(username: string, song: TSong) {
-  return await dynamoClient.put(PkType.Song, username, song, song.songId);
+export async function putSong(
+  username: string,
+  song: TSong,
+  returnItem: boolean = false
+) {
+  return (await dynamoClient.put(
+    PkType.Song,
+    username,
+    song,
+    song.songId,
+    returnItem
+  )) as TSong | null;
 }
 
 export async function deleteSong(username: string, songId: string) {

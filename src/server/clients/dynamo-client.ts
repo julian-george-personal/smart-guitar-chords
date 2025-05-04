@@ -3,6 +3,7 @@ import {
   QueryCommand,
   DeleteItemCommand,
   AttributeValue,
+  ReturnValue,
 } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
@@ -11,6 +12,7 @@ import {
   UpdateCommand,
   PutCommandInput,
   UpdateCommandInput,
+  GetCommandInput,
 } from "@aws-sdk/lib-dynamodb";
 import config from "../config";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
@@ -71,13 +73,25 @@ export async function put(
   pkType: PkType,
   key: string,
   item: object,
-  itemId?: string
+  itemId?: string,
+  returnItem: boolean = false
 ) {
+  const PK = `${pkType}#${key}`;
+  const SK = itemId ?? defaultSk;
   const commandObj: PutCommandInput = {
     TableName: config.dynamoAccountTableName,
-    Item: { PK: `${pkType}#${key}`, SK: itemId ?? defaultSk, ...item },
+    Item: { PK, SK, ...item },
   };
-  return (await db.send(new PutCommand(commandObj))).Attributes;
+  await db.send(new PutCommand(commandObj));
+  if (returnItem) {
+    const getCommandObj: GetCommandInput = {
+      TableName: config.dynamoAccountTableName,
+      Key: { PK, SK },
+    };
+    const item = await db.send(new GetCommand(getCommandObj));
+    return filterItem(item.Item);
+  }
+  return;
 }
 
 export async function update(
@@ -106,12 +120,15 @@ export async function update(
 }
 
 export async function remove(pkType: PkType, key: string, itemId?: string) {
-  const idSuffix = itemId ? `#${itemId}` : "";
+  console.log({
+    PK: { S: `${pkType}#${key}` },
+    SK: { S: itemId ?? defaultSk },
+  });
   return await db.send(
     new DeleteItemCommand({
       TableName: config.dynamoAccountTableName,
       Key: {
-        PK: { S: `${pkType}#${key}${idSuffix}` },
+        PK: { S: `${pkType}#${key}` },
         SK: { S: itemId ?? defaultSk },
       },
     })

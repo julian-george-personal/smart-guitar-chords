@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import { AiOutlineSave } from "react-icons/ai";
-import { RxPencil1 } from "react-icons/rx";
 import Tab from "./Tab";
 import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
@@ -13,9 +12,14 @@ import SongModal from "./SongModal/SongModal";
 const MemoizedTab = memo(Tab);
 
 export default function MainPage() {
-  const { account, recoverPasswordToken } = useAccountData();
-  const { song, setChordNames, setSongStringTunings, setSongStartingFretNum } =
-    useSongData();
+  const { account, recoverPasswordToken, songs } = useAccountData();
+  const {
+    song,
+    setChordNames,
+    setSongStringTunings,
+    setSongStartingFretNum,
+    selectSong,
+  } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
   useEffect(() => {
@@ -96,11 +100,21 @@ export default function MainPage() {
         <div className="centered-col w-[80%]">
           <div className="centered-row justify-between w-full px-1 py-1">
             <div className="centered-row gap-2">
-              {song?.title && (
-                <>
-                  <div>{song.title}</div>
-                  <RxPencil1 />
-                </>
+              {Object.keys(songs).length > 0 && (
+                <select
+                  className="w-36 px-1 py-2 bg-white"
+                  onChange={(e) => {
+                    const songId = e.target.value;
+                    selectSong(songId);
+                  }}
+                >
+                  <option value={""}>Unsaved Song</option>
+                  {Object.entries(songs).map(([songId, song], i) => (
+                    <option key={i} value={songId}>
+                      {song.title}
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
             <AiOutlineSave

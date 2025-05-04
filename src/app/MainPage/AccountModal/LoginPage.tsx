@@ -2,11 +2,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Dispatch, SetStateAction, useCallback } from "react";
-import { AccountModalForms } from "./AccountModal";
+import { AccountModalPages } from "./AccountModal";
 import { useAccountData } from "../../context/account-context";
 
 interface LoginPageProps {
-  setActiveForm: Dispatch<SetStateAction<AccountModalForms>>;
+  setActiveForm: Dispatch<SetStateAction<AccountModalPages>>;
   onFinished: () => void;
 }
 
@@ -83,13 +83,13 @@ export default function LoginPage({
         </button>
       </form>
       <button
-        onClick={() => setActiveForm(AccountModalForms.SignUp)}
+        onClick={() => setActiveForm(AccountModalPages.SignUp)}
         className="p-2 w-full"
       >
         Sign Up
       </button>
       <button
-        onClick={() => setActiveForm(AccountModalForms.RecoverPassword)}
+        onClick={() => setActiveForm(AccountModalPages.RecoverPassword)}
         className="p-2 w-full"
       >
         Forgot Password?

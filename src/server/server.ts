@@ -63,18 +63,7 @@ Bun.serve({
     }
   },
   websocket: {
-    message(ws, message) {
-      if (config.environment == Environment.Local) {
-        const destWs = new WebSocket("wss://localhost:5173");
-        destWs.onopen = () => {
-          destWs.send(message);
-        };
-
-        destWs.onmessage = (event) => {
-          ws.send(event.data.toString());
-        };
-      }
-    },
+    message(ws, message) {},
   },
   port,
 });

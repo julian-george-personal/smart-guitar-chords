@@ -1,48 +1,63 @@
-import Modal from "react-modal";
-import { RxCross1, RxArrowLeft } from "react-icons/rx";
+import { useState, useEffect } from "react";
 import { useAccountData } from "../../context/account-context";
-import SaveSongPage from "./SongTitlePage";
+import SaveSongPage from "./SaveSongPage";
+import Modal, { PageInfo } from "../Modal";
+import ConfirmSongDeletionPage from "./ConfirmSongDeletionPage";
 
 interface SongModalProps {
   isOpen: boolean;
   closeModal: () => void;
 }
 
+export enum SongModalPages {
+  Save,
+  ConfirmDeletion,
+}
+
 export default function SongModal({ isOpen, closeModal }: SongModalProps) {
   const { account } = useAccountData();
+  const [activePage, setActivePage] = useState<SongModalPages>(
+    SongModalPages.Save
+  );
+  const [activePageInfo, setActivePageInfo] = useState<PageInfo>();
+  useEffect(() => {
+    switch (activePage) {
+      case SongModalPages.Save:
+        setActivePageInfo({
+          title: "Save Song",
+          pageComponent: (
+            <SaveSongPage
+              onFinished={closeModal}
+              onDelete={() => setActivePage(SongModalPages.ConfirmDeletion)}
+            />
+          ),
+        });
+        break;
+      case SongModalPages.ConfirmDeletion:
+        setActivePageInfo({
+          title: "Confirm Deletion",
+          pageComponent: (
+            <ConfirmSongDeletionPage
+              onFinished={() => setActivePage(SongModalPages.Save)}
+            />
+          ),
+        });
+    }
+  }, [activePage, setActivePageInfo]);
   return (
     <>
-      {/*@ts-ignore */}
       <Modal
         isOpen={isOpen}
-        onRequestClose={closeModal}
-        style={{
-          overlay: {
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          },
-          content: {
-            width: "auto",
-            position: "relative",
-          },
-        }}
+        closeModal={closeModal}
+        onBack={
+          activePage == SongModalPages.ConfirmDeletion
+            ? () => setActivePage(SongModalPages.Save)
+            : undefined
+        }
       >
-        <div className="centered-col w-[48rem]">
-          <header className="flex flex-row justify-between w-full">
-            <div></div>
-            <div className="cursor-pointer" onClick={closeModal}>
-              <RxCross1 />
-            </div>
-          </header>
-          <div className="w-full max-w-lg">
-            {account ? (
-              <SaveSongPage onFinished={closeModal} />
-            ) : (
-              "You must have an account to save."
-            )}
-          </div>
-        </div>
+        {account
+          ? activePageInfo?.pageComponent
+          : "You must have an account to save."}
       </Modal>
     </>
   );

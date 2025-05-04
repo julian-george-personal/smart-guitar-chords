@@ -10,33 +10,40 @@ type TSaveSongFormFields = {
 
 interface SaveSongPageProps {
   onFinished: () => void;
+  onDelete: () => void;
 }
 
 const validationSchema = z.object({
   title: z.string({ message: "Title is required" }),
 });
 
-export default function SaveSongPage({ onFinished }: SaveSongPageProps) {
-  const { song, setTitle, saveSong } = useSongData();
+export default function SaveSongPage({
+  onFinished,
+  onDelete,
+}: SaveSongPageProps) {
+  const { song, songId, setTitle, saveSong, selectSong } = useSongData();
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
   } = useForm({
+    defaultValues: {
+      title: song.title ?? "",
+    },
     resolver: zodResolver(validationSchema),
   });
   const onSubmit = useCallback(
     async (data: TSaveSongFormFields) => {
-      setTitle(data.title);
-      const response = await saveSong();
+      const response = await saveSong({ title: data.title });
+      if (response?.songId) selectSong(response.songId);
       if (response.isError) {
         setError("root", { type: "server", message: response.errorMessage });
       } else {
         onFinished();
       }
     },
-    [setTitle, saveSong]
+    [setTitle, saveSong, selectSong]
   );
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -52,8 +59,16 @@ export default function SaveSongPage({ onFinished }: SaveSongPageProps) {
         />
         {errors.title && <p className="text-red-500">{errors.title.message}</p>}
         <button type="submit" className="p-2 w-full">
-          {song.title ? "Save Changes" : "Save Song"}
+          {songId ? "Save Changes" : "Save Song"}
         </button>
+        {songId && (
+          <button
+            className="bg-red-500 w-full text-white p-1"
+            onClick={onDelete}
+          >
+            Delete Song
+          </button>
+        )}
       </div>
     </form>
   );

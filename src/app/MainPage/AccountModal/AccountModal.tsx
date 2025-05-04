@@ -1,19 +1,18 @@
-import { useState, ReactNode, useEffect } from "react";
-import Modal from "react-modal";
-import { RxCross1, RxArrowLeft } from "react-icons/rx";
+import { useState, useEffect } from "react";
 import { useAccountData } from "../../context/account-context";
 import SignUpPage from "./SignUpPage";
 import LoginPage from "./LoginPage";
 import RecoverPasswordPage from "./RecoverPasswordPage";
 import AccountPage from "./AccountPage";
 import SetNewPasswordPage from "./SetNewPasswordPage";
+import Modal, { PageInfo } from "../Modal";
 
 interface AccountModalProps {
   isOpen: boolean;
   closeModal: () => void;
 }
 
-export enum AccountModalForms {
+export enum AccountModalPages {
   SignUp,
   Login,
   RecoverPassword,
@@ -21,111 +20,69 @@ export enum AccountModalForms {
   SetNewPassword,
 }
 
-type PageInfo = {
-  pageComponent: ReactNode;
-  title: string;
-  backText?: string;
-  backCallback?: () => void;
-};
-
 export default function AccountModal({
   isOpen,
   closeModal,
 }: AccountModalProps) {
   const { account, recoverPasswordToken } = useAccountData();
-  const [activeForm, setActiveForm] = useState<AccountModalForms>(
-    AccountModalForms.Login
+  // TODO this page behavior can be generalized across modals
+  const [activePage, setActivePage] = useState<AccountModalPages>(
+    AccountModalPages.Login
   );
-  const [currentPageInfo, setCurrentPageInfo] = useState<PageInfo>();
+  const [activePageInfo, setActivePageInfo] = useState<PageInfo>();
   useEffect(() => {
-    if (account != null) setActiveForm(AccountModalForms.Account);
+    if (account != null) setActivePage(AccountModalPages.Account);
     else if (recoverPasswordToken != null)
-      setActiveForm(AccountModalForms.SetNewPassword);
-    else setActiveForm(AccountModalForms.Login);
+      setActivePage(AccountModalPages.SetNewPassword);
+    else setActivePage(AccountModalPages.Login);
   }, [account, recoverPasswordToken]);
 
   useEffect(() => {
-    switch (activeForm) {
-      case AccountModalForms.Account:
-        setCurrentPageInfo({
+    switch (activePage) {
+      case AccountModalPages.Account:
+        setActivePageInfo({
           pageComponent: <AccountPage />,
           title: "Account",
         });
         break;
-      case AccountModalForms.Login:
-        setCurrentPageInfo({
+      case AccountModalPages.Login:
+        setActivePageInfo({
           pageComponent: (
-            <LoginPage onFinished={closeModal} setActiveForm={setActiveForm} />
+            <LoginPage onFinished={closeModal} setActiveForm={setActivePage} />
           ),
           title: "Log In",
         });
         break;
-      case AccountModalForms.SignUp:
-        setCurrentPageInfo({
+      case AccountModalPages.SignUp:
+        setActivePageInfo({
           pageComponent: <SignUpPage onFinished={closeModal} />,
           title: "Sign Up",
           backText: "Back to Login",
-          backCallback: () => setActiveForm(AccountModalForms.Login),
+          backCallback: () => setActivePage(AccountModalPages.Login),
         });
         break;
-      case AccountModalForms.RecoverPassword:
-        setCurrentPageInfo({
+      case AccountModalPages.RecoverPassword:
+        setActivePageInfo({
           pageComponent: <RecoverPasswordPage onFinished={closeModal} />,
           title: "Recover Password",
           backText: "Back to Login",
-          backCallback: () => setActiveForm(AccountModalForms.Login),
+          backCallback: () => setActivePage(AccountModalPages.Login),
         });
         break;
-      case AccountModalForms.SetNewPassword:
-        setCurrentPageInfo({
+      case AccountModalPages.SetNewPassword:
+        setActivePageInfo({
           pageComponent: <SetNewPasswordPage />,
           title: "Set new password",
         });
         break;
     }
-  }, [activeForm]);
-  if (!currentPageInfo) return null;
+  }, [activePage, setActivePageInfo]);
+  if (!activePageInfo) return null;
   return (
     <>
-      {/*@ts-ignore */}
-      <Modal
-        isOpen={isOpen}
-        onRequestClose={closeModal}
-        style={{
-          overlay: {
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          },
-          content: {
-            width: "auto",
-            position: "relative",
-          },
-        }}
-      >
-        <div className="centered-col w-[48rem]">
-          <header className="flex flex-row justify-between w-full">
-            <div>
-              {currentPageInfo.backCallback && (
-                <div
-                  className="cursor-pointer flex flex-row items-center gap-1"
-                  onClick={currentPageInfo.backCallback}
-                >
-                  <RxArrowLeft />
-                  {currentPageInfo.backText}
-                </div>
-              )}
-            </div>
-            <div className="cursor-pointer" onClick={closeModal}>
-              <RxCross1 />
-            </div>
-          </header>
-
-          <div className="w-full max-w-lg">
-            <div className="text-xl w-full py-2">{currentPageInfo.title}</div>
-            {currentPageInfo?.pageComponent}
-          </div>
-        </div>
+      <Modal isOpen={isOpen} closeModal={closeModal}>
+        <div className="text-xl w-full py-2">{activePageInfo.title}</div>
+        {activePageInfo?.pageComponent}
       </Modal>
     </>
   );

@@ -13,19 +13,23 @@ type GetSongsResponse = {
   songs: SongData[] | null;
 };
 
-type UnparsedSongData = { songId: string; song: string };
+type CreateSongResponse = {
+  songId: string | null;
+};
+
+type UnparsedSongData = { songId: string; songJson: string };
 
 export type SongData = { songId: string; song: TSong };
 
 export async function getSongs(): Promise<GetSongsResponse & StoreResponse> {
   try {
-    const result = await axios.get<UnparsedSongData[]>(
+    const result = await axios.get<{ songs: UnparsedSongData[] }>(
       songUrl + "/user",
       authHeaders
     );
-    const parsedResult = result.data.map((unparsedSongData) => ({
+    const parsedResult = result.data.songs.map((unparsedSongData) => ({
       songId: unparsedSongData.songId,
-      song: JSON.parse(unparsedSongData.song) as TSong,
+      song: JSON.parse(unparsedSongData.songJson) as TSong,
     }));
     return { songs: parsedResult, isError: false };
   } catch (e) {
@@ -37,12 +41,19 @@ export async function getSongs(): Promise<GetSongsResponse & StoreResponse> {
   }
 }
 
-export async function createSong(songJson: string): Promise<StoreResponse> {
+export async function createSong(
+  songJson: string
+): Promise<CreateSongResponse & StoreResponse> {
   try {
-    await axios.post(songUrl + "/create", { songJson }, authHeaders);
-    return { isError: false };
+    const result = await axios.post<{ songJson: string }, CreateSongResponse>(
+      songUrl + "/create",
+      { songJson },
+      authHeaders
+    );
+    return { songId: result.songId, isError: false };
   } catch (e) {
     return {
+      songId: null,
       isError: true,
       errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
     };
