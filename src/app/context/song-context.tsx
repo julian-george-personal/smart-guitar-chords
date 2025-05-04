@@ -234,8 +234,9 @@ export function useTabByKey(key: number) {
   const resetManualStringNote = useCallback(
     (stringIdx: number) => {
       updateTab((prev) => {
-        delete prev.manualStringNotes[stringIdx];
-        return prev;
+        const newManualStringNotes = { ...prev.manualStringNotes };
+        delete newManualStringNotes[stringIdx];
+        return { ...prev, manualStringNotes: newManualStringNotes };
       });
     },
     [updateTab]
