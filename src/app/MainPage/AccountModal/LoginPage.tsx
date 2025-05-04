@@ -1,12 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Dispatch, SetStateAction } from "react";
-import { AccountModalForms } from "./AccountModal";
+import { useCallback } from "react";
 import { useAccountData } from "../../context/account-context";
 
 interface LoginPageProps {
-  setActiveForm: Dispatch<SetStateAction<AccountModalForms>>;
+  onSignUp: () => void;
+  onForgotPassword: () => void;
   onFinished: () => void;
 }
 
@@ -23,7 +23,8 @@ const validationSchema = z.object({
 });
 
 export default function LoginPage({
-  setActiveForm,
+  onSignUp,
+  onForgotPassword,
   onFinished,
 }: LoginPageProps) {
   const { login } = useAccountData();
@@ -36,14 +37,14 @@ export default function LoginPage({
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = async (data: TLoginFormFields) => {
+  const onSubmit = useCallback(async (data: TLoginFormFields) => {
     const response = await login(data.username, data.password);
     if (response.isError) {
       setError("root", { type: "server", message: response.errorMessage });
     } else {
       onFinished();
     }
-  };
+  }, []);
 
   return (
     <>
@@ -82,16 +83,10 @@ export default function LoginPage({
           Login
         </button>
       </form>
-      <button
-        onClick={() => setActiveForm(AccountModalForms.SignUp)}
-        className="p-2 w-full"
-      >
+      <button onClick={onSignUp} className="p-2 w-full">
         Sign Up
       </button>
-      <button
-        onClick={() => setActiveForm(AccountModalForms.RecoverPassword)}
-        className="p-2 w-full"
-      >
+      <button onClick={onForgotPassword} className="p-2 w-full">
         Forgot Password?
       </button>
     </>

@@ -1,32 +1,35 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getNoteFromNumFrets, getNumFrets, ChordTab } from "../music_util";
+import { getNoteFromNumFrets, getNumFrets } from "../music_util";
 import {
   getChordNameFromNotes,
   getChordNotesPerString,
 } from "../chord_calculator";
-import { TabContext } from "../context/tab-context";
+import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
 import { NoteLiteral } from "tonal";
+import { useTabByKey } from "../context/song-context";
 
 interface TabProps {
-  fretCount: number;
-  chordName: string;
-  defaultStartingFretNum: number;
-  interactiveStartingFretNum: boolean;
-  stringTunings: string[];
+  tabKey: number;
 }
 
-export default function Tab({
-  fretCount,
-  chordName,
-  defaultStartingFretNum,
-  interactiveStartingFretNum,
-  stringTunings,
-}: TabProps) {
-  const [manualStringNotes, setManualStringNotes] = useState<ChordTab>({});
-  const [startingFretNum, setStartingFretNum] = useState(
-    defaultStartingFretNum
-  );
+export default function Tab({ tabKey }: TabProps) {
+  const {
+    tab,
+    setManualStringNote,
+    resetManualStringNote,
+    resetAllManualStringNotes,
+    setStartingFretNum,
+  } = useTabByKey(tabKey);
+  const {
+    stringTunings,
+    startingFretNum,
+    chordName,
+    fretCount,
+    manualStringNotes,
+  } = tab;
+  const [interactiveStartingFretNum, setInteractiveStartingFretNum] =
+    useState<boolean>(false);
   const startingFretNotes = useMemo(
     () =>
       stringTunings.map((baseNote) =>
@@ -38,7 +41,6 @@ export default function Tab({
     null
   );
   const [relativeFretNumToBar, setRelativeFretNumToBar] = useState<number>(0);
-  const stringCount = useMemo(() => stringTunings.length, [stringTunings]);
   const tabBaseNotes = useMemo(
     () =>
       stringTunings.map((tuning) =>
@@ -46,9 +48,6 @@ export default function Tab({
       ),
     [startingFretNum, stringTunings]
   );
-  useEffect(() => {
-    setStartingFretNum(defaultStartingFretNum);
-  }, [defaultStartingFretNum, setStartingFretNum]);
   useEffect(() => {
     const [newStringNotes, newRelativeFretNumToBar] = getChordNotesPerString(
       chordName,
@@ -66,29 +65,7 @@ export default function Tab({
     setRelativeFretNumToBar,
     fretCount,
   ]);
-  const setManualStringNote = useCallback(
-    (stringIdx: number, fretNum: number | null) => {
-      setManualStringNotes((prev) => {
-        const updatedNotes = { ...prev };
-        updatedNotes[stringIdx] =
-          fretNum == null
-            ? null
-            : getNoteFromNumFrets(startingFretNotes[stringIdx], fretNum);
-        return updatedNotes;
-      });
-    },
-    [setManualStringNotes, startingFretNotes]
-  );
-  const resetManualStringNote = useCallback(
-    (stringIdx: number) => {
-      setManualStringNotes((prev) => {
-        const updatedNotes = { ...prev };
-        delete updatedNotes[stringIdx];
-        return updatedNotes;
-      });
-    },
-    [setManualStringNotes]
-  );
+
   useEffect(() => {
     if (stringNotes == null) return;
     if (
@@ -106,9 +83,20 @@ export default function Tab({
     relativeFretNumToBar,
     setRelativeFretNumToBar,
   ]);
+  const setManualStringFretNum = useCallback(
+    (stringNum: number, newFretNum: number | null) => {
+      setManualStringNote(
+        stringNum,
+        newFretNum == null
+          ? null
+          : getNoteFromNumFrets(startingFretNotes[stringNum], newFretNum)
+      );
+    },
+    [setManualStringNote, startingFretNotes]
+  );
   if (stringNotes == null || stringTunings.length == 0) return null;
   return (
-    <TabContext.Provider value={{ fretCount, stringCount }}>
+    <TabProvider tabKey={tabKey}>
       <div className="centered-row aspect-square w-full max-w-80">
         {interactiveStartingFretNum && (
           <div className="w-1/6">
@@ -137,7 +125,7 @@ export default function Tab({
                   currNote={stringNotes[i]}
                   key={i}
                   onFretChange={(newFretNum) => {
-                    setManualStringNote(i, newFretNum);
+                    setManualStringFretNum(i, newFretNum);
                   }}
                   interactive
                 />
@@ -174,7 +162,7 @@ export default function Tab({
                   }
                 : {}
             }
-            onClick={() => setManualStringNotes({})}
+            onClick={resetAllManualStringNotes}
           >
             {getChordNameFromNotes(
               stringNotes.filter((note) => note != null),
@@ -183,7 +171,7 @@ export default function Tab({
           </div>
         </div>
       </div>
-    </TabContext.Provider>
+    </TabProvider>
   );
 }
 

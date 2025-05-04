@@ -1,12 +1,28 @@
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
+import { AiOutlineSave } from "react-icons/ai";
 import Tab from "./Tab";
 import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
+import { useSongData } from "../context/song-context";
+import MultiStringInput from "./MultiStringInput";
+import { sanitizeNoteName } from "../music_util";
+import SongModal from "./SongModal/SongModal";
+
+const MemoizedTab = memo(Tab);
 
 export default function MainPage() {
-  const { account, recoverPasswordToken } = useAccountData();
+  const { account, recoverPasswordToken, songs } = useAccountData();
+  const {
+    song,
+    setChordNames,
+    setSongStringTunings,
+    setSongStartingFretNum,
+    selectSong,
+    songId,
+  } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
+  const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
   useEffect(() => {
     if (recoverPasswordToken != null) setIsAccountModalOpen(true);
   }, [recoverPasswordToken]);
@@ -16,26 +32,25 @@ export default function MainPage() {
   const closeAccountModal = useCallback(() => {
     setIsAccountModalOpen(false);
   }, [setIsAccountModalOpen]);
-  const [chordNames, setChordNames] = useState("C");
-  const [startingFretNum, setStartingFretNum] = useState(0);
-  const [stringTunings, setStringTunings] = useState([
-    "E",
-    "A",
-    "D",
-    "G",
-    "B",
-    "E",
-  ]);
+  const openSongModal = useCallback(() => {
+    setIsSongModalOpen(true);
+  }, [setIsSongModalOpen]);
+  const closeSongModal = useCallback(() => {
+    setIsSongModalOpen(false);
+  }, [setIsSongModalOpen]);
   return (
     <>
       <AccountModal
         isOpen={isAccountModalOpen}
         closeModal={closeAccountModal}
       />
-      <header className="bg-white px-6 py-2 flex flex-row items-center justify-items-stretch">
-        <div className="flex-1" />
-        <div className="flex-1 flex flex-row justify-center">
-          <div className="text-xl">Smart Guitar Chords</div>
+      <SongModal isOpen={isSongModalOpen} closeModal={closeSongModal} />
+      <header className="bg-white md:px-6 px-2 py-2 flex flex-row items-center justify-items-stretch">
+        <div className="md:flex-1" />
+        <div className="flex-1 flex flex-row md:justify-center">
+          <div className="md:text-xl sm:text-sm xs:text-xs">
+            Smart Guitar Chords
+          </div>
         </div>
         <div className="flex-1 flex flex-row justify-end">
           <div onClick={openAccountModal} className="cursor-pointer">
@@ -47,21 +62,13 @@ export default function MainPage() {
         className="font-sans min-h-screen centered-col gap-4 grow"
         id="main"
       >
-        <div className="centered-row gap-2">
-          <div className="flex flex-col basis-1/3">
-            <span className="text-sm">Chord Names</span>
-            <input
-              value={chordNames}
-              onChange={(newValue) => setChordNames(newValue.target.value)}
-              className="bg-neutral-100 w-full px-1 py-1 rounded-md"
-            />
-          </div>
-          <div className="flex flex-col basis-1/3">
+        <div className="centered-row gap-2 max-w-[80vw] flex-wrap">
+          <div className="flex flex-col basis-1/3 min-w-36">
             <span className="text-sm">Starting Fret Number</span>
             <input
-              value={startingFretNum}
+              value={song.startingFretNum}
               onChange={(newValue) => {
-                setStartingFretNum(
+                setSongStartingFretNum(
                   newValue.target.value != ""
                     ? Math.max(0, parseInt(newValue.target.value))
                     : 0
@@ -71,35 +78,64 @@ export default function MainPage() {
               className="bg-neutral-100 w-full px-1 py-1 rounded-md"
             />
           </div>
-          <div className="flex flex-col basis-1/3">
+          <div className="flex flex-col basis-1/3 min-w-36">
             <span className="text-sm">String Tunings</span>
             <input
-              value={stringTunings.join(",")}
+              value={song.stringTunings.join(",")}
               onChange={(newValue) => {
-                setStringTunings(
-                  newValue.target.value.split(",").map((x) => x.trim())
+                setSongStringTunings(
+                  newValue.target.value.split(",").map(sanitizeNoteName)
                 );
               }}
               className="bg-neutral-100 w-full px-1 py-1 rounded-md"
             />
           </div>
         </div>
-        <div
-          className="w-[80%] border-2 border-gray-300 border-solid rounded-md gap-8 p-8 grid justify-items-center"
-          style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))",
-          }}
-        >
-          {chordNames.split(",").map((chordName, i) => (
-            <Tab
-              fretCount={5}
-              chordName={chordName.trim()}
-              defaultStartingFretNum={startingFretNum}
-              interactiveStartingFretNum={false}
-              stringTunings={stringTunings}
-              key={i}
+        <div className="centered-row">
+          <div className="flex flex-col">
+            <span className="text-sm">Chord Names</span>
+            <MultiStringInput
+              onChange={setChordNames}
+              values={song.chordNames}
             />
-          ))}
+          </div>
+        </div>
+        <div className="centered-col w-[80%]">
+          <div className="centered-row justify-between w-full px-1 py-1">
+            <div className="centered-row gap-2">
+              {Object.keys(songs).length > 0 && (
+                <select
+                  className="w-36 px-1 py-2 bg-white"
+                  onChange={(e) => {
+                    const songId = e.target.value;
+                    selectSong(songId);
+                  }}
+                  value={songId}
+                >
+                  <option value={""}>Unsaved Song</option>
+                  {Object.entries(songs).map(([songId, song], i) => (
+                    <option key={i} value={songId}>
+                      {song.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+            <AiOutlineSave
+              className="text-gray-300 w-6 h-6 cursor-pointer"
+              onClick={openSongModal}
+            />
+          </div>
+          <div
+            className="w-full border-2 border-gray-300 border-solid rounded-md gap-8 p-8 grid justify-items-center"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(10rem, 1fr))",
+            }}
+          >
+            {song.tabs.map((_, i) => (
+              <MemoizedTab key={i} tabKey={i} />
+            ))}
+          </div>
         </div>
       </main>
       <ToastContainer />

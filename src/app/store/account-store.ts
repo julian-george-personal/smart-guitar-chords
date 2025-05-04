@@ -1,6 +1,10 @@
 import axios, { AxiosError } from "axios";
-import { StoreResponse, apiUrl, UnknownErrorMessage } from "./store";
-import { getCookie } from "../util";
+import {
+  StoreResponse,
+  apiUrl,
+  UnknownErrorMessage,
+  authHeaders,
+} from "./store";
 
 const accountUrl = apiUrl + "/account";
 
@@ -66,11 +70,11 @@ export async function getUser(): Promise<
   StoreResponse & Partial<LoginResponse>
 > {
   try {
-    var { data } = await axios.get<GetUserResponse>(accountUrl + "/get", {
-      headers: {
-        Authorization: `Bearer ${getCookie("auth")}`,
-      },
-    });
+    var { data } = await axios.get<GetUserResponse>(
+      accountUrl + "/get",
+      authHeaders
+    );
+    if (!data.username) throw new Error();
     return { username: data.username, email: data.email, isError: false };
   } catch (e) {
     return {

@@ -15,6 +15,8 @@ export type TLoginResponse = {
   token: string;
 };
 
+export type TGetAccountRequest = {};
+
 export type TGetAccountResponse = {
   username: string;
   email: string;

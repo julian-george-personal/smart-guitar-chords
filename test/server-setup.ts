@@ -14,17 +14,13 @@ console.log("Creating account table...");
 await db.send(
   new CreateTableCommand({
     TableName: config.dynamoAccountTableName,
-    KeySchema: [{ AttributeName: "username", KeyType: "HASH" }],
-    AttributeDefinitions: [
-      { AttributeName: "username", AttributeType: "S" },
-      { AttributeName: "email", AttributeType: "S" },
+    KeySchema: [
+      { AttributeName: "PK", KeyType: "HASH" },
+      { AttributeName: "SK", KeyType: "RANGE" },
     ],
-    GlobalSecondaryIndexes: [
-      {
-        IndexName: "EmailIndex",
-        KeySchema: [{ AttributeName: "email", KeyType: "HASH" }],
-        Projection: { ProjectionType: "ALL" },
-      },
+    AttributeDefinitions: [
+      { AttributeName: "PK", AttributeType: "S" },
+      { AttributeName: "SK", AttributeType: "S" },
     ],
     BillingMode: "PAY_PER_REQUEST",
   })

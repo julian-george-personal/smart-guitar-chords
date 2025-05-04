@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { toast } from "react-toastify";
 import { useAccountData } from "../../context/account-context";
+import { useCallback } from "react";
 
 type TSignUpFormFields = {
   username: string;
@@ -42,7 +43,7 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = async (data: TSignUpFormFields) => {
+  const onSubmit = useCallback(async (data: TSignUpFormFields) => {
     const response = await signUp(data.username, data.email, data.password);
     if (response.isError) {
       setError("root", { type: "server", message: response.errorMessage });
@@ -50,7 +51,7 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
       toast.success("Successfully created account. Log in to use it.");
       onFinished();
     }
-  };
+  }, []);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -41,3 +41,11 @@ export function fillInMutedStrings(stringNotes: ChordTab, numStrings: number) {
   }
   return stringNotes;
 }
+
+export function sanitizeChordName(chordString: string) {
+  return chordString.trim().replace(/[^a-zA-G0-9#//]/g, "");
+}
+
+export function sanitizeNoteName(noteString: string) {
+  return noteString.trim().replace(/[^A-G#b]/g, "");
+}

@@ -7,7 +7,9 @@ import {
   ReactNode,
 } from "react";
 import * as accountStore from "../store/account-store";
+import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
+import { TSong } from "./song-context";
 
 export type TAccount = {
   username: string;
@@ -16,6 +18,9 @@ export type TAccount = {
 
 export type TAccountContext = {
   account: TAccount | null;
+  songs: {
+    [songId: string]: TSong;
+  };
   login: (username: string, password: string) => Promise<StoreResponse>;
   logout: () => void;
   signUp: (
@@ -26,6 +31,7 @@ export type TAccountContext = {
   recoverPassword: (email: string) => Promise<StoreResponse>;
   recoverPasswordToken: string | null;
   setNewPassword: (newPassword: string) => Promise<StoreResponse>;
+  refreshSongs: () => void;
   loading: boolean;
 };
 
@@ -41,7 +47,23 @@ const recoverPasswordToken = new URLSearchParams(window.location.search).get(
 
 export function AccountProvider({ children }: AccountProviderProps) {
   const [account, setAccount] = useState<TAccount | null>(null);
+  const [songs, setSongs] = useState<{
+    [songId: string]: TSong;
+  }>({});
   const [loading, setLoading] = useState(false);
+
+  const refreshSongs = useCallback(() => {
+    songStore.getSongs().then((response) => {
+      if (!response.isError && response.songs) {
+        setSongs(
+          response.songs.reduce(
+            (prev, curr) => ({ ...prev, [curr.songId]: curr.song }),
+            {}
+          )
+        );
+      }
+    });
+  }, [setSongs, account]);
 
   useEffect(() => {
     accountStore.getUser().then((response) => {
@@ -54,6 +76,10 @@ export function AccountProvider({ children }: AccountProviderProps) {
       }
     });
   }, []);
+
+  useEffect(() => {
+    refreshSongs();
+  }, [refreshSongs]);
 
   const signUp = useCallback(
     async (
@@ -91,7 +117,8 @@ export function AccountProvider({ children }: AccountProviderProps) {
     await accountStore.logout();
     setLoading(false);
     setAccount(null);
-  }, [setAccount]);
+    setSongs({});
+  }, [setAccount, setLoading, setSongs]);
 
   const recoverPassword = useCallback(async (email: string) => {
     return await accountStore.recoverPassword(email);
@@ -106,6 +133,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
     <AccountContext.Provider
       value={{
         account,
+        songs,
         loading,
         signUp,
         login,
@@ -113,6 +141,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
         recoverPassword,
         recoverPasswordToken,
         setNewPassword,
+        refreshSongs,
       }}
     >
       {children}

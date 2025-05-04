@@ -1,25 +1,27 @@
 import { z } from "zod";
-import Bun from "bun";
 import {
   getAccountByEmail,
   getAccountByUsername,
   putNewAccount as putNewAccount,
   setAccountNewPassword,
-} from "./dynamo-client";
+} from "./account-repository";
 import {
   TCreateAccountRequest,
+  TGetAccountResponse,
   TLoginRequest,
   TLoginResponse,
   TRecoverPasswordRequest,
   TSetNewPasswordRequest,
-} from "./requests";
-import { generateToken, verifyToken } from "./auth-client";
-import { sendRecoverPasswordEmail } from "./email-client";
+} from "./account-requests";
+import { generateToken, verifyToken } from "../clients/auth-client";
+import { sendRecoverPasswordEmail } from "../clients/email-client";
+import { TAccountInfo } from "./accountinfo-store";
 
 export enum AccountStatus {
   Success,
   InvalidRequest,
-  InvalidToken,
+  NotFound,
+  Unauthorized,
   UnknownError,
 }
 
@@ -33,6 +35,7 @@ export enum AccountErrors {
   PasswordInvalidFormat = "PasswordInvalidFormat",
   PasswordTooShort = "PasswordTooShort",
   PasswordTooLong = "PasswordTooLong",
+  InvalidToken = "InvalidToken",
 }
 
 const accountSchema = z.object({
@@ -74,8 +77,20 @@ export async function signup(
   return [AccountStatus.Success, null];
 }
 
-async function getExistingUsers(username: string, email: string) {
-  const userByUsername = await getAccountByUsername(username);
+export async function getAccount(
+  username: string | null
+): Promise<[TGetAccountResponse | null, AccountStatus]> {
+  if (username == null) {
+    return [null, AccountStatus.InvalidRequest];
+  }
+  const accountInfo = await getAccountByUsername(username);
+  if (!accountInfo) {
+    return [null, AccountStatus.NotFound];
+  }
+  return [
+    { username: accountInfo.username, email: accountInfo.email },
+    AccountStatus.Success,
+  ];
 }
 
 export async function login(
@@ -84,7 +99,7 @@ export async function login(
   const { username, password } = request;
   // TODO: do a getAccountByUsernameAndHashedPassword and do the password filtering in the DB instead of pulling it in
   const user = await getAccountByUsername(username);
-  if (!user) return [null, AccountStatus.InvalidRequest];
+  if (!user) return [null, AccountStatus.NotFound];
   const isMatch = await Bun.password.verify(password, user.hashedPassword);
   if (!isMatch) return [null, AccountStatus.InvalidRequest];
   const token = generateToken({ username: user.username });
@@ -109,7 +124,7 @@ export async function recoverPassword(
   if (account != null) {
     const token = generateToken({
       username: account.username,
-      email: account.email,
+      email: request.email,
     });
     await sendRecoverPasswordEmail(request.email, token);
   }
@@ -130,7 +145,8 @@ export async function setNewPassword(
   const parsedToken = verifyToken<{ email: string; username: string }>(
     request.token
   );
-  if (!parsedToken) return [AccountStatus.InvalidToken, null];
+  if (!parsedToken)
+    return [AccountStatus.InvalidRequest, AccountErrors.InvalidToken];
   const hashedPassword = await Bun.password.hash(request.newPassword);
   await setAccountNewPassword(parsedToken.email, hashedPassword);
   return [AccountStatus.Success, null];
