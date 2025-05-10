@@ -9,7 +9,6 @@ export default function App() {
     <AccountProvider>
       <SongProvider>
         <MainPage />
-        <ToastContainer position="bottom-right" autoClose={2000} />
       </SongProvider>
     </AccountProvider>
   );

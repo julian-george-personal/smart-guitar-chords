@@ -25,7 +25,7 @@ export async function getSongs(): Promise<GetSongsResponse & StoreResponse> {
   try {
     const result = await axios.get<{ songs: UnparsedSongData[] }>(
       songUrl + "/user",
-      authHeaders
+      authHeaders()
     );
     const parsedResult = result.data.songs.map((unparsedSongData) => ({
       songId: unparsedSongData.songId,
@@ -48,7 +48,7 @@ export async function createSong(
     const result = await axios.post<
       { songJson: string },
       AxiosResponse<CreateSongResponse>
-    >(songUrl + "/create", { songJson }, authHeaders);
+    >(songUrl + "/create", { songJson }, authHeaders());
     return { songId: result.data.songId, isError: false };
   } catch (e) {
     return {
@@ -63,7 +63,11 @@ export async function updateSong(
   songJson: string
 ): Promise<StoreResponse> {
   try {
-    await axios.post(songUrl + "/update/" + songId, { songJson }, authHeaders);
+    await axios.post(
+      songUrl + "/update/" + songId,
+      { songJson },
+      authHeaders()
+    );
     return { isError: false };
   } catch (e) {
     return {
@@ -75,7 +79,7 @@ export async function updateSong(
 
 export async function deleteSong(songId: string): Promise<StoreResponse> {
   try {
-    await axios.delete(songUrl + "/delete/" + songId, authHeaders);
+    await axios.delete(songUrl + "/delete/" + songId, authHeaders());
     return { isError: false };
   } catch (e) {
     return {

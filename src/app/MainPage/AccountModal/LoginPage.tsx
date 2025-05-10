@@ -79,14 +79,14 @@ export default function LoginPage({
           )}
         </div>
 
-        <button type="submit" className="p-2 w-full">
+        <button type="submit" className="standard-button">
           Login
         </button>
       </form>
-      <button onClick={onSignUp} className="p-2 w-full">
+      <button onClick={onSignUp} className="standard-button">
         Sign Up
       </button>
-      <button onClick={onForgotPassword} className="p-2 w-full">
+      <button onClick={onForgotPassword} className="standard-button bg-white">
         Forgot Password?
       </button>
     </>

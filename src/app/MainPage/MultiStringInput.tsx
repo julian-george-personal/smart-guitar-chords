@@ -32,7 +32,7 @@ export default function MultiStringInput({
       {values.map((stringValue, i) => (
         <div
           key={i}
-          className="relative inline-block w-fit flex flex-row items-center bg-neutral-100 px-2 py-1 "
+          className="relative inline-block w-fit flex flex-row items-center standard-input"
         >
           <input
             className="w-16 bg-neutral-100"

@@ -38,10 +38,11 @@ export default function Modal({
         content: {
           width: "auto",
           position: "relative",
+          inset: "0",
         },
       }}
     >
-      <div className="centered-col w-[48rem]">
+      <div className="centered-col w-[48rem] max-w-[80vw]">
         <header className="flex flex-row justify-between w-full">
           <div>
             {onBack && (

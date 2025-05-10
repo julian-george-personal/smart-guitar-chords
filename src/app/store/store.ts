@@ -18,8 +18,8 @@ export type StoreResponse =
 
 export const apiUrl = `${window.location.protocol}//${window.location.host}/api`;
 
-export const authHeaders = {
+export const authHeaders = () => ({
   headers: {
     Authorization: `Bearer ${getCookie("auth")}`,
   },
-};
+});
