@@ -52,11 +52,11 @@ export default function MainPage() {
             Smart Guitar Chords
           </div>
         </div>
-        <div className="flex-1 flex flex-row justify-end items-center gap-1">
-          <div
-            onClick={openAccountModal}
-            className="cursor-pointer sm:block hidden"
-          >
+        <div
+          onClick={openAccountModal}
+          className="flex-1 flex flex-row justify-end items-center gap-1 cursor-pointer"
+        >
+          <div className="sm:block hidden">
             {account ? account.username : "Login"}
           </div>
           <AiOutlineUser className="sm:w-4 sm:h-4 w-8 h-8 stroke-4" />
