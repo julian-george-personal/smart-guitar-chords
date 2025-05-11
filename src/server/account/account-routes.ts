@@ -40,6 +40,11 @@ const accountRoutes: TRoutes = {
             { error },
             { status: 400, statusText: error?.toString() }
           );
+        case AccountStatus.Conflict:
+          return Response.json(
+            { error },
+            { status: 409, statusText: error?.toString() }
+          );
         default:
           return Response.json({}, { status: 500 });
       }

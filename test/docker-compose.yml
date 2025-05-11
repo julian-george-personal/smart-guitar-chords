@@ -19,11 +19,6 @@ services:
     depends_on:
       - dynamodb
 
-  ses:
-    image: kamranahmed/local-ses:latest
-    ports:
-      - "8282:8282"
-
   server:
     image: oven/bun:latest
     depends_on:
@@ -36,6 +31,8 @@ services:
       - ..:/app
       - node_modules_volume:/app/node_modules
     working_dir: /app
+    env_file:
+      - .env
     environment:
       - DYNAMO_USER_TABLE_NAME=smartguitarchords-accounts
       - DYNAMO_ENDPOINT=http://dynamodb:8000

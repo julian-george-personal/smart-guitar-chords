@@ -15,7 +15,6 @@ import {
 } from "./account-requests";
 import { generateToken, verifyToken } from "../clients/auth-client";
 import { sendRecoverPasswordEmail } from "../clients/email-client";
-import { TAccountInfo } from "./accountinfo-store";
 
 export enum AccountStatus {
   Success,
@@ -23,15 +22,18 @@ export enum AccountStatus {
   NotFound,
   Unauthorized,
   UnknownError,
+  Conflict,
 }
 
 export enum AccountErrors {
   UsernameInvalidFormat = "UsernameInvalidFormat",
   UsernameTooShort = "UsernameTooShort",
   UsernameTooLong = "UsernameTooLong",
+  UsernameTaken = "UsernameTaken",
   EmailInvalidFormat = "EmailInvalidFormat",
   EmailTooShort = "EmailTooShort",
   EmailTooLong = "EmailTooLong",
+  EmailTaken = "EmailTaken",
   PasswordInvalidFormat = "PasswordInvalidFormat",
   PasswordTooShort = "PasswordTooShort",
   PasswordTooLong = "PasswordTooLong",
@@ -69,6 +71,14 @@ export async function signup(
   }
 
   const { username, email, password } = request;
+
+  if (await getAccountByUsername(username)) {
+    return [AccountStatus.Conflict, AccountErrors.UsernameTaken];
+  }
+
+  if (await getAccountByEmail(email)) {
+    return [AccountStatus.Conflict, AccountErrors.EmailTaken];
+  }
 
   const hashedPassword = await Bun.password.hash(password);
 
