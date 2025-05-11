@@ -9,9 +9,12 @@ export type TConfig = {
   dynamoAccountTableName: string;
   region: string;
   dynamoEndpoint: string | undefined;
-  sesEndpoint: string | undefined;
   jwtSecret: string;
   domain: string;
+  sendgrid: {
+    apiKey: string;
+    recoverPasswordTemplateId: string;
+  };
 };
 
 const environment =
@@ -37,14 +40,29 @@ if (!domain) {
   throw new Error("No DOMAIN was found");
 }
 
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+if (!sendgridApiKey) {
+  throw new Error("No SENDGRID_API_KEY was found");
+}
+
+// TODO: it really sucks that I have to do this. twilio api designers are brain dead
+const sendgridRecoverPasswordTemplateId =
+  process.env.RECOVER_PASSWORD_TEMPLATE_ID;
+if (!sendgridRecoverPasswordTemplateId) {
+  throw new Error("No RECOVER_PASSWORD_TEMPLATE_ID was found");
+}
+
 const config: TConfig = {
   environment,
   port,
   dynamoAccountTableName,
   region: "us-east-1",
   dynamoEndpoint: process.env.DYNAMO_ENDPOINT,
-  sesEndpoint: process.env.SES_ENDPOINT,
   jwtSecret: jwtSecret,
   domain,
+  sendgrid: {
+    apiKey: sendgridApiKey,
+    recoverPasswordTemplateId: sendgridRecoverPasswordTemplateId,
+  },
 };
 export default config;
