@@ -18,6 +18,7 @@ export default function MainPage() {
     setChordNames,
     setSongStringTunings,
     setSongStartingFretNum,
+    setSongFretCount,
     selectSong,
     songId,
   } = useSongData();
@@ -67,20 +68,19 @@ export default function MainPage() {
         id="main"
       >
         <div className="centered-row gap-2 max-w-[80vw] flex-wrap">
-          <div className="flex flex-col basis-1/3 min-w-36">
+          <div className="flex flex-col min-w-16">
             <span className="text-sm">Starting Fret Number</span>
             <input
               value={song.startingFretNum}
               onChange={(newValue) => {
-                const parsedValue = parseInt(newValue.target.value);
-                setSongStartingFretNum(
-                  parsedValue ? Math.max(0, parsedValue) : 0
-                );
+                let parsedValue = parseInt(newValue.target.value);
+                if (isNaN(parsedValue)) parsedValue = 0;
+                if (parsedValue >= 0) setSongStartingFretNum(parsedValue);
               }}
               className="standard-input"
             />
           </div>
-          <div className="flex flex-col basis-1/3 min-w-36">
+          <div className="flex flex-col min-w-16">
             <span className="text-sm">String Tunings</span>
             <input
               value={song.stringTunings.join(",")}
@@ -88,6 +88,19 @@ export default function MainPage() {
                 setSongStringTunings(
                   newValue.target.value.split(",").map(sanitizeNoteName)
                 );
+              }}
+              className="standard-input"
+            />
+          </div>
+          <div className="flex flex-col min-w-16">
+            <span className="text-sm">Number of Frets</span>
+            <input
+              value={song.fretCount}
+              onChange={(newValue) => {
+                let parsedValue = parseInt(newValue.target.value);
+                if (isNaN(parsedValue)) parsedValue = 0;
+                if (parsedValue <= 12 && parsedValue >= 0)
+                  setSongFretCount(parsedValue);
               }}
               className="standard-input"
             />
