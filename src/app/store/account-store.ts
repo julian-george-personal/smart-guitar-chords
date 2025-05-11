@@ -72,7 +72,7 @@ export async function getUser(): Promise<
   try {
     var { data } = await axios.get<GetUserResponse>(
       accountUrl + "/get",
-      authHeaders
+      authHeaders()
     );
     if (!data.username) throw new Error();
     return { username: data.username, email: data.email, isError: false };

@@ -38,9 +38,9 @@ export default function AccountModal({
   }, [account, recoverPasswordToken]);
 
   const onFinished = useCallback(() => {
-    setActivePage(AccountModalPages.Login);
+    if (!account) setActivePage(AccountModalPages.Login);
     closeModal();
-  }, [setActivePage, closeModal]);
+  }, [setActivePage, closeModal, account]);
 
   useEffect(() => {
     switch (activePage) {

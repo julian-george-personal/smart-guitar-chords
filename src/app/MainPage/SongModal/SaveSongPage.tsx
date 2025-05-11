@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSongData } from "../../context/song-context";
+import { toast } from "react-toastify";
 import { useCallback } from "react";
+import { useSongData } from "../../context/song-context";
 
 type TSaveSongFormFields = {
   title: string;
@@ -39,6 +40,7 @@ export default function SaveSongPage({
       if (response.isError) {
         setError("root", { type: "server", message: response.errorMessage });
       } else {
+        if (!songId) toast.success("New song saved", {});
         onFinished();
       }
     },
@@ -60,13 +62,16 @@ export default function SaveSongPage({
           {errors.title && (
             <p className="text-red-500">{errors.title.message}</p>
           )}
-          <button type="submit" className="p-2 w-full">
+          <button type="submit" className="standard-button">
             {songId ? "Save Changes" : "Save Song"}
           </button>
         </div>
       </form>
       {songId && (
-        <button className="bg-red-500 w-full text-white p-1" onClick={onDelete}>
+        <button
+          className="bg-red-500 text-white standard-button"
+          onClick={onDelete}
+        >
           Delete Song
         </button>
       )}

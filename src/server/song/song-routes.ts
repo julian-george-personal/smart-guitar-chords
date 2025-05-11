@@ -22,7 +22,10 @@ const songRoutes: TRoutes = {
       const [songs, status] = await getSongsByUser(authorizedUsername);
       switch (status) {
         case SongStatus.Success:
-          return Response.json(songs, { status: 200 });
+          return Response.json(songs, {
+            status: 200,
+            headers: { "Cache-control": "no-store" },
+          });
         default:
           return Response.json(null, { status: 500 });
       }

@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
-import { AiOutlineSave } from "react-icons/ai";
+import { AiOutlineSave, AiOutlineUser } from "react-icons/ai";
 import Tab from "./Tab";
 import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
@@ -48,18 +48,22 @@ export default function MainPage() {
       <header className="bg-white md:px-6 px-2 py-2 flex flex-row items-center justify-items-stretch">
         <div className="md:flex-1" />
         <div className="flex-1 flex flex-row md:justify-center">
-          <div className="md:text-xl sm:text-sm xs:text-xs">
+          <div className="md:text-xl sm:text-sm sm:block hidden">
             Smart Guitar Chords
           </div>
         </div>
-        <div className="flex-1 flex flex-row justify-end">
-          <div onClick={openAccountModal} className="cursor-pointer">
+        <div className="flex-1 flex flex-row justify-end items-center gap-1">
+          <div
+            onClick={openAccountModal}
+            className="cursor-pointer sm:block hidden"
+          >
             {account ? account.username : "Login"}
           </div>
+          <AiOutlineUser className="sm:w-4 sm:h-4 w-8 h-8 stroke-4" />
         </div>
       </header>
       <main
-        className="font-sans min-h-screen centered-col gap-4 grow"
+        className="font-sans min-h-screen centered-col gap-4 grow px-2"
         id="main"
       >
         <div className="centered-row gap-2 max-w-[80vw] flex-wrap">
@@ -68,14 +72,12 @@ export default function MainPage() {
             <input
               value={song.startingFretNum}
               onChange={(newValue) => {
+                const parsedValue = parseInt(newValue.target.value);
                 setSongStartingFretNum(
-                  newValue.target.value != ""
-                    ? Math.max(0, parseInt(newValue.target.value))
-                    : 0
+                  parsedValue ? Math.max(0, parsedValue) : 0
                 );
               }}
-              type="number"
-              className="bg-neutral-100 w-full px-1 py-1 rounded-md"
+              className="standard-input"
             />
           </div>
           <div className="flex flex-col basis-1/3 min-w-36">
@@ -87,7 +89,7 @@ export default function MainPage() {
                   newValue.target.value.split(",").map(sanitizeNoteName)
                 );
               }}
-              className="bg-neutral-100 w-full px-1 py-1 rounded-md"
+              className="standard-input"
             />
           </div>
         </div>
@@ -101,11 +103,11 @@ export default function MainPage() {
           </div>
         </div>
         <div className="centered-col w-[80%]">
-          <div className="centered-row justify-between w-full px-1 py-1">
+          <div className="centered-row justify-between w-full py-1">
             <div className="centered-row gap-2">
               {Object.keys(songs).length > 0 && (
                 <select
-                  className="w-36 px-1 py-2 bg-white"
+                  className="w-36 standard-input"
                   onChange={(e) => {
                     const songId = e.target.value;
                     selectSong(songId);
