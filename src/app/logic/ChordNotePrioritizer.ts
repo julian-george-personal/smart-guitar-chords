@@ -106,6 +106,7 @@ export default class ChordNotePrioritizer {
       delete this.chordNotePriorities[note];
       this.usedChordNotes.add(note);
     }
+
     this.refreshChordNoteQueue();
   }
 
