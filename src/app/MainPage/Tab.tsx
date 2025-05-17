@@ -1,9 +1,9 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getNoteFromNumFrets, getNumFrets } from "../music_util";
+import { getNoteFromNumFrets, getNumFrets } from "../logic/music_util";
 import {
   getChordNameFromNotes,
   getChordNotesPerString,
-} from "../chord_calculator";
+} from "../logic/chord_calculator";
 import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
 import { NoteLiteral } from "tonal";

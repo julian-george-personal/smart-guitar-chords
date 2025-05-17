@@ -6,7 +6,7 @@ import {
   fillInMutedStrings,
 } from "./music_util";
 import { NoteLiteral } from "tonal";
-import { comparePriorities } from "./util";
+import { comparePriorities } from "../util";
 
 type ChordTabEnvelope = {
   chordTab: ChordTab;
@@ -14,42 +14,53 @@ type ChordTabEnvelope = {
   // doesnt include bar finger
   numFingers: number;
   totalFingerDistance: number;
+  bassOnBottom: boolean;
+  numChordNotesMissing: number;
+  isValid: boolean;
+  numStringsUnvoiced: number;
 };
 
-function getNumFingerPriority(chordTabEnvelope: ChordTabEnvelope) {
-  return (
-    chordTabEnvelope.numFingers + (chordTabEnvelope.barredFret > 0 ? 1 : 0)
-  );
+// Ideas to improve this:
+// 1. use exponential rates: it should be worse not voice 3 strings than 2
+// 2. including total finger distance
+// In the end though, we should give users the ability to choose from the top tabs in the priority queue.
+function getPriority(chordTabEnvelope: ChordTabEnvelope) {
+  const {
+    numFingers,
+    barredFret,
+    bassOnBottom,
+    numChordNotesMissing,
+    isValid,
+    numStringsUnvoiced,
+  } = chordTabEnvelope;
+  const priority =
+    numFingers +
+    numStringsUnvoiced +
+    (barredFret > 0 ? 2.1 : 0) +
+    (!bassOnBottom ? 2.1 : 0) +
+    (numChordNotesMissing > 0 ? 2.2 : 0) +
+    (!isValid ? 5 : 0);
+  return priority;
 }
 
 export default class ChordTabPrioritizer {
   private noteMatrix: NoteLiteral[][];
+  private allChordNotes: Set<NoteLiteral>;
   private prioritizedChordNotes: NoteLiteral[];
-  private avoidBar: boolean = true;
+  private existingStringifiedTabs: Set<string> = new Set();
+  private bassNote: NoteLiteral;
 
   private compareTabs: ICompare<ChordTabEnvelope> = (
     a: ChordTabEnvelope,
     b: ChordTabEnvelope
   ) => {
-    let comparison = comparePriorities(
-      this.isChordTabEnvelopeValid(a) ? 0 : 1,
-      this.isChordTabEnvelopeValid(b) ? 0 : 1
-    );
-    if (comparison != null) return comparison;
+    const [aPriority, bPriority] = [getPriority(a), getPriority(b)];
 
-    if (this.avoidBar) {
-      comparison = comparePriorities(
-        a.barredFret > 0 ? 1 : 0,
-        b.barredFret > 0 ? 1 : 0
-      );
-      if (comparison != null) return comparison;
+    const comparison = comparePriorities(aPriority, bPriority);
+
+    if (comparison != null) {
+      return comparison;
     }
-
-    comparison = comparePriorities(
-      getNumFingerPriority(a),
-      getNumFingerPriority(b)
-    );
-    if (comparison != null) return comparison;
     return 0;
   };
 
@@ -60,6 +71,8 @@ export default class ChordTabPrioritizer {
     chordTab: ChordTab,
     barredFret: number
   ): ChordTabEnvelope {
+    const tabArray = chordTabToArray(chordTab);
+    const voicedNotes = tabArray.filter((x) => x != null);
     return {
       chordTab,
       barredFret,
@@ -69,44 +82,56 @@ export default class ChordTabPrioritizer {
           note != this.noteMatrix[parseInt(stringNum)][barredFret]
       ).length,
       totalFingerDistance: 0,
+      bassOnBottom: voicedNotes[0] == this.bassNote,
+      numChordNotesMissing: this.allChordNotes.difference(new Set(voicedNotes))
+        .size,
+      isValid: chordNotesAreValid(
+        chordTab,
+        this.prioritizedChordNotes,
+        this.noteMatrix.map((s) => s[barredFret]),
+        barredFret != 0
+      ),
+      numStringsUnvoiced: tabArray.length - voicedNotes.length,
     };
-  }
-
-  // private calculateTotalFingerDistance(chordTab: ChordTab) {
-  //   return 0;
-  // }
-
-  private isChordTabEnvelopeValid(chordTabEnvelope: ChordTabEnvelope) {
-    return chordNotesAreValid(
-      chordTabEnvelope.chordTab,
-      this.prioritizedChordNotes,
-      this.noteMatrix.map((s) => s[chordTabEnvelope.barredFret]),
-      chordTabEnvelope.barredFret != 0
-    );
   }
 
   public constructor(
     noteMatrix: NoteLiteral[][],
-    prioritizedChordNotes: NoteLiteral[]
+    prioritizedChordNotes: NoteLiteral[],
+    bassNote: NoteLiteral
   ) {
     this.noteMatrix = noteMatrix;
     this.prioritizedChordNotes = prioritizedChordNotes;
+    this.allChordNotes = new Set(prioritizedChordNotes);
+    this.bassNote = bassNote;
   }
 
   public addChordTab(chordTab: ChordTab, barredFret: number) {
-    this.chordTabQueue.enqueue(
-      this.buildChordTabEnvelope(chordTab, barredFret)
-    );
+    const stringifiedTab = JSON.stringify(chordTab);
+    if (this.existingStringifiedTabs.has(stringifiedTab)) {
+      return;
+    }
+
+    const chordEnvelope = this.buildChordTabEnvelope(chordTab, barredFret);
+
+    this.existingStringifiedTabs.add(stringifiedTab);
+    this.chordTabQueue.enqueue(chordEnvelope);
   }
 
   public popChordTab() {
-    return this.chordTabQueue.pop();
+    const chord = this.chordTabQueue.pop();
+    return chord;
+  }
+
+  public toArray() {
+    return this.chordTabQueue.toArray();
   }
 }
 
 const InnerStringsCanBeMuted = false;
 const EnforceBassNote = false;
 
+// TODO: this should use finger distance in some way
 function chordNotesAreValid(
   stringNotes: ChordTab,
   chordNotes: NoteLiteral[],
@@ -129,8 +154,9 @@ function chordNotesAreValid(
     ).length +
       (isTabbed ? 1 : 0) >
     4
-  )
+  ) {
     return false;
+  }
 
   // False if it doesn't voice the 3 most prioritized chord notes
   for (const chordNote of chordNotes.slice(0, 3)) {
