@@ -1,6 +1,6 @@
 import { ICompare, PriorityQueue } from "@datastructures-js/priority-queue";
 import { NoteLiteral } from "tonal";
-import { comparePriorities } from "./util";
+import { comparePriorities } from "../util";
 
 function getBassPriority(guitarNote: GuitarNote) {
   const { fretNum, stringNum } = guitarNote;
@@ -12,7 +12,7 @@ type GuitarNote = { note: string; stringNum: number; fretNum: number };
 export default class ChordNotePrioritizer {
   private chordNotePriorities: { [chordNote: string]: number } = {};
   private usedChordNotes: Set<NoteLiteral> = new Set();
-  private enforceBassNote: boolean;
+  private prioritizeBassNote: boolean;
   private bassNote: NoteLiteral;
   private poppedGuitarNotes: GuitarNote[] = [];
 
@@ -20,30 +20,47 @@ export default class ChordNotePrioritizer {
     a: GuitarNote,
     b: GuitarNote
   ) => {
+    // Prioritize unvoiced chord notes in order of importance in the chord
     let [aPriority, bPriority] = [
       this.chordNotePriorities?.[a.note as string] ?? Infinity,
       this.chordNotePriorities?.[b.note as string] ?? Infinity,
     ];
     let comparison = comparePriorities(aPriority, bPriority);
-    if (comparison != null) return comparison;
+    if (comparison != null) {
+      // console.log("a", comparison, a, b);
+      return comparison;
+    }
 
+    // if we get to this point, a and b are the same note, and we're trying to find the best way to voice it
+
+    // the best voicing of the bass note is on a lower string and lower fret number
     if (
-      this.enforceBassNote &&
-      a.note == b.note &&
-      !this.usedChordNotes.has(a.note) &&
-      a.note == this.bassNote
+      this.prioritizeBassNote &&
+      a.note == this.bassNote &&
+      !this.usedChordNotes.has(a.note)
     ) {
       [aPriority, bPriority] = [getBassPriority(a), getBassPriority(b)];
       comparison = comparePriorities(aPriority, bPriority);
-      if (comparison != null) return comparison;
+      if (comparison != null) {
+        // console.log("b", comparison, a, b);
+        return comparison;
+      }
     }
+
+    // the best voicing of a non-bass note is on a lower fret number
     [aPriority, bPriority] = [a.fretNum, b.fretNum];
     comparison = comparePriorities(aPriority, bPriority);
-    if (comparison != null) return comparison;
+    if (comparison != null) {
+      // console.log("c", comparison, a, b);
+      return comparison;
+    }
 
     [aPriority, bPriority] = [a.stringNum, b.stringNum];
     comparison = comparePriorities(aPriority, bPriority);
-    if (comparison != null) return comparison;
+    if (comparison != null) {
+      // console.log("d", comparison, a, b);
+      return comparison;
+    }
 
     return 0;
   };
@@ -60,13 +77,17 @@ export default class ChordNotePrioritizer {
 
   public constructor(
     prioritizedChordNotes: NoteLiteral[],
+    bassNote: NoteLiteral,
     enforceBassNote: boolean
   ) {
+    this.bassNote = bassNote;
+    this.prioritizeBassNote = enforceBassNote;
     for (let i = 0; i < prioritizedChordNotes.length; i++) {
-      this.chordNotePriorities[prioritizedChordNotes[i] as string] = i;
+      const note = prioritizedChordNotes[i];
+      const priority =
+        this.prioritizeBassNote && note == this.bassNote ? -1 : i;
+      this.chordNotePriorities[note as string] = priority;
     }
-    this.enforceBassNote = enforceBassNote;
-    this.bassNote = prioritizedChordNotes[0];
   }
 
   public addGuitarNote(guitarNote: GuitarNote) {
@@ -86,5 +107,9 @@ export default class ChordNotePrioritizer {
       this.usedChordNotes.add(note);
     }
     this.refreshChordNoteQueue();
+  }
+
+  public toArray() {
+    return this.chordNoteQueue.toArray();
   }
 }

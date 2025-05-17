@@ -8,7 +8,7 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import { ChordTab } from "../music_util";
+import { ChordTab } from "../logic/music_util";
 import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
 import { useAccountData } from "./account-context";

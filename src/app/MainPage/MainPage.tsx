@@ -6,7 +6,7 @@ import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
 import { useSongData } from "../context/song-context";
 import MultiStringInput from "./MultiStringInput";
-import { sanitizeNoteName } from "../music_util";
+import { sanitizeNoteName } from "../logic/music_util";
 import SongModal from "./SongModal/SongModal";
 
 const MemoizedTab = memo(Tab);

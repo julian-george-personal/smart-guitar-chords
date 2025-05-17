@@ -5,6 +5,7 @@ import {
   ChordTab,
   chordTabToArray,
   fillInMutedStrings,
+  getNumFrets,
 } from "./music_util";
 import ChordNotePrioritizer from "./ChordNotePrioritizer";
 import ChordTabPrioritizer from "./ChordTabPrioritizer";
@@ -24,11 +25,13 @@ export function getChordNotesPerString(
     ];
   }
   const tabNoteMatrix = generateNoteMatrix(baseNotes, numFrets);
-  const chordNotes = getGuitarNotesFromChordName(chordName);
+  const prioritizedChordNotes = getGuitarNotesFromChordName(chordName);
+  const bassNote = getBassNoteFromChordName(chordName);
 
   const chordTabPrioritizer = new ChordTabPrioritizer(
     tabNoteMatrix,
-    chordNotes
+    prioritizedChordNotes,
+    bassNote
   );
 
   for (
@@ -42,13 +45,14 @@ export function getChordNotesPerString(
         string.slice(fretToBar)
       );
       const numPermutations = enforceBassNote
-        ? getNumPossibleBassNotes(chordNotes[0], barredMatrix)
+        ? getNumPossibleBassNotes(prioritizedChordNotes[0], barredMatrix)
         : //TODO: this should be more precise and should allow us to get the G#m7 voicing from the chord chart
           3;
 
       for (let i = 0; i < numPermutations; i++) {
         const barredStringNotes = getNewChordNotesPerStringInner(
-          chordNotes,
+          prioritizedChordNotes,
+          bassNote,
           barredMatrix,
           manualStringNotes,
           enforceBassNote
@@ -57,6 +61,11 @@ export function getChordNotesPerString(
       }
     }
   }
+
+  console.log(
+    "prioritized tabs",
+    chordTabPrioritizer.toArray().map((x) => x.chordTab)
+  );
 
   const bestChordTabEnvelope = chordTabPrioritizer.popChordTab();
   if (!bestChordTabEnvelope) {
@@ -75,6 +84,10 @@ export function getGuitarNotesFromChordName(chordName: string): NoteLiteral[] {
   const chord = Chord.get(chordName);
   const prioritizedNotes = prioritizeChordNotes(chord);
   return prioritizedNotes;
+}
+
+export function getBassNoteFromChordName(chordName: string): NoteLiteral {
+  return Chord.get(chordName).bass;
 }
 
 export function getChordNameFromNotes(
@@ -107,6 +120,7 @@ function getNumPossibleBassNotes(
 
 function getNewChordNotesPerStringInner(
   prioritizedChordNotes: NoteLiteral[],
+  bassNote: NoteLiteral,
   noteMatrix: NoteLiteral[][],
   currentStringNotes: ChordTab,
   prioritizeVoicingBass: boolean = true,
@@ -116,6 +130,7 @@ function getNewChordNotesPerStringInner(
   const numStrings = noteMatrix.length;
   const chordNotePrioritizer = new ChordNotePrioritizer(
     prioritizedChordNotes,
+    bassNote,
     prioritizeVoicingBass
   );
   const chordNoteSet = new Set(prioritizedChordNotes);
@@ -140,11 +155,12 @@ function getNewChordNotesPerStringInner(
     const { note, stringNum } = guitarNote;
     if (!(stringNum in newStringNotes)) {
       if (permutationIdx < permutation) {
+        // even though the prioritizer has determined this is the best voicing, we skip it for a "worse" voicing to get a different permutation
         permutationIdx++;
         continue;
       }
       newStringNotes[stringNum] = note;
-      if (bassNeedsToBeSet && note == prioritizedChordNotes[0]) {
+      if (bassNeedsToBeSet && note == bassNote) {
         for (let stringIdx = 0; stringIdx < stringNum; stringIdx++) {
           if (!(stringIdx in newStringNotes)) {
             newStringNotes[stringIdx] = null;
@@ -181,8 +197,9 @@ const deprioritizedIntervals: number[] = ["5P"].map(Interval.semitones);
 function prioritizeChordNotes(chord: Chord.Chord): NoteLiteral[] {
   const semitonesToIndices: { [semitones: number]: number } = {};
   const unprioritizedIntervals: number[] = [];
-  chord.intervals.forEach((interval, idx) => {
-    const intervalSemitones = Interval.semitones(interval);
+
+  chord.notes.forEach((note, idx) => {
+    const intervalSemitones = getNumFrets(chord.tonic ?? chord.root, note);
     semitonesToIndices[intervalSemitones] = idx;
     if (
       ![...prioritizedIntervals, ...deprioritizedIntervals].includes(
@@ -199,10 +216,11 @@ function prioritizeChordNotes(chord: Chord.Chord): NoteLiteral[] {
     ...unprioritizedIntervals,
     ...deprioritizedIntervals,
   ].forEach((intervalSemitones) => {
-    if (intervalSemitones in semitonesToIndices)
+    if (intervalSemitones in semitonesToIndices) {
       notes.push(
         normalizeNote(chord.notes[semitonesToIndices[intervalSemitones]])
       );
+    }
   });
   return notes;
 }

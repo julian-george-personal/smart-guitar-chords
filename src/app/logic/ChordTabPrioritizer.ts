@@ -6,7 +6,7 @@ import {
   fillInMutedStrings,
 } from "./music_util";
 import { NoteLiteral } from "tonal";
-import { comparePriorities } from "./util";
+import { comparePriorities } from "../util";
 
 type ChordTabEnvelope = {
   chordTab: ChordTab;
@@ -14,18 +14,23 @@ type ChordTabEnvelope = {
   // doesnt include bar finger
   numFingers: number;
   totalFingerDistance: number;
+  bassOnBottom: boolean;
 };
 
-function getNumFingerPriority(chordTabEnvelope: ChordTabEnvelope) {
+function getPriority(chordTabEnvelope: ChordTabEnvelope) {
   return (
-    chordTabEnvelope.numFingers + (chordTabEnvelope.barredFret > 0 ? 1 : 0)
+    chordTabEnvelope.numFingers +
+    (chordTabEnvelope.barredFret > 0 ? 1 : 0) +
+    (chordTabEnvelope.bassOnBottom ? 0 : 1)
   );
 }
 
 export default class ChordTabPrioritizer {
   private noteMatrix: NoteLiteral[][];
   private prioritizedChordNotes: NoteLiteral[];
+  private existingStringifiedTabs: Set<string> = new Set();
   private avoidBar: boolean = true;
+  private bassNote: NoteLiteral;
 
   private compareTabs: ICompare<ChordTabEnvelope> = (
     a: ChordTabEnvelope,
@@ -35,21 +40,28 @@ export default class ChordTabPrioritizer {
       this.isChordTabEnvelopeValid(a) ? 0 : 1,
       this.isChordTabEnvelopeValid(b) ? 0 : 1
     );
-    if (comparison != null) return comparison;
+    if (comparison != null) {
+      // console.log("A", comparison, a.chordTab, b.chordTab);
+      return comparison;
+    }
 
     if (this.avoidBar) {
       comparison = comparePriorities(
         a.barredFret > 0 ? 1 : 0,
         b.barredFret > 0 ? 1 : 0
       );
-      if (comparison != null) return comparison;
+      if (comparison != null) {
+        // console.log("B", comparison, a.chordTab, b.chordTab);
+        return comparison;
+      }
     }
 
-    comparison = comparePriorities(
-      getNumFingerPriority(a),
-      getNumFingerPriority(b)
-    );
-    if (comparison != null) return comparison;
+    comparison = comparePriorities(getPriority(a), getPriority(b));
+
+    if (comparison != null) {
+      // console.log("C", comparison, a.chordTab, b.chordTab);
+      return comparison;
+    }
     return 0;
   };
 
@@ -60,6 +72,7 @@ export default class ChordTabPrioritizer {
     chordTab: ChordTab,
     barredFret: number
   ): ChordTabEnvelope {
+    const tabArray = chordTabToArray(chordTab);
     return {
       chordTab,
       barredFret,
@@ -69,6 +82,7 @@ export default class ChordTabPrioritizer {
           note != this.noteMatrix[parseInt(stringNum)][barredFret]
       ).length,
       totalFingerDistance: 0,
+      bassOnBottom: tabArray[0] == this.bassNote,
     };
   }
 
@@ -87,20 +101,31 @@ export default class ChordTabPrioritizer {
 
   public constructor(
     noteMatrix: NoteLiteral[][],
-    prioritizedChordNotes: NoteLiteral[]
+    prioritizedChordNotes: NoteLiteral[],
+    bassNote: NoteLiteral
   ) {
     this.noteMatrix = noteMatrix;
     this.prioritizedChordNotes = prioritizedChordNotes;
+    this.bassNote = bassNote;
   }
 
   public addChordTab(chordTab: ChordTab, barredFret: number) {
-    this.chordTabQueue.enqueue(
-      this.buildChordTabEnvelope(chordTab, barredFret)
-    );
+    const stringifiedTab = JSON.stringify(chordTab);
+    if (this.existingStringifiedTabs.has(stringifiedTab)) return;
+
+    const chord = this.buildChordTabEnvelope(chordTab, barredFret);
+
+    this.existingStringifiedTabs.add(JSON.stringify(chordTab));
+    this.chordTabQueue.enqueue(chord);
   }
 
   public popChordTab() {
-    return this.chordTabQueue.pop();
+    const chord = this.chordTabQueue.pop();
+    return chord;
+  }
+
+  public toArray() {
+    return this.chordTabQueue.toArray();
   }
 }
 
