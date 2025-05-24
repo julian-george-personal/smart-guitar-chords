@@ -19,15 +19,15 @@ const songRoutes: TRoutes = {
     GET: async (req) => {
       const authorizedUsername = verifyAuthorization(req);
       if (!authorizedUsername) return Response.json(null, { status: 401 });
-      const [songs, status] = await getSongsByUser(authorizedUsername);
-      switch (status) {
+      const [songs, error] = await getSongsByUser(authorizedUsername);
+      switch (error) {
         case SongStatus.Success:
           return Response.json(songs, {
             status: 200,
             headers: { "Cache-control": "no-store" },
           });
         default:
-          return Response.json(null, { status: 500 });
+          return Response.json({ error }, { status: 500 });
       }
     },
   },
@@ -46,7 +46,7 @@ const songRoutes: TRoutes = {
         case SongStatus.InvalidRequest:
           return Response.json({ error }, { status: 400 });
         default:
-          return Response.json(null, { status: 500 });
+          return Response.json({ error }, { status: 500 });
       }
     },
   },

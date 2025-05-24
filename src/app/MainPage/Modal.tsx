@@ -59,7 +59,7 @@ export default function Modal({
           </div>
         </header>
         <div className="w-full max-w-lg">
-          {title && <div className="text-xl w-full py-2">{title}</div>}
+          {title && <div className="text-xl w-full py-1">{title}</div>}
           {children}
         </div>
       </div>

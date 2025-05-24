@@ -3,12 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useCallback } from "react";
 import { useAccountData } from "../../context/account-context";
-
-interface LoginPageProps {
-  onSignUp: () => void;
-  onForgotPassword: () => void;
-  onFinished: () => void;
-}
+import { UnknownServerErrorMessage } from "../constants";
 
 type TLoginFormFields = {
   username: string;
@@ -17,10 +12,19 @@ type TLoginFormFields = {
 
 const validationSchema = z.object({
   username: z.string({ message: "Name is required" }),
-  password: z
-    .string({ message: "Password is required" })
-    .min(6, "Password must be at least 6 characters"),
+  password: z.string({ message: "Password is required" }),
 });
+
+const ErrorStatusMessages: { [errorCode: number]: string } = {
+  404: "Invalid credentials",
+  500: UnknownServerErrorMessage,
+};
+
+interface LoginPageProps {
+  onSignUp: () => void;
+  onForgotPassword: () => void;
+  onFinished: () => void;
+}
 
 export default function LoginPage({
   onSignUp,
@@ -40,7 +44,12 @@ export default function LoginPage({
   const onSubmit = useCallback(async (data: TLoginFormFields) => {
     const response = await login(data.username, data.password);
     if (response.isError) {
-      setError("root", { type: "server", message: response.errorMessage });
+      setError("root", {
+        type: "server",
+        message: response.errorCode
+          ? ErrorStatusMessages[response.errorCode]
+          : UnknownServerErrorMessage,
+      });
     } else {
       onFinished();
     }
@@ -48,8 +57,11 @@ export default function LoginPage({
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        {errors.root && (
+          <p className="text-red-500 text-sm">{errors.root.message}</p>
+        )}
+        <div className="mb-4">
           <label htmlFor="username" className="block">
             Username
           </label>
@@ -60,11 +72,11 @@ export default function LoginPage({
             className="border p-2 w-full"
           />
           {errors.username && (
-            <p className="text-red-500">{errors.username.message}</p>
+            <p className="text-red-500 text-sm">{errors.username.message}</p>
           )}
         </div>
 
-        <div>
+        <div className="mb-4">
           <label htmlFor="password" className="block">
             Password
           </label>
@@ -75,7 +87,7 @@ export default function LoginPage({
             className="border p-2 w-full"
           />
           {errors.password && (
-            <p className="text-red-500">{errors.password.message}</p>
+            <p className="text-red-500 text-sm">{errors.password.message}</p>
           )}
         </div>
 

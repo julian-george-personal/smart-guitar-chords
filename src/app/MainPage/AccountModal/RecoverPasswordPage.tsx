@@ -4,6 +4,7 @@ import z from "zod";
 import { useAccountData } from "../../context/account-context";
 import { useCallback } from "react";
 import { toast } from "react-toastify";
+import { UnknownServerErrorMessage } from "../constants";
 
 type TRecoverPasswordFields = {
   email: string;
@@ -12,6 +13,11 @@ type TRecoverPasswordFields = {
 interface RecoverPasswordPageProps {
   onFinished: () => void;
 }
+
+const ErrorStatusMessages: { [errorCode: number]: string } = {
+  400: "Invalid email format",
+  500: UnknownServerErrorMessage,
+};
 
 const validationSchema = z.object({
   email: z
@@ -36,7 +42,12 @@ export default function RecoverPasswordPage({
     async (data: TRecoverPasswordFields) => {
       const response = await recoverPassword(data.email);
       if (response.isError) {
-        setError("root", { type: "server", message: response.errorMessage });
+        setError("root", {
+          type: "server",
+          message: response.errorCode
+            ? ErrorStatusMessages[response.errorCode]
+            : UnknownServerErrorMessage,
+        });
       } else {
         toast.success(
           "Recovery instructions sent to that email if it belongs to a user."
@@ -50,6 +61,9 @@ export default function RecoverPasswordPage({
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {errors.root && (
+          <p className="text-red-500 text-sm">{errors.root.message}</p>
+        )}
         <div>
           <label htmlFor="email" className="block">
             Email
@@ -61,7 +75,7 @@ export default function RecoverPasswordPage({
             className="border p-2 w-full"
           />
           {errors.email && (
-            <p className="text-red-500">{errors.email.message}</p>
+            <p className="text-red-500 text-sm">{errors.email.message}</p>
           )}
         </div>
 

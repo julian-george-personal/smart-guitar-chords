@@ -1,11 +1,6 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios, { AxiosResponse } from "axios";
 import { TSong } from "../context/song-context";
-import {
-  apiUrl,
-  authHeaders,
-  StoreResponse,
-  UnknownErrorMessage,
-} from "./store";
+import { apiUrl, authHeaders, StoreResponse, toStoreResponse } from "./store";
 
 const songUrl = apiUrl + "/song";
 
@@ -33,11 +28,7 @@ export async function getSongs(): Promise<GetSongsResponse & StoreResponse> {
     }));
     return { songs: parsedResult, isError: false };
   } catch (e) {
-    return {
-      songs: null,
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return { ...toStoreResponse(e), songs: null };
   }
 }
 
@@ -51,10 +42,7 @@ export async function createSong(
     >(songUrl + "/create", { songJson }, authHeaders());
     return { songId: result.data.songId, isError: false };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }
 
@@ -70,10 +58,7 @@ export async function updateSong(
     );
     return { isError: false };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }
 
@@ -82,9 +67,6 @@ export async function deleteSong(songId: string): Promise<StoreResponse> {
     await axios.delete(songUrl + "/delete/" + songId, authHeaders());
     return { isError: false };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }
