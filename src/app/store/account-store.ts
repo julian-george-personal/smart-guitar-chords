@@ -1,9 +1,9 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {
   StoreResponse,
   apiUrl,
-  UnknownErrorMessage,
   authHeaders,
+  toStoreResponse,
 } from "./store";
 
 const accountUrl = apiUrl + "/account";
@@ -21,10 +21,7 @@ export async function signUp(
     });
     return { isError: false };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }
 
@@ -54,10 +51,7 @@ export async function login(
       isError: false,
     };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }
 
@@ -77,10 +71,7 @@ export async function getUser(): Promise<
     if (!data.username) throw new Error();
     return { username: data.username, email: data.email, isError: false };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }
 
@@ -89,10 +80,7 @@ export async function logout(): Promise<StoreResponse> {
     await axios.delete(accountUrl + "/logout");
     return { isError: false };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }
 
@@ -101,10 +89,7 @@ export async function recoverPassword(email: string): Promise<StoreResponse> {
     await axios.post(accountUrl + "/recoverPassword", { email });
     return { isError: false };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }
 
@@ -116,9 +101,6 @@ export async function setNewPassword(
     await axios.post(accountUrl + "/setNewPassword", { newPassword, token });
     return { isError: false };
   } catch (e) {
-    return {
-      isError: true,
-      errorMessage: e instanceof AxiosError ? e.message : UnknownErrorMessage,
-    };
+    return toStoreResponse(e);
   }
 }

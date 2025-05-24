@@ -144,6 +144,11 @@ export async function recoverPassword(
 export async function setNewPassword(
   request: TSetNewPasswordRequest
 ): Promise<[AccountStatus, AccountErrors | null]> {
+  const parsedToken = verifyToken<{ email: string; username: string }>(
+    request.token
+  );
+  if (!parsedToken)
+    return [AccountStatus.Unauthorized, AccountErrors.InvalidToken];
   const { success, error } = accountSchema
     .pick({ password: true })
     .safeParse({ password: request.newPassword });
@@ -152,11 +157,6 @@ export async function setNewPassword(
       AccountStatus.InvalidRequest,
       error.errors[0].message as AccountErrors,
     ];
-  const parsedToken = verifyToken<{ email: string; username: string }>(
-    request.token
-  );
-  if (!parsedToken)
-    return [AccountStatus.InvalidRequest, AccountErrors.InvalidToken];
   const hashedPassword = await Bun.password.hash(request.newPassword);
   await setAccountNewPassword(parsedToken.email, hashedPassword);
   return [AccountStatus.Success, null];

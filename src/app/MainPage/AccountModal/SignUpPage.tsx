@@ -4,6 +4,8 @@ import z from "zod";
 import { toast } from "react-toastify";
 import { useAccountData } from "../../context/account-context";
 import { useCallback } from "react";
+import { StoreResponse } from "../../store/store";
+import { UnknownServerErrorMessage } from "../constants";
 
 type TSignUpFormFields = {
   username: string;
@@ -28,6 +30,16 @@ const validationSchema = z
     path: ["confirm"],
   });
 
+const GetErrorStatusMessage = (response: StoreResponse) => {
+  if (response.errorCode === 400) {
+    return "Invalid account data: " + response.errorMessage;
+  }
+  if (response.errorCode === 409) {
+    return "An account with this username or email already exists";
+  }
+  return UnknownServerErrorMessage;
+};
+
 interface SignUpPageProps {
   onFinished: () => void;
 }
@@ -46,7 +58,7 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
   const onSubmit = useCallback(async (data: TSignUpFormFields) => {
     const response = await signUp(data.username, data.email, data.password);
     if (response.isError) {
-      setError("root", { type: "server", message: response.errorMessage });
+      setError("root", { type: "server", message: GetErrorStatusMessage(response) });
     } else {
       toast.success("Successfully created account. Log in to use it.");
       onFinished();
@@ -56,61 +68,66 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="username" className="block">
-          Username
-        </label>
-        <input
-          id="username"
-          type="text"
-          {...register("username")}
-          className="border p-2 w-full"
-        />
-        {errors.username && (
-          <p className="text-red-500">{errors.username.message}</p>
-        )}
-      </div>
+        <div className="flex flex-col gap-2">
+          {errors.root && (
+            <p className="text-red-500 text-sm">{errors.root.message}</p>
+          )}
+          <label htmlFor="username" className="block">
+            Username
+          </label>
+          <input
+            id="username"
+            type="text"
+            {...register("username")}
+            className="border p-2 w-full"
+          />
+          {errors.username && (
+            <p className="text-red-500 text-sm">{errors.username.message}</p>
+          )}
+        </div>
 
-      <div>
-        <label htmlFor="email" className="block">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          {...register("email")}
-          className="border p-2 w-full"
-        />
-        {errors.email && <p className="text-red-500">{errors.email.message}</p>}
-      </div>
+        <div>
+          <label htmlFor="email" className="block">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            {...register("email")}
+            className="border p-2 w-full"
+          />
+          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+        </div>
 
-      <div>
-        <label htmlFor="password" className="block">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          {...register("password")}
-          className="border p-2 w-full"
-        />
-        {errors.password && (
-          <p className="text-red-500">{errors.password.message}</p>
-        )}
-      </div>
+        <div>
+          <label htmlFor="password" className="block">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            {...register("password")}
+            className="border p-2 w-full"
+          />
+          {errors.password && (
+            <p className="text-red-500 text-sm">{errors.password.message}</p>
+          )}
+        </div>
 
-      <div>
-        <label htmlFor="confirmPassword" className="block">
-          Confirm Password
-        </label>
-        <input
-          id="confirmPassword"
-          type="password"
-          {...register("confirmPassword")}
-          className="border p-2 w-full"
-        />
-        {errors.confirmPassword && (
-          <p className="text-red-500">{errors.confirmPassword.message}</p>
-        )}
+        <div>
+          <label htmlFor="confirmPassword" className="block">
+            Confirm Password
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            {...register("confirmPassword")}
+            className="border p-2 w-full"
+          />
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>
+          )}
+        </div>
       </div>
 
       <button type="submit" className="p-2 w-full">

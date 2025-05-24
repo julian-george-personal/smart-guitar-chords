@@ -46,7 +46,7 @@ const accountRoutes: TRoutes = {
             { status: 409, statusText: error?.toString() }
           );
         default:
-          return Response.json({}, { status: 500 });
+          return Response.json({error}, { status: 500 });
       }
     },
   },
