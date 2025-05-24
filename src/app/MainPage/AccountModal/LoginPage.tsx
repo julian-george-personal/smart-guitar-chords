@@ -61,34 +61,36 @@ export default function LoginPage({
         {errors.root && (
           <p className="text-red-500 text-sm">{errors.root.message}</p>
         )}
-        <div className="mb-4">
-          <label htmlFor="username" className="block">
-            Username
-          </label>
-          <input
-            id="username"
-            type="text"
-            {...register("username")}
-            className="border p-2 w-full"
-          />
-          {errors.username && (
-            <p className="text-red-500 text-sm">{errors.username.message}</p>
-          )}
-        </div>
+        <div className="flex flex-col gap-2">
+          <div>
+            <label htmlFor="username" className="block">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              {...register("username")}
+              className="border p-2 w-full"
+            />
+            {errors.username && (
+              <p className="text-red-500 text-sm">{errors.username.message}</p>
+            )}
+          </div>
 
-        <div className="mb-4">
-          <label htmlFor="password" className="block">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            {...register("password")}
-            className="border p-2 w-full"
-          />
-          {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password.message}</p>
-          )}
+          <div>
+            <label htmlFor="password" className="block">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              {...register("password")}
+              className="border p-2 w-full"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm">{errors.password.message}</p>
+            )}
+          </div>
         </div>
 
         <button type="submit" className="standard-button">

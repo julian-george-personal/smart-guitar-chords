@@ -23,15 +23,15 @@ const validationSchema = z
     path: ["confirm"],
   });
 
-  const GetErrorStatusMessage = (response: StoreResponse) => {
-    if (response.errorCode === 400) {
-      return "Invalid password: " + response.errorMessage;
-    }
-    if (response.errorCode === 401) {
-      return "This password reset link is invalid or expired";
-    }
-    return UnknownServerErrorMessage;
-  };
+const GetErrorStatusMessage = (response: StoreResponse) => {
+  if (response.errorCode === 400) {
+    return "Invalid password: " + response.errorMessage;
+  }
+  if (response.errorCode === 401) {
+    return "This password reset link is invalid or expired";
+  }
+  return UnknownServerErrorMessage;
+};
 
 export default function SetNewPasswordPage() {
   const { setNewPassword } = useAccountData();
@@ -67,33 +67,35 @@ export default function SetNewPasswordPage() {
         {errors.root && (
           <p className="text-red-500 text-sm">{errors.root.message}</p>
         )}
-        <div>
-          <label htmlFor="password" className="block">
-            New Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            {...register("password")}
-            className="border p-2 w-full"
-          />
-          {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password.message}</p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="confirmPassword" className="block">
-            Confirm New Password
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            {...register("confirmPassword")}
-            className="border p-2 w-full"
-          />
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>
-          )}
+        <div className="flex flex-col gap-2">
+          <div>
+            <label htmlFor="password" className="block">
+              New Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              {...register("password")}
+              className="border p-2 w-full"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm">{errors.password.message}</p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="confirmPassword" className="block">
+              Confirm New Password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              {...register("confirmPassword")}
+              className="border p-2 w-full"
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>
+            )}
+          </div>
         </div>
 
         <button type="submit" className="p-2 w-full">
