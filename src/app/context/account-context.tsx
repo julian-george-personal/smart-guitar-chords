@@ -10,6 +10,7 @@ import * as accountStore from "../store/account-store";
 import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
 import { TSong } from "./song-context";
+import { withLoading } from "../util";
 
 export type TAccount = {
   username: string;
@@ -32,7 +33,7 @@ export type TAccountContext = {
   recoverPasswordToken: string | null;
   setNewPassword: (newPassword: string) => Promise<StoreResponse>;
   refreshSongs: () => void;
-  loading: boolean;
+  isLoading: boolean;
 };
 
 const AccountContext = createContext<TAccountContext | null>(null);
@@ -50,7 +51,9 @@ export function AccountProvider({ children }: AccountProviderProps) {
   const [songs, setSongs] = useState<{
     [songId: string]: TSong;
   }>({});
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const withAccountLoading = useCallback(withLoading(setIsLoading), [setIsLoading])
 
   const refreshSongs = useCallback(() => {
     songStore.getSongs().then((response) => {
@@ -87,19 +90,15 @@ export function AccountProvider({ children }: AccountProviderProps) {
       email: string,
       password: string
     ): Promise<StoreResponse> => {
-      setLoading(true);
       const response = await accountStore.signUp(username, email, password);
-      setLoading(false);
       return response;
     },
-    [setLoading]
+    []
   );
 
   const login = useCallback(
     async (username: string, password: string) => {
-      setLoading(true);
       const response = await accountStore.login(username, password);
-      setLoading(false);
       if (!response.isError) {
         const loginResponse = response as accountStore.LoginResponse;
         setAccount({
@@ -109,16 +108,14 @@ export function AccountProvider({ children }: AccountProviderProps) {
       }
       return response;
     },
-    [setLoading, setAccount]
+    [setAccount]
   );
 
   const logout = useCallback(async () => {
-    setLoading(true);
     await accountStore.logout();
-    setLoading(false);
     setAccount(null);
     setSongs({});
-  }, [setAccount, setLoading, setSongs]);
+  }, [setAccount, setSongs]);
 
   const recoverPassword = useCallback(async (email: string) => {
     return await accountStore.recoverPassword(email);
@@ -134,13 +131,13 @@ export function AccountProvider({ children }: AccountProviderProps) {
       value={{
         account,
         songs,
-        loading,
+        isLoading,
         signUp,
-        login,
-        logout,
-        recoverPassword,
+        login: withAccountLoading(login),
+        logout: withAccountLoading(logout),
+        recoverPassword: withAccountLoading(recoverPassword),
         recoverPasswordToken,
-        setNewPassword,
+        setNewPassword: withAccountLoading(setNewPassword),
         refreshSongs,
       }}
     >

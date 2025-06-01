@@ -12,6 +12,7 @@ import { ChordTab } from "../logic/music_util";
 import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
 import { useAccountData } from "./account-context";
+import { withLoading } from "../util";
 
 export type TTab = {
   chordName: string;
@@ -44,6 +45,7 @@ type TSongContext = {
     updates: Partial<TSong>
   ) => Promise<StoreResponse & { songId?: string }>;
   deleteCurrentSong: () => Promise<StoreResponse>;
+  isLoading: boolean;
 };
 
 const SongContext = createContext<TSongContext | null>(null);
@@ -64,9 +66,12 @@ const defaultSong = {
 };
 
 export function SongProvider({ children }: SongProviderProps) {
+  const [isLoading, setIsLoading] = useState(false);
   const [song, setSong] = useState<TSong>(defaultSong);
   const [songId, setSongId] = useState<string | undefined>();
   const { songs, refreshSongs } = useAccountData();
+
+  const withSongLoading = useCallback(withLoading(setIsLoading), [setIsLoading])
 
   useEffect(() => {
     if (!songId || !songs?.[songId]) {
@@ -174,8 +179,9 @@ export function SongProvider({ children }: SongProviderProps) {
         setSongStartingFretNum,
         setSongFretCount,
         setSongStringTunings,
-        saveSong,
-        deleteCurrentSong,
+        saveSong: withSongLoading(saveSong),
+        deleteCurrentSong: withSongLoading(deleteCurrentSong),
+        isLoading,
       }}
     >
       {children}
@@ -196,15 +202,15 @@ export function useTabByKey(key: number) {
 
   const tab = useMemo(
     () =>
-      ({
-        ...song.tabs[key],
-        ...{
-          fretCount: song.fretCount,
-          // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
-          stringTunings: song.stringTunings.filter((s) => s !== ""),
-          startingFretNum: song.startingFretNum,
-        },
-      } as Required<TTab>),
+    ({
+      ...song.tabs[key],
+      ...{
+        fretCount: song.fretCount,
+        // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
+        stringTunings: song.stringTunings.filter((s) => s !== ""),
+        startingFretNum: song.startingFretNum,
+      },
+    } as Required<TTab>),
     [
       song.tabs[key].chordName,
       song.tabs[key].manualStringNotes,

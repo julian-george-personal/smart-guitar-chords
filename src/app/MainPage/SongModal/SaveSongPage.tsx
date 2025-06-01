@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { useSongData } from "../../context/song-context";
 import { UnknownServerErrorMessage } from "../constants";
 import { StoreResponse } from "../../store/store";
+import { PulseLoader } from "react-spinners";
 
 type TSaveSongFormFields = {
   title: string;
@@ -34,7 +35,7 @@ export default function SaveSongPage({
   onFinished,
   onDelete,
 }: SaveSongPageProps) {
-  const { song, songId, setTitle, saveSong, selectSong } = useSongData();
+  const { song, songId, setTitle, saveSong, selectSong, isLoading } = useSongData();
   const {
     register,
     handleSubmit,
@@ -84,7 +85,7 @@ export default function SaveSongPage({
               <p className="text-red-500 text-sm">{errors.title.message}</p>
             )}
             <button type="submit" className="standard-button">
-              {songId ? "Save Changes" : "Save Song"}
+              {isLoading ? <PulseLoader size={12} cssOverride={{ margin: 0 }} speedMultiplier={0.5} /> : songId ? "Save Changes" : "Save Song"}
             </button>
           </div>
         </div>

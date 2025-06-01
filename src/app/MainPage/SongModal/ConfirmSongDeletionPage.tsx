@@ -4,6 +4,7 @@ import { useSongData } from "../../context/song-context";
 import { useForm } from "react-hook-form";
 import { StoreResponse } from "../../store/store";
 import { UnknownServerErrorMessage } from "../constants";
+import { PulseLoader } from "react-spinners";
 
 const GetErrorStatusMessage = (response: StoreResponse) => {
   if (response.errorCode === 400) {
@@ -22,7 +23,7 @@ interface ConfirmSongDeletionPageProps {
 export default function ConfirmSongDeletionPage({
   onFinished,
 }: ConfirmSongDeletionPageProps) {
-  const { deleteCurrentSong, selectSong } = useSongData();
+  const { deleteCurrentSong, selectSong, isLoading } = useSongData();
   const {
     handleSubmit,
     formState: { errors },
@@ -52,7 +53,7 @@ export default function ConfirmSongDeletionPage({
           className="bg-red-500 text-white standard-button"
           type="submit"
         >
-          Confirm Deletion
+          {isLoading ? <PulseLoader size={12} cssOverride={{ margin: 0 }} speedMultiplier={0.5} color="white" /> : "Confirm Deletion"}
         </button>
       </form>
       <button className="standard-button bg-white" onClick={onFinished}>

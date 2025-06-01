@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useCallback } from "react";
+import { PulseLoader, SyncLoader } from "react-spinners";
 import { useAccountData } from "../../context/account-context";
 import { UnknownServerErrorMessage } from "../constants";
 
@@ -31,7 +32,7 @@ export default function LoginPage({
   onForgotPassword,
   onFinished,
 }: LoginPageProps) {
-  const { login } = useAccountData();
+  const { login, isLoading } = useAccountData();
   const {
     register,
     handleSubmit,
@@ -93,7 +94,7 @@ export default function LoginPage({
         </div>
 
         <button type="submit" className="standard-button">
-          Login
+          {isLoading ? <PulseLoader size={12} cssOverride={{ margin: 0 }} speedMultiplier={0.5} /> : "Login"}
         </button>
       </form>
       <button onClick={onSignUp} className="standard-button">
