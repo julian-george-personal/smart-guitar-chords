@@ -38,12 +38,18 @@ export function getChordNotesPerString(
 
   for (let fretToBar = 0; fretToBar < numFrets; fretToBar++) {
     for (
-      let stringsToSkip = 0;
-      stringsToSkip < baseNotes.length - 2;
-      stringsToSkip++
+      let numStringsSkipped = 0, stringIdx = -1;
+      numStringsSkipped < baseNotes.length - 2 && stringIdx < baseNotes.length;
+      stringIdx++
     ) {
+      // This skipping can produce a chord tab with unvoiced strings in between voiced ones, 
+      //     but that behavior seems desirable when notes are manually specified
+      if (stringIdx in manualStringNotes) {
+        continue;
+      }
+      // Filter out strings that are being skipped so long as they don't have a manually-set note
       const trimmedMatrix = tabNoteMatrix.map((string, i) =>
-        i < stringsToSkip ? [] : string.slice(fretToBar)
+        i >= stringIdx || i in manualStringNotes ? string.slice(fretToBar) : []
       );
       for (
         let enforceBassNoteIdx = 0;
@@ -69,13 +75,9 @@ export function getChordNotesPerString(
           chordTabPrioritizer.addChordTab(stringNotes, fretToBar);
         }
       }
+      numStringsSkipped++;
     }
   }
-
-  // console.log(
-  //   "prioritized tabs",
-  //   chordTabPrioritizer.toArray().map((x) => x.chordTab)
-  // );
 
   const bestChordTabEnvelope = chordTabPrioritizer.popChordTab();
   if (!bestChordTabEnvelope) {
