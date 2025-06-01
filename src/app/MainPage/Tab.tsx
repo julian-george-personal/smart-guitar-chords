@@ -156,10 +156,10 @@ export default function Tab({ tabKey }: TabProps) {
             style={
               Object.keys(manualStringNotes).length > 0
                 ? {
-                    fontStyle: "italic",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }
+                  fontStyle: "italic",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }
                 : {}
             }
             onClick={resetAllManualStringNotes}
