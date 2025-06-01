@@ -3,7 +3,7 @@ import {
   QueryCommand,
   DeleteItemCommand,
   AttributeValue,
-  ReturnValue,
+  QueryCommandInput,
 } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
@@ -43,13 +43,33 @@ function parseItem(item?: Record<string, AttributeValue>) {
 }
 
 export async function get(pkType: PkType, key: string, itemId?: string) {
+  const commandObj: GetCommandInput = {
+    TableName: config.dynamoAccountTableName,
+    Key: { PK: `${pkType}#${key}`, SK: itemId ?? defaultSk },
+  }
   const result = await db.send(
-    new GetCommand({
-      TableName: config.dynamoAccountTableName,
-      Key: { PK: `${pkType}#${key}`, SK: itemId ?? defaultSk },
-    })
+    new GetCommand(commandObj)
   );
   return filterItem(result.Item);
+}
+
+export async function query(pkType: PkType, key: string, itemId?: string, filters?:{[key:string]:string}) {
+  const commandObj: QueryCommandInput = {
+    TableName: config.dynamoAccountTableName,
+    KeyConditionExpression: `PK = :pk AND SK = :sk`,
+    ExpressionAttributeValues: {
+      ":pk": { S: `${pkType}#${key}` },
+      ":sk": { S: itemId ?? defaultSk },
+    },
+  }
+  if (filters) {
+    commandObj.FilterExpression = Object.keys(filters).map((key) => `${key} = :${key}`).join(" AND ");
+    commandObj.ExpressionAttributeValues = {...commandObj.ExpressionAttributeValues, ...Object.fromEntries(Object.entries(filters).map(([key, value]) => [`:${key}`, { S: value }]))}
+  }
+  const result = await db.send(
+    new QueryCommand(commandObj)
+  );
+  return result.Items?.map(parseItem)
 }
 
 export async function getRange(
@@ -57,14 +77,15 @@ export async function getRange(
   keyPrefix: string
 ): Promise<unknown[] | undefined> {
   const prefixExpression = ":keyPrefix";
+  const commandObj: QueryCommandInput = {
+    TableName: config.dynamoAccountTableName,
+    KeyConditionExpression: `PK = ${prefixExpression}`,
+    ExpressionAttributeValues: {
+      [prefixExpression]: { S: `${pkType}#${keyPrefix}` },
+    },
+  }
   const result = await db.send(
-    new QueryCommand({
-      TableName: config.dynamoAccountTableName,
-      KeyConditionExpression: `PK = ${prefixExpression}`,
-      ExpressionAttributeValues: {
-        [prefixExpression]: { S: `${pkType}#${keyPrefix}` },
-      },
-    })
+    new QueryCommand(commandObj)
   );
   return result.Items?.map(parseItem);
 }

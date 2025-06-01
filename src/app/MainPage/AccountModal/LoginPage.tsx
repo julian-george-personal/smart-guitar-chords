@@ -76,7 +76,6 @@ export default function LoginPage({
               <p className="text-red-500 text-sm">{errors.username.message}</p>
             )}
           </div>
-
           <div>
             <label htmlFor="password" className="block">
               Password

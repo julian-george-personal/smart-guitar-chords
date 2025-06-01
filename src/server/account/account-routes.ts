@@ -61,7 +61,6 @@ const accountRoutes: TRoutes = {
             loginResponse?.token as string
           );
         case AccountStatus.InvalidRequest:
-          return Response.json({}, { status: 400 });
         case AccountStatus.NotFound:
           return Response.json({}, { status: 404 });
         default:

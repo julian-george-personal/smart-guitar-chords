@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   getAccountByEmail,
   getAccountByUsername,
-  putNewAccount as putNewAccount,
+  putNewAccount,
   setAccountNewPassword,
 } from "./account-repository";
 import {
@@ -13,7 +13,7 @@ import {
   TRecoverPasswordRequest,
   TSetNewPasswordRequest,
 } from "./account-requests";
-import { generateToken, verifyToken } from "../clients/auth-client";
+import { generateToken, hashPassword, verifyToken } from "../clients/auth-client";
 import { sendRecoverPasswordEmail } from "../clients/email-client";
 
 export enum AccountStatus {
@@ -80,7 +80,7 @@ export async function signup(
     return [AccountStatus.Conflict, AccountErrors.EmailTaken];
   }
 
-  const hashedPassword = await Bun.password.hash(password);
+  const hashedPassword = await hashPassword(password)
 
   await putNewAccount(username, hashedPassword, email);
 
@@ -107,7 +107,6 @@ export async function login(
   request: TLoginRequest
 ): Promise<[TLoginResponse | null, AccountStatus]> {
   const { username, password } = request;
-  // TODO: do a getAccountByUsernameAndHashedPassword and do the password filtering in the DB instead of pulling it in
   const user = await getAccountByUsername(username);
   if (!user) return [null, AccountStatus.NotFound];
   const isMatch = await Bun.password.verify(password, user.hashedPassword);
@@ -157,7 +156,7 @@ export async function setNewPassword(
       AccountStatus.InvalidRequest,
       error.errors[0].message as AccountErrors,
     ];
-  const hashedPassword = await Bun.password.hash(request.newPassword);
+  const hashedPassword = await hashPassword(request.newPassword);
   await setAccountNewPassword(parsedToken.email, hashedPassword);
   return [AccountStatus.Success, null];
 }
