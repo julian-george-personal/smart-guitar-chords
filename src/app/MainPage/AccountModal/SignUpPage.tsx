@@ -6,6 +6,7 @@ import { useAccountData } from "../../context/account-context";
 import { useCallback } from "react";
 import { StoreResponse } from "../../store/store";
 import { UnknownServerErrorMessage } from "../constants";
+import { PulseLoader } from "react-spinners";
 
 type TSignUpFormFields = {
   username: string;
@@ -45,7 +46,7 @@ interface SignUpPageProps {
 }
 
 export default function SignUpPage({ onFinished }: SignUpPageProps) {
-  const { signUp } = useAccountData();
+  const { signUp, isLoading } = useAccountData();
   const {
     register,
     handleSubmit,
@@ -131,7 +132,7 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
       </div>
 
       <button type="submit" className="p-2 w-full">
-        Sign Up
+        {isLoading ? <PulseLoader size={12} cssOverride={{ margin: 0 }} speedMultiplier={0.5} /> : "Sign Up"}
       </button>
     </form>
   );

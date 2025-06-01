@@ -1,7 +1,8 @@
+import { PulseLoader } from "react-spinners";
 import { useAccountData } from "../../context/account-context";
 
 export default function AccountPage() {
-  const { account, logout } = useAccountData();
+  const { account, logout, isLoading } = useAccountData();
   if (account == null) return null;
   return (
     <div className="centered-col items-start gap-2">
@@ -14,7 +15,7 @@ export default function AccountPage() {
         <div>{account.email}</div>
       </div>
       <button onClick={logout} className="standard-button">
-        Log Out
+        {isLoading ? <PulseLoader size={12} cssOverride={{ margin: 0 }} speedMultiplier={0.5} color="white" /> : "Log Out"}
       </button>
     </div>
   );
