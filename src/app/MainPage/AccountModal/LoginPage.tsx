@@ -12,8 +12,8 @@ type TLoginFormFields = {
 };
 
 const validationSchema = z.object({
-  username: z.string({ message: "Name is required" }),
-  password: z.string({ message: "Password is required" }),
+  username: z.string().min(1, { message: "Username is required" }),
+  password: z.string().min(1, { message: "Password is required" }),
 });
 
 const ErrorStatusMessages: { [errorCode: number]: string } = {

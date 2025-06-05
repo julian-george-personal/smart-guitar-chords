@@ -28,7 +28,7 @@ export default function MultiStringInput({
     [onChange, values]
   );
   return (
-    <div className="flex flex-row py-1 gap-2 items-center max-w-[32rem] flex-wrap">
+    <div className="flex flex-row gap-2 items-center max-w-[32rem] flex-wrap">
       {values.map((stringValue, i) => (
         <div
           key={i}
