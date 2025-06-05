@@ -91,11 +91,11 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
         )}
       </div>
       <div className="w-full h-[85%] centered-col relative">
-        <div className="w-full h-full centered-row absolute -z-10">
+        <div className="w-full h-full centered-row absolute">
           <div className="h-full grow border-r border-solid border-black" />
           <div className="h-full grow border-l border-solid border-black" />
         </div>
-        <div className="centered-col w-full h-full">
+        <div className="centered-col w-full h-full z-10">
           {Array.from(Array(tabContext.fretCount).keys()).map((fretIdx) => {
             const isTabbed = fretNumber != null && fretIdx == fretNumber - 1;
             const isHovered = fretIdx == hoveredFretIdx;

@@ -34,6 +34,7 @@ export default function Modal({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 100
         },
         content: {
           width: "auto",
