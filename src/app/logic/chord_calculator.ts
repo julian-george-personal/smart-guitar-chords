@@ -15,6 +15,7 @@ const NumPermutations = 1;
 export function getChordNotesPerString(
   chordName: string | null,
   baseNotes: NoteLiteral[],
+  startingFretNum: number,
   numFrets: number,
   manualStringNotes: ChordTab
 ): [stringNotes: (NoteLiteral | null)[], fretNumToBar: number] {
@@ -26,7 +27,7 @@ export function getChordNotesPerString(
       0,
     ];
   }
-  const tabNoteMatrix = generateNoteMatrix(baseNotes, numFrets);
+  const tabNoteMatrix = generateNoteMatrix(baseNotes, startingFretNum, numFrets);
   const prioritizedChordNotes = getGuitarNotesFromChordName(chordName);
   const bassNote = getBassNoteFromChordName(chordName);
 
@@ -202,13 +203,16 @@ function getNewChordNotesPerStringInner(
 
 function generateNoteMatrix(
   baseNotes: NoteLiteral[],
+  startingFretNum: number,
   numFrets: number
 ): NoteLiteral[][] {
   const noteMatrix: NoteLiteral[][] = [];
   for (const baseNote of baseNotes) {
     const stringNotes: NoteLiteral[] = [];
     for (let fretIdx = 0; fretIdx <= numFrets; fretIdx++) {
-      stringNotes.push(getNoteFromNumFrets(baseNote, fretIdx));
+      // When the startingFretNum isn't 0, we still want open notes to be an option
+      const fretOffset = fretIdx == 0 ? 0 : fretIdx + startingFretNum;
+      stringNotes.push(getNoteFromNumFrets(baseNote, fretOffset));
     }
     noteMatrix.push(stringNotes);
   }

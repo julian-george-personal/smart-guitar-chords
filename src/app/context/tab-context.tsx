@@ -4,6 +4,7 @@ import { useTabByKey } from "./song-context";
 type TTabContext = {
   fretCount: number;
   stringCount: number;
+  startingFretNum: number;
 };
 
 export const TabContext = createContext<TTabContext | null>(null);
@@ -20,6 +21,7 @@ export function TabProvider({ children, tabKey }: TabProviderProps) {
       value={{
         fretCount: tab.fretCount,
         stringCount: tab.stringTunings.length,
+        startingFretNum: tab.startingFretNum
       }}
     >
       {children}

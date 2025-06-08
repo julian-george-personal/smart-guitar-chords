@@ -8,6 +8,7 @@ import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
 import { NoteLiteral } from "tonal";
 import { useTabByKey } from "../context/song-context";
+import { RxArrowDown, RxArrowUp } from "react-icons/rx";
 
 interface TabProps {
   tabKey: number;
@@ -19,39 +20,36 @@ export default function Tab({ tabKey }: TabProps) {
     setManualStringNote,
     resetManualStringNote,
     resetAllManualStringNotes,
-    setStartingFretNum,
+    incrementStartingFretNum,
   } = useTabByKey(tabKey);
   const {
     stringTunings,
     startingFretNum,
+    capoFretNum,
     chordName,
     fretCount,
     manualStringNotes,
   } = tab;
-  const [interactiveStartingFretNum, setInteractiveStartingFretNum] =
-    useState<boolean>(false);
-  const startingFretNotes = useMemo(
-    () =>
-      stringTunings.map((baseNote) =>
-        getNoteFromNumFrets(baseNote, startingFretNum)
-      ),
-    [stringTunings, startingFretNum]
-  );
+
   const [stringNotes, setStringNotes] = useState<(NoteLiteral | null)[] | null>(
     null
   );
   const [relativeFretNumToBar, setRelativeFretNumToBar] = useState<number>(0);
+
   const tabBaseNotes = useMemo(
     () =>
       stringTunings.map((tuning) =>
-        getNoteFromNumFrets(tuning, startingFretNum)
+        getNoteFromNumFrets(tuning, capoFretNum)
       ),
-    [startingFretNum, stringTunings]
+    [capoFretNum, stringTunings]
   );
+
+  // The voicing is calculated here:
   useEffect(() => {
     const [newStringNotes, newRelativeFretNumToBar] = getChordNotesPerString(
       chordName,
       tabBaseNotes,
+      startingFretNum,
       fretCount,
       manualStringNotes
     );
@@ -66,25 +64,11 @@ export default function Tab({ tabKey }: TabProps) {
     fretCount,
   ]);
 
-  useEffect(() => {
-    if (stringNotes == null) return;
-    if (
-      stringNotes.filter(
-        (stringNote, i) =>
-          stringNote != null &&
-          getNumFrets(startingFretNotes[i], stringNote) < relativeFretNumToBar
-      ).length > 0
-    ) {
-      setRelativeFretNumToBar(0);
-    }
-  }, [
-    stringNotes,
-    startingFretNotes,
-    relativeFretNumToBar,
-    setRelativeFretNumToBar,
-  ]);
   const setManualStringFretNum = useCallback(
     (stringNum: number, newFretNum: number | null) => {
+      const startingFretNotes = stringTunings.map((baseNote) =>
+        getNoteFromNumFrets(baseNote, startingFretNum)
+      )
       setManualStringNote(
         stringNum,
         newFretNum == null
@@ -92,29 +76,24 @@ export default function Tab({ tabKey }: TabProps) {
           : getNoteFromNumFrets(startingFretNotes[stringNum], newFretNum)
       );
     },
-    [setManualStringNote, startingFretNotes]
+    [setManualStringNote, stringTunings]
   );
+
   if (stringNotes == null || stringTunings.length == 0) return null;
   return (
     <TabProvider tabKey={tabKey}>
       <div className="centered-row aspect-square w-full max-w-80">
-        {interactiveStartingFretNum && (
-          <div className="w-1/6">
-            <div className="top-[15%] relative align-right w-full text-lg">
-              (
-              <input
-                value={startingFretNum}
-                onChange={(newValue) => {
-                  const newNumber = parseInt(newValue.target.value);
-                  if (newNumber >= 0) setStartingFretNum(newNumber);
-                }}
-                type="number"
-                className="w-full"
-              />
-              )
-            </div>
+        <div className="w-8 h-full">
+          <div className="centered-col justify-center position-relative pt-1">
+            {startingFretNum != 0 ?
+              <>
+                <RxArrowUp className="cursor-pointer stroke-[1] sm:h-4 sm:w-4 h-6 w-6" onClick={() => incrementStartingFretNum(-1)} />
+                <div className="h-6">{startingFretNum}</div>
+              </> : <div className="h-10" />
+            }
+            <RxArrowDown className="cursor-pointer stroke-[1] sm:h-4 sm:w-4 h-6 w-6" onClick={() => incrementStartingFretNum(1)} />
           </div>
-        )}
+        </div>
         <div className="w-full h-full">
           <div className="w-full h-[90%] relative">
             <Box fretNumToBar={relativeFretNumToBar} />
