@@ -17,16 +17,17 @@ import { withLoading } from "../util";
 export type TTab = {
   chordName: string;
   manualStringNotes: ChordTab;
-  fretCount?: number;
-  startingFretNum?: number;
-  stringTunings?: NoteLiteral[];
+  fretCount: number;
+  startingFretNum: number;
+  capoFretNum: number;
+  stringTunings: NoteLiteral[];
 };
 
 export type TSong = {
   tabs: TTab[];
   title?: string;
   fretCount: number;
-  startingFretNum: number;
+  capoFretNum: number;
   stringTunings: NoteLiteral[];
   chordNames: string[];
 };
@@ -38,7 +39,7 @@ type TSongContext = {
   setTitle: (title: string) => void;
   setChordNames: (chordNames: string[]) => void;
   updateTabByKey: (key: number, newTab: TTab) => void;
-  setSongStartingFretNum: (startingFretNum: number) => void;
+  setSongCapoFretNum: (capoFretNum: number) => void;
   setSongFretCount: (fretCount: number) => void;
   setSongStringTunings: (stringTunings: NoteLiteral[]) => void;
   saveSong: (
@@ -56,14 +57,23 @@ interface SongProviderProps {
 
 const defaultStringTunings: NoteLiteral[] = ["E", "A", "D", "G", "B", "E"];
 const defaultFretCount = 5;
+const defaultCapoFretNum = 0;
 const defaultStartingFretNum = 0;
-const defaultSong = {
+const defaultSong: TSong = {
   chordNames: ["C"],
   tabs: [],
-  startingFretNum: defaultStartingFretNum,
+  capoFretNum: defaultCapoFretNum,
   fretCount: defaultFretCount,
   stringTunings: defaultStringTunings,
 };
+const defaultTab: TTab = {
+  chordName: defaultSong.chordNames[0],
+  manualStringNotes: {},
+  fretCount: defaultFretCount,
+  stringTunings: defaultStringTunings,
+  capoFretNum: defaultCapoFretNum,
+  startingFretNum: defaultStartingFretNum
+}
 
 export function SongProvider({ children }: SongProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -99,8 +109,8 @@ export function SongProvider({ children }: SongProviderProps) {
       for (let i = 0; i < prev.chordNames.length; i++) {
         if (i >= newSong.tabs.length) {
           newSong.tabs.push({
+            ...defaultTab,
             chordName: prev.chordNames[i],
-            manualStringNotes: {},
           });
         } else {
           newSong.tabs[i].chordName = prev.chordNames[i];
@@ -112,9 +122,9 @@ export function SongProvider({ children }: SongProviderProps) {
     });
   }, [song.chordNames]);
 
-  const setSongStartingFretNum = useCallback(
-    (startingFretNum: number) =>
-      setSong((prev) => ({ ...prev, startingFretNum })),
+  const setSongCapoFretNum = useCallback(
+    (capoFretNum: number) =>
+      setSong((prev) => ({ ...prev, capoFretNum })),
     [setSong]
   );
 
@@ -176,7 +186,7 @@ export function SongProvider({ children }: SongProviderProps) {
         setTitle,
         setChordNames,
         updateTabByKey,
-        setSongStartingFretNum,
+        setSongCapoFretNum,
         setSongFretCount,
         setSongStringTunings,
         saveSong: withSongLoading(saveSong),
@@ -208,15 +218,17 @@ export function useTabByKey(key: number) {
         fretCount: song.fretCount,
         // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
         stringTunings: song.stringTunings.filter((s) => s !== ""),
-        startingFretNum: song.startingFretNum,
+        capoFretNum: song.capoFretNum,
+        startingFretNum: song.tabs[key].startingFretNum
       },
     } as Required<TTab>),
     [
       song.tabs[key].chordName,
       song.tabs[key].manualStringNotes,
+      song.tabs[key].startingFretNum,
       song.fretCount,
       song.stringTunings,
-      song.startingFretNum,
+      song.capoFretNum,
     ]
   );
   const updateTab = useCallback(
@@ -256,11 +268,19 @@ export function useTabByKey(key: number) {
     },
     [updateTab]
   );
+  const incrementStartingFretNum = useCallback(
+    (fretDiff: number) =>
+      updateTab((prev) => {
+        return prev.startingFretNum != null ? ({ ...prev, startingFretNum: prev.startingFretNum + fretDiff }) : prev
+      }),
+    [updateTab]
+  );
   return {
     tab,
     setManualStringNote,
     resetManualStringNote,
     setStartingFretNum,
     resetAllManualStringNotes,
+    incrementStartingFretNum,
   };
 }

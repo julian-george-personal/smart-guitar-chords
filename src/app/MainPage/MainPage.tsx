@@ -18,7 +18,7 @@ export default function MainPage() {
     song,
     setChordNames,
     setSongStringTunings,
-    setSongStartingFretNum,
+    setSongCapoFretNum,
     setSongFretCount,
     selectSong,
     songId,
@@ -80,17 +80,17 @@ export default function MainPage() {
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">Capo Fret</span>
               <input
-                value={song.startingFretNum}
+                value={song.capoFretNum}
                 onChange={(newValue) => {
                   let parsedValue = parseInt(newValue.target.value);
                   if (isNaN(parsedValue)) parsedValue = 0;
-                  if (parsedValue >= 0) setSongStartingFretNum(parsedValue);
+                  if (parsedValue >= 0) setSongCapoFretNum(parsedValue);
                 }}
                 className="standard-input w-36"
               />
             </div>
             <div className="flex flex-col min-w-16">
-              <span className="text-[12px]">Number of Frets</span>
+              <span className="text-[12px]">Fret Window Size</span>
               <input
                 value={song.fretCount}
                 onChange={(newValue) => {
