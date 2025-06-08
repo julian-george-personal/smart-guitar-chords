@@ -33,7 +33,7 @@ function validateSongJson(songJson: string) {
     "tabs",
     "title",
     "fretCount",
-    "startingFretNum",
+    "capoFretNum",
     "stringTunings",
     "chordNames",
   ]);

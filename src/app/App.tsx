@@ -1,4 +1,3 @@
-import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AccountProvider } from "./context/account-context";
 import MainPage from "./MainPage/MainPage";

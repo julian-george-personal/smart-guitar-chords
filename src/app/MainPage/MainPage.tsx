@@ -155,7 +155,8 @@ export default function MainPage() {
                     }),
                     valueContainer: (baseStyles) => ({
                       ...baseStyles,
-                      padding: '0px 0px'
+                      padding: '0px 0px',
+                      zIndex: 50
                     }),
                     indicatorSeparator: () => ({
                       display: 'none'
@@ -166,7 +167,8 @@ export default function MainPage() {
                     }),
                     menu: (baseStyles) => ({
                       ...baseStyles,
-                      border: 'none'
+                      border: 'none',
+                      zIndex: 50
                     })
                   }}
                 />

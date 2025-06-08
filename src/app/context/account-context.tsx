@@ -132,7 +132,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
         account,
         songs,
         isLoading,
-        signUp,
+        signUp: withAccountLoading(signUp),
         login: withAccountLoading(login),
         logout: withAccountLoading(logout),
         recoverPassword: withAccountLoading(recoverPassword),
