@@ -46,6 +46,7 @@ type TSongContext = {
     updates: Partial<TSong>
   ) => Promise<StoreResponse & { songId?: string }>;
   deleteCurrentSong: () => Promise<StoreResponse>;
+  duplicateCurrentSong: () => Promise<StoreResponse & { songId?: string }>;
   isLoading: boolean;
 };
 
@@ -163,6 +164,16 @@ export function SongProvider({ children }: SongProviderProps) {
     return response;
   }, [song, songId]);
 
+  const duplicateCurrentSong = useCallback(async () => {
+    if (!songId) throw new Error();
+    const response = await songStore.duplicateSong(songId);
+    refreshSongs();
+    if (response.songId) {
+      setSongId(response.songId);
+    }
+    return response;
+  }, [songId, refreshSongs]);
+
   const updateTabByKey = useCallback(
     (key: number, changes: Partial<TTab>) => {
       setSong((prev) => {
@@ -191,6 +202,7 @@ export function SongProvider({ children }: SongProviderProps) {
         setSongStringTunings,
         saveSong: withSongLoading(saveSong),
         deleteCurrentSong: withSongLoading(deleteCurrentSong),
+        duplicateCurrentSong: withSongLoading(duplicateCurrentSong),
         isLoading,
       }}
     >

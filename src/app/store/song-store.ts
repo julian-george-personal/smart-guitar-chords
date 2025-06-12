@@ -70,3 +70,18 @@ export async function deleteSong(songId: string): Promise<StoreResponse> {
     return toStoreResponse(e);
   }
 }
+
+export async function duplicateSong(
+  songId: string
+): Promise<CreateSongResponse & StoreResponse> {
+  try {
+    const result = await axios.post<{}, AxiosResponse<CreateSongResponse>>(
+      songUrl + "/duplicate/" + songId,
+      {},
+      authHeaders()
+    );
+    return { songId: result.data.songId, isError: false };
+  } catch (e) {
+    return toStoreResponse(e);
+  }
+}
