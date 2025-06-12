@@ -3,6 +3,8 @@ import {
   TCreateSongRequest,
   TCreateSongResponse,
   TDeleteSongRequest,
+  TDuplicateSongRequest,
+  TDuplicateSongResponse,
   TGetSongsResponse,
   TUpdateSongRequest,
   TUpdateSongResponse,
@@ -134,4 +136,49 @@ export async function getSongsByUser(
     return [null, SongStatus.NotFound];
   }
   return [{ songs }, SongStatus.Success];
+}
+
+const duplicateSongSchema = songSchema.omit({ songJson: true });
+
+export async function duplicateSong(
+  request: TDuplicateSongRequest,
+  username: string
+): Promise<[TDuplicateSongResponse | null, SongStatus, SongErrors | null]> {
+  const { success, error } = duplicateSongSchema.safeParse(request);
+  if (!success) {
+    if (!error) {
+      throw new Error();
+    }
+    return [
+      null,
+      SongStatus.InvalidRequest,
+      error.errors[0].message as SongErrors,
+    ];
+  }
+
+  const [songsResponse, status] = await getSongsByUser(username);
+  if (status !== SongStatus.Success || !songsResponse) {
+    return [null, SongStatus.NotFound, null];
+  }
+
+  const originalSong = songsResponse.songs.find(
+    (song) => song.songId === request.songId
+  );
+  if (!originalSong) {
+    return [null, SongStatus.NotFound, null];
+  }
+
+  const songData = JSON.parse(originalSong.songJson);
+  songData.title = `${songData.title} (Copy)`;
+  const newSongJson = JSON.stringify(songData);
+
+  const newSongId = await songRepository.createSong(username, {
+    songJson: newSongJson,
+  });
+
+  if (!newSongId) {
+    return [null, SongStatus.UnknownError, null];
+  }
+
+  return [{ songId: newSongId }, SongStatus.Success, null];
 }

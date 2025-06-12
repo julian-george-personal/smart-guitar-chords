@@ -35,7 +35,7 @@ export default function SaveSongPage({
   onFinished,
   onDelete,
 }: SaveSongPageProps) {
-  const { song, songId, setTitle, saveSong, selectSong, isLoading } = useSongData();
+  const { song, songId, setTitle, saveSong, selectSong, duplicateCurrentSong, isLoading } = useSongData();
   const {
     register,
     handleSubmit,
@@ -48,8 +48,10 @@ export default function SaveSongPage({
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = useCallback(
-    async (data: TSaveSongFormFields) => {
+  const onSubmit = useCallback((data: TSaveSongFormFields) => onSave(data, true), [])
+
+  const onSave = useCallback(
+    async (data: TSaveSongFormFields, shouldFinish: boolean) => {
       const response = await saveSong({ title: data.title });
       if (response.isError) {
         setError("root", {
@@ -57,12 +59,23 @@ export default function SaveSongPage({
           message: GetErrorStatusMessage(response),
         });
       } else {
-        if (!songId) toast.success("New song saved");
-        onFinished();
+        !!songId ? toast.success("Song saved") : toast.success("New song saved");
+        if (shouldFinish) onFinished();
       }
     },
     [setTitle, saveSong, selectSong]
   );
+
+  const onDuplicate = useCallback(async (data: TSaveSongFormFields) => {
+    onSave(data, false);
+    const response = await duplicateCurrentSong();
+    if (response.isError) {
+      toast.error(GetErrorStatusMessage(response));
+    } else {
+      toast.success("Song duplicated successfully");
+      onFinished();
+    }
+  }, [duplicateCurrentSong, onFinished, onSave]);
 
   return (
     <>
@@ -91,12 +104,25 @@ export default function SaveSongPage({
         </div>
       </form>
       {songId && (
-        <button
-          className="bg-red-500 text-white standard-button"
-          onClick={onDelete}
-        >
-          Delete Song
-        </button>
+        <div>
+          <button
+            className="standard-button"
+            onClick={handleSubmit(onDuplicate)}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <PulseLoader size={12} cssOverride={{ margin: 0 }} speedMultiplier={0.5} />
+            ) : (
+              "Duplicate Song"
+            )}
+          </button>
+          <button
+            className="bg-red-500 text-white standard-button"
+            onClick={onDelete}
+          >
+            Delete Song
+          </button>
+        </div>
       )}
     </>
   );

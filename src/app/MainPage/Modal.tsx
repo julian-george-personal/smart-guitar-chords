@@ -59,8 +59,8 @@ export default function Modal({
             <RxCross1 />
           </div>
         </header>
-        <div className="w-full max-w-lg">
-          {title && <div className="text-xl w-full py-1">{title}</div>}
+        <div className="w-full max-w-lg py-8">
+          {title && <div className="text-xl w-full py-1 font-medium">{title}</div>}
           {children}
         </div>
       </div>

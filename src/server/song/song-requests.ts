@@ -30,3 +30,11 @@ export type TUpdateSongResponse = {
 export type TDeleteSongRequest = {
   songId: string;
 };
+
+export type TDuplicateSongRequest = {
+  songId: string;
+};
+
+export type TDuplicateSongResponse = {
+  songId: string;
+};

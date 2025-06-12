@@ -5,11 +5,13 @@ import {
   SongStatus,
   updateSong,
   deleteSong,
+  duplicateSong,
 } from "./song-service";
 import { verifyAuthorization } from "../clients/auth-client";
 import {
   TCreateSongRequest,
   TDeleteSongRequest,
+  TDuplicateSongRequest,
   TUpdateSongRequest,
 } from "./song-requests";
 import { BunRequest } from "bun";
@@ -84,6 +86,30 @@ const songRoutes: TRoutes = {
           return Response.json(null, { status: 200 });
         case SongStatus.InvalidRequest:
           return Response.json({ error }, { status: 400 });
+        default:
+          return Response.json(null, { status: 500 });
+      }
+    },
+  },
+  "/api/song/duplicate/:songId": {
+    POST: async (req: BunRequest<"/api/song/duplicate/:songId">) => {
+      const authorizedUsername = verifyAuthorization(req);
+      if (!authorizedUsername) return Response.json(null, { status: 401 });
+
+      const { songId } = req.params;
+      const request = { songId } as TDuplicateSongRequest;
+
+      const [response, status, error] = await duplicateSong(
+        request,
+        authorizedUsername
+      );
+      switch (status) {
+        case SongStatus.Success:
+          return Response.json(response, { status: 200 });
+        case SongStatus.InvalidRequest:
+          return Response.json({ error }, { status: 400 });
+        case SongStatus.NotFound:
+          return Response.json(null, { status: 404 });
         default:
           return Response.json(null, { status: 500 });
       }
