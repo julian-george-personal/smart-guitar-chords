@@ -18,6 +18,7 @@ type ChordTabEnvelope = {
   numChordNotesMissing: number;
   isValid: boolean;
   numStringsUnvoiced: number;
+  priority: number;
 };
 
 // Ideas to improve this:
@@ -33,7 +34,7 @@ function getPriority(chordTabEnvelope: ChordTabEnvelope) {
     isValid,
     numStringsUnvoiced,
   } = chordTabEnvelope;
-  const priority =
+  let priority =
     numFingers +
     numStringsUnvoiced +
     (barredFret > 0 ? 2.1 : 0) +
@@ -50,11 +51,25 @@ export default class ChordTabPrioritizer {
   private existingStringifiedTabs: Set<string> = new Set();
   private bassNote: NoteLiteral;
 
+  public constructor(
+    noteMatrix: NoteLiteral[][],
+    prioritizedChordNotes: NoteLiteral[],
+    bassNote: NoteLiteral
+  ) {
+    this.noteMatrix = noteMatrix;
+    this.prioritizedChordNotes = prioritizedChordNotes;
+    this.allChordNotes = new Set(prioritizedChordNotes);
+    this.bassNote = bassNote;
+  }
+
   private compareTabs: ICompare<ChordTabEnvelope> = (
     a: ChordTabEnvelope,
     b: ChordTabEnvelope
   ) => {
     const [aPriority, bPriority] = [getPriority(a), getPriority(b)];
+
+    a.priority = aPriority;
+    b.priority = bPriority;
 
     const comparison = comparePriorities(aPriority, bPriority);
 
@@ -92,19 +107,10 @@ export default class ChordTabPrioritizer {
         barredFret != 0
       ),
       numStringsUnvoiced: tabArray.length - voicedNotes.length,
+      priority: Infinity
     };
   }
 
-  public constructor(
-    noteMatrix: NoteLiteral[][],
-    prioritizedChordNotes: NoteLiteral[],
-    bassNote: NoteLiteral
-  ) {
-    this.noteMatrix = noteMatrix;
-    this.prioritizedChordNotes = prioritizedChordNotes;
-    this.allChordNotes = new Set(prioritizedChordNotes);
-    this.bassNote = bassNote;
-  }
 
   public addChordTab(chordTab: ChordTab, barredFret: number) {
     const stringifiedTab = JSON.stringify(chordTab);
@@ -118,9 +124,26 @@ export default class ChordTabPrioritizer {
     this.chordTabQueue.enqueue(chordEnvelope);
   }
 
-  public popChordTab() {
-    const chord = this.chordTabQueue.pop();
+  public popChordTab(): Required<ChordTabEnvelope> | null {
+    const chord = this.chordTabQueue.pop() as Required<ChordTabEnvelope>;
     return chord;
+  }
+
+  private ScoreThreshold = 8;
+  private MaxTabsToReturn = 10;
+
+  public getBestTabs(): ChordTabEnvelope[] {
+    const bestTabs: ChordTabEnvelope[] = []
+
+    while (bestTabs.length <= this.MaxTabsToReturn) {
+      const tab = this.chordTabQueue.pop();
+      if (tab != null && (bestTabs.length == 0 || (tab?.isValid && tab.priority < this.ScoreThreshold))) {
+        bestTabs.push(tab);
+      }
+      else break;
+    }
+
+    return bestTabs;
   }
 
   public toArray() {
@@ -152,7 +175,7 @@ function chordNotesAreValid(
     stringNoteValues.filter(
       (a, i) => a != null && getNumFrets(baseNotes[i], a) > 0
     ).length +
-      (isTabbed ? 1 : 0) >
+    (isTabbed ? 1 : 0) >
     4
   ) {
     return false;

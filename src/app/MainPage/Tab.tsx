@@ -1,14 +1,14 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getNoteFromNumFrets, getNumFrets } from "../logic/music_util";
+import { getNoteFromNumFrets } from "../logic/music_util";
 import {
   getChordNameFromNotes,
-  getChordNotesPerString,
+  getBestTabsForChord,
+  NotesAndBarredFret,
 } from "../logic/chord_calculator";
 import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
-import { NoteLiteral } from "tonal";
 import { useTabByKey } from "../context/song-context";
-import { RxArrowDown, RxArrowUp } from "react-icons/rx";
+import { RxArrowDown, RxArrowLeft, RxArrowRight, RxArrowUp } from "react-icons/rx";
 
 interface TabProps {
   tabKey: number;
@@ -21,6 +21,7 @@ export default function Tab({ tabKey }: TabProps) {
     resetManualStringNote,
     resetAllManualStringNotes,
     incrementStartingFretNum,
+    incrementVoicingIdx
   } = useTabByKey(tabKey);
   const {
     stringTunings,
@@ -29,12 +30,11 @@ export default function Tab({ tabKey }: TabProps) {
     chordName,
     fretCount,
     manualStringNotes,
+    voicingIdx,
   } = tab;
 
-  const [stringNotes, setStringNotes] = useState<(NoteLiteral | null)[] | null>(
-    null
-  );
-  const [relativeFretNumToBar, setRelativeFretNumToBar] = useState<number>(0);
+  const [voicingOptions, setVoicingOptions] = useState<NotesAndBarredFret[]>([])
+  const currentVoicing = useMemo(() => voicingOptions[voicingIdx], [voicingIdx, voicingOptions])
 
   const tabBaseNotes = useMemo(
     () =>
@@ -46,22 +46,20 @@ export default function Tab({ tabKey }: TabProps) {
 
   // The voicing is calculated here:
   useEffect(() => {
-    const [newStringNotes, newRelativeFretNumToBar] = getChordNotesPerString(
+    const voicings = getBestTabsForChord(
       chordName,
       tabBaseNotes,
       startingFretNum,
       fretCount,
       manualStringNotes
     );
-    setStringNotes(newStringNotes);
-    setRelativeFretNumToBar(newRelativeFretNumToBar);
+    setVoicingOptions(voicings);
   }, [
     manualStringNotes,
     chordName,
     tabBaseNotes,
-    setStringNotes,
-    setRelativeFretNumToBar,
     fretCount,
+    setVoicingOptions
   ]);
 
   const setManualStringFretNum = useCallback(
@@ -79,29 +77,33 @@ export default function Tab({ tabKey }: TabProps) {
     [setManualStringNote, stringTunings]
   );
 
-  if (stringNotes == null || stringTunings.length == 0) return null;
+  if (currentVoicing == null) return null;
   return (
     <TabProvider tabKey={tabKey}>
-      <div className="centered-row aspect-square w-full max-w-80">
+      <div className="centered-row w-full max-w-80">
         <div className="w-8 h-full">
-          <div className="centered-col justify-center position-relative pt-1">
-            {startingFretNum != 0 ?
+          <div style={{
+            // h-10
+            height: startingFretNum == 0 ? "2.5rem" : "2.15rem"
+          }} />
+          <div className="centered-col justify-center position-relative">
+            {startingFretNum != 0 &&
               <>
                 <RxArrowUp className="cursor-pointer stroke-[1] sm:h-4 sm:w-4 h-6 w-6" onClick={() => incrementStartingFretNum(-1)} />
-                <div className="h-6">{startingFretNum}</div>
-              </> : <div className="h-10" />
+                <div className="h-6">{startingFretNum + 1}</div>
+              </>
             }
             <RxArrowDown className="cursor-pointer stroke-[1] sm:h-4 sm:w-4 h-6 w-6" onClick={() => incrementStartingFretNum(1)} />
           </div>
         </div>
-        <div className="w-full h-full">
+        <div className="w-full aspect-square">
           <div className="w-full h-[90%] relative">
-            <Box fretNumToBar={relativeFretNumToBar} />
+            <Box fretNumToBar={currentVoicing.fretNumToBar} />
             <div className="absolute w-full h-full top-0 centered-row">
               {tabBaseNotes.map((baseNote, i) => (
                 <TunedString
                   baseNote={baseNote}
-                  currNote={stringNotes[i]}
+                  currNote={currentVoicing.stringNotes[i]}
                   key={i}
                   onFretChange={(newFretNum) => {
                     setManualStringFretNum(i, newFretNum);
@@ -112,7 +114,7 @@ export default function Tab({ tabKey }: TabProps) {
             </div>
           </div>
           <div className="w-full h-[10%] centered-row">
-            {stringNotes.map((note, stringIdx) => {
+            {currentVoicing.stringNotes.map((note, stringIdx) => {
               const isModified = stringIdx in manualStringNotes;
               return (
                 <div
@@ -130,23 +132,38 @@ export default function Tab({ tabKey }: TabProps) {
               );
             })}
           </div>
-          <div
-            className="w-full text-center"
-            style={
-              Object.keys(manualStringNotes).length > 0
-                ? {
-                  fontStyle: "italic",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }
-                : {}
-            }
-            onClick={resetAllManualStringNotes}
-          >
-            {getChordNameFromNotes(
-              stringNotes.filter((note) => note != null),
-              chordName
-            ) ?? "???"}
+          <div className="centered-col">
+            <div
+              className="w-full text-center"
+              style={
+                Object.keys(manualStringNotes).length > 0
+                  ? {
+                    fontStyle: "italic",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }
+                  : {}
+              }
+              onClick={resetAllManualStringNotes}
+            >
+              {getChordNameFromNotes(
+                currentVoicing.stringNotes.filter((note) => note != null),
+                chordName
+              ) ?? "???"}
+            </div>
+            <div className="flex flex-row items-center justify-center gap-2 w-full">
+              <div className="basis-1/3 flex flex-row justify-end">
+                {voicingIdx != 0 && <RxArrowLeft className="stroke-1 cursor-pointer" onClick={() => {
+                  incrementVoicingIdx(-1, voicingOptions.length)
+                }} />}
+              </div>
+              <div className="text-sm text-center">{voicingIdx + 1} of {voicingOptions.length}</div>
+              <div className="basis-1/3 flex flex-row justify-start">
+                {voicingIdx != voicingOptions.length - 1 && <RxArrowRight className="stroke-1 cursor-pointer" onClick={() => {
+                  incrementVoicingIdx(1, voicingOptions.length)
+                }} />}
+              </div>
+            </div>
           </div>
         </div>
       </div>
