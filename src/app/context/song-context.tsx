@@ -20,6 +20,7 @@ export type TTab = {
   fretCount: number;
   startingFretNum: number;
   capoFretNum: number;
+  voicingIdx: number;
   stringTunings: NoteLiteral[];
 };
 
@@ -73,7 +74,8 @@ const defaultTab: TTab = {
   fretCount: defaultFretCount,
   stringTunings: defaultStringTunings,
   capoFretNum: defaultCapoFretNum,
-  startingFretNum: defaultStartingFretNum
+  startingFretNum: defaultStartingFretNum,
+  voicingIdx: 0
 }
 
 export function SongProvider({ children }: SongProviderProps) {
@@ -222,6 +224,7 @@ export const useSongData = () => {
 export function useTabByKey(key: number) {
   const { song, updateTabByKey } = useSongData();
 
+  // NOTE: whenever you add a property to TTab, you need to change this
   const tab = useMemo(
     () =>
     ({
@@ -231,13 +234,15 @@ export function useTabByKey(key: number) {
         // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
         stringTunings: song.stringTunings.filter((s) => s !== ""),
         capoFretNum: song.capoFretNum,
-        startingFretNum: song.tabs[key].startingFretNum
+        startingFretNum: song.tabs[key].startingFretNum,
+        voicingIdx: song.tabs[key].voicingIdx
       },
     } as Required<TTab>),
     [
       song.tabs[key].chordName,
       song.tabs[key].manualStringNotes,
       song.tabs[key].startingFretNum,
+      song.tabs[key].voicingIdx,
       song.fretCount,
       song.stringTunings,
       song.capoFretNum,
@@ -287,6 +292,11 @@ export function useTabByKey(key: number) {
       }),
     [updateTab]
   );
+  const incrementVoicingIdx = useCallback((idxDiff: number, numVoicingOptions: number) => {
+    updateTab((prev) => {
+      return ({ ...prev, voicingIdx: Math.min(Math.max(prev.voicingIdx + idxDiff, 0), numVoicingOptions - 1) })
+    })
+  }, [updateTab])
   return {
     tab,
     setManualStringNote,
@@ -294,5 +304,6 @@ export function useTabByKey(key: number) {
     setStartingFretNum,
     resetAllManualStringNotes,
     incrementStartingFretNum,
+    incrementVoicingIdx
   };
 }

@@ -11,12 +11,16 @@ export function normalizeNote(noteName: NoteLiteral): NoteLiteral {
   ];
 }
 
-export function getNumFrets(baseNote: NoteLiteral, currNote: NoteLiteral) {
+export function getNumSemitones(baseNote: NoteLiteral, currNote: NoteLiteral) {
   return (
     Number(
       Interval.semitones(Interval.simplify(Note.distance(baseNote, currNote)))
-    ) % 12
+    )
   );
+}
+
+export function getNumFrets(baseNote: NoteLiteral, currNote: NoteLiteral) {
+  return getNumSemitones(baseNote, currNote) % 12;
 }
 
 export function getNoteFromNumFrets(baseNote: NoteLiteral, numFrets: number) {

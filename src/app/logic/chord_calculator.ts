@@ -6,26 +6,29 @@ import {
   chordTabToArray,
   fillInMutedStrings,
   getNumFrets,
+  getNumSemitones,
 } from "./music_util";
 import ChordNotePrioritizer from "./ChordNotePrioritizer";
 import ChordTabPrioritizer from "./ChordTabPrioritizer";
 
+export type NotesAndBarredFret = { stringNotes: (NoteLiteral | null)[], fretNumToBar: number }
+
 const NumPermutations = 1;
 
-export function getChordNotesPerString(
+export function getBestTabsForChord(
   chordName: string | null,
   baseNotes: NoteLiteral[],
   startingFretNum: number,
   numFrets: number,
   manualStringNotes: ChordTab
-): [stringNotes: (NoteLiteral | null)[], fretNumToBar: number] {
+): NotesAndBarredFret[] {
   if (chordName == null || Chord.get(chordName).empty) {
-    return [
-      baseNotes.map((baseNote, i) =>
+    return [{
+      stringNotes: baseNotes.map((baseNote, i) =>
         i in manualStringNotes ? manualStringNotes[i] : baseNote
       ),
-      0,
-    ];
+      fretNumToBar: 0
+    }];
   }
   const tabNoteMatrix = generateNoteMatrix(baseNotes, startingFretNum, numFrets);
   const prioritizedChordNotes = getGuitarNotesFromChordName(chordName);
@@ -62,7 +65,7 @@ export function getChordNotesPerString(
         const numPermutations = enforceBassNote
           ? getNumPossibleBassNotes(prioritizedChordNotes[0], trimmedMatrix)
           : //TODO: this should be more precise and should allow us to get the G#m7 voicing from the chord chart
-            NumPermutations;
+          NumPermutations;
 
         for (let i = 0; i < numPermutations; i++) {
           const stringNotes = getNewChordNotesPerStringInner(
@@ -80,17 +83,13 @@ export function getChordNotesPerString(
     }
   }
 
-  const bestChordTabEnvelope = chordTabPrioritizer.popChordTab();
-  if (!bestChordTabEnvelope) {
-    return [[], 0];
-  }
-
-  return [
-    chordTabToArray(
-      fillInMutedStrings(bestChordTabEnvelope.chordTab, baseNotes.length)
+  return chordTabPrioritizer.getBestTabs().map((chordEnv) =>
+  ({
+    stringNotes: chordTabToArray(
+      fillInMutedStrings(chordEnv.chordTab, baseNotes.length)
     ),
-    bestChordTabEnvelope.barredFret,
-  ];
+    fretNumToBar: chordEnv.barredFret
+  }));
 }
 
 export function getGuitarNotesFromChordName(chordName: string): NoteLiteral[] {
@@ -116,12 +115,12 @@ export function getChordNameFromNotes(
   notes: NoteLiteral[],
   inputtedChordName: string | null
 ) {
-  const detectedChords = Chord.detect(notes as string[]);
+  const detectedChords = Chord.detect(notes as string[], { assumePerfectFifth: true });
   if (!inputtedChordName) return detectedChords[0];
   const chord = Chord.get(inputtedChordName);
   return (
     detectedChords.filter(
-      (chordName) => chordName.indexOf(chord?.tonic || "X") == 0
+      (chordName) => chordName.indexOf(chord?.tonic ? normalizeNote(chord.tonic) as string : "X") == 0
     )?.[0] || detectedChords?.[0]
   );
 }
@@ -228,8 +227,8 @@ function prioritizeChordNotes(chord: Chord.Chord): NoteLiteral[] {
   const semitonesToIndices: { [semitones: number]: number } = {};
   const unprioritizedIntervals: number[] = [];
 
-  chord.notes.forEach((note, idx) => {
-    const intervalSemitones = getNumFrets(chord.tonic ?? chord.root, note);
+  chord.intervals.forEach((intervalName, idx) => {
+    const intervalSemitones = Interval.semitones(intervalName)
     semitonesToIndices[intervalSemitones] = idx;
     if (
       ![...prioritizedIntervals, ...deprioritizedIntervals].includes(
