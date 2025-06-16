@@ -52,18 +52,20 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
     try {
-      if (config.environment == Environment.Production)
-        return new Response(
-          Bun.file(
-            `./dist${url.pathname === "/" ? "/index.html" : url.pathname}`
-          )
-        );
+      if (config.environment == Environment.Production) {
+        const filePath = url.pathname === "/" ? "/index.html" : url.pathname;
+        const file = Bun.file(`./dist${filePath}`);
+        if (await file.exists()) {
+          return new Response(file);
+        }
+        return new Response(null, { status: 404 });
+      }
     } catch (e) {
       return new Response(null, { status: 404 });
     }
   },
   websocket: {
-    message(ws, message) {},
+    message(ws, message) { },
   },
   port,
 });
