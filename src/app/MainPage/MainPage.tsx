@@ -49,7 +49,7 @@ export default function MainPage() {
       <SongModal isOpen={isSongModalOpen} closeModal={closeSongModal} />
       <header className="bg-[#fffefc] md:px-4 px-2 py-2 flex flex-row items-center justify-items-stretch min-h-[5vh]">
         <div className="md:flex-1 flex flex-row items-center gap-1" >
-          <img src="/static/logo.png" className="h-8 w-8" />
+          <img src="/logo.png" className="h-8 w-8" />
           <div className="font-[Inter] font-bold text-xl tracking-tighter">Smart Guitar Chords</div>
         </div>
         <div
