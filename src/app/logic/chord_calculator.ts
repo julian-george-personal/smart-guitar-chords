@@ -8,8 +8,10 @@ import {
   getNumFrets,
   getNumSemitones,
 } from "./music_util";
-import ChordNotePrioritizer from "./ChordNotePrioritizer";
+import ChordNotePrioritizer, { NotePosition } from "./ChordNotePrioritizer";
 import ChordTabPrioritizer from "./ChordTabPrioritizer";
+import { PriorityQueue } from "@datastructures-js/priority-queue";
+import { comparePriorities } from "../util";
 
 export type NotesAndBarredFret = { stringNotes: (NoteLiteral | null)[], fretNumToBar: number }
 
@@ -68,7 +70,7 @@ export function getBestTabsForChord(
           NumPermutations;
 
         for (let i = 0; i < numPermutations; i++) {
-          const stringNotes = getNewChordNotesPerStringInner(
+          const [stringNotes, totalFingerDistance] = getNewChordNotesPerStringInner(
             prioritizedChordNotes,
             bassNote,
             trimmedMatrix,
@@ -76,7 +78,7 @@ export function getBestTabsForChord(
             enforceBassNote
           );
 
-          chordTabPrioritizer.addChordTab(stringNotes, fretToBar);
+          chordTabPrioritizer.addChordTab(stringNotes, totalFingerDistance, fretToBar);
         }
       }
       numStringsSkipped++;
@@ -146,7 +148,7 @@ function getNewChordNotesPerStringInner(
   currentStringNotes: ChordTab,
   prioritizeVoicingBass: boolean = true,
   permutation: number = 0
-) {
+): [ChordTab, totalFingerDistance: number] {
   const newStringNotes = { ...currentStringNotes };
   const numStrings = noteMatrix.length;
   const chordNotePrioritizer = new ChordNotePrioritizer(
@@ -172,6 +174,7 @@ function getNewChordNotesPerStringInner(
 
   let permutationIdx = 0;
   let bassNeedsToBeSet = prioritizeVoicingBass;
+  const notePositions: NotePosition[] = []
 
   while (Object.keys(newStringNotes).length < numStrings) {
     const guitarNote = chordNotePrioritizer.popGuitarNote();
@@ -194,10 +197,11 @@ function getNewChordNotesPerStringInner(
         }
         bassNeedsToBeSet = false;
       }
-      chordNotePrioritizer.useGuitarNote(guitarNote);
+      notePositions.push(chordNotePrioritizer.useGuitarNote(guitarNote));
     }
   }
-  return newStringNotes;
+
+  return [newStringNotes, getTabFingerDistance(notePositions)];
 }
 
 function generateNoteMatrix(
@@ -252,4 +256,33 @@ function prioritizeChordNotes(chord: Chord.Chord): NoteLiteral[] {
     }
   });
   return notes;
+}
+
+// It sucks that we cant do this in one of the Prioritizers
+function getTabFingerDistance(notePositions: NotePosition[]) {
+  let totalFingerDistance = 0;
+  const usedPairs = new Set<string>();
+
+  const nonOpenNotePositions = notePositions.filter(x => x.fretNum != 0)
+  const closestPositions = new PriorityQueue<[NotePosition, NotePosition]>((a, b) => comparePriorities(getNotesFingerDistance(a[0], a[1]), getNotesFingerDistance(b[0], b[1])) ?? 0)
+  for (let i = 0; i < nonOpenNotePositions.length; i++) {
+    for (let j = i + 1; j < nonOpenNotePositions.length; j++) {
+      closestPositions.push([nonOpenNotePositions[i], nonOpenNotePositions[j]])
+    }
+  }
+
+  while (closestPositions.size() > 0) {
+    const closestPair = closestPositions.pop() as [NotePosition, NotePosition];
+    const [aString, bString] = [JSON.stringify(closestPair[0]), JSON.stringify(closestPair[1])]
+    if (usedPairs.has(aString) || usedPairs.has(bString)) continue;
+    totalFingerDistance += getNotesFingerDistance(...closestPair)
+    usedPairs.add(aString);
+    usedPairs.add(bString);
+  }
+
+  return totalFingerDistance;
+}
+
+function getNotesFingerDistance(a: NotePosition, b: NotePosition) {
+  return Math.abs(a.stringNum - b.stringNum) + Math.abs(a.fretNum - b.fretNum)
 }

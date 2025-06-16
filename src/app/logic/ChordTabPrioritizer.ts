@@ -33,14 +33,16 @@ function getPriority(chordTabEnvelope: ChordTabEnvelope) {
     numChordNotesMissing,
     isValid,
     numStringsUnvoiced,
+    totalFingerDistance
   } = chordTabEnvelope;
   let priority =
     numFingers +
     numStringsUnvoiced +
-    (barredFret > 0 ? 2.1 : 0) +
+    (barredFret > 0 ? 3.1 : 0) +
     (!bassOnBottom ? 2.1 : 0) +
     (numChordNotesMissing > 0 ? 2.2 : 0) +
-    (!isValid ? 5 : 0);
+    (!isValid ? 5 : 0) +
+    totalFingerDistance * 0.75
   return priority;
 }
 
@@ -84,6 +86,7 @@ export default class ChordTabPrioritizer {
 
   private buildChordTabEnvelope(
     chordTab: ChordTab,
+    totalFingerDistance: number,
     barredFret: number
   ): ChordTabEnvelope {
     const tabArray = chordTabToArray(chordTab);
@@ -96,7 +99,7 @@ export default class ChordTabPrioritizer {
           note != null &&
           note != this.noteMatrix[parseInt(stringNum)][barredFret]
       ).length,
-      totalFingerDistance: 0,
+      totalFingerDistance,
       bassOnBottom: voicedNotes[0] == this.bassNote,
       numChordNotesMissing: this.allChordNotes.difference(new Set(voicedNotes))
         .size,
@@ -112,13 +115,13 @@ export default class ChordTabPrioritizer {
   }
 
 
-  public addChordTab(chordTab: ChordTab, barredFret: number) {
+  public addChordTab(chordTab: ChordTab, totalFingerDistance: number, barredFret: number) {
     const stringifiedTab = JSON.stringify(chordTab);
     if (this.existingStringifiedTabs.has(stringifiedTab)) {
       return;
     }
 
-    const chordEnvelope = this.buildChordTabEnvelope(chordTab, barredFret);
+    const chordEnvelope = this.buildChordTabEnvelope(chordTab, totalFingerDistance, barredFret);
 
     this.existingStringifiedTabs.add(stringifiedTab);
     this.chordTabQueue.enqueue(chordEnvelope);
@@ -129,7 +132,7 @@ export default class ChordTabPrioritizer {
     return chord;
   }
 
-  private ScoreThreshold = 8;
+  private ScoreThreshold = 10;
   private MaxTabsToReturn = 10;
 
   public getBestTabs(): ChordTabEnvelope[] {
@@ -149,6 +152,10 @@ export default class ChordTabPrioritizer {
   public toArray() {
     return this.chordTabQueue.toArray();
   }
+}
+
+function getFingerDistance() {
+
 }
 
 const InnerStringsCanBeMuted = false;

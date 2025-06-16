@@ -18,7 +18,7 @@ export function processInputString(input: string): string {
   return input.trim();
 }
 
-export const withLoading = (setIsLoading: (isLoading:boolean)=>void) => function(func: Function) {
+export const withLoading = (setIsLoading: (isLoading: boolean) => void) => function (func: Function) {
   return async (...args: any[]) => {
     setIsLoading(true);
     try {
