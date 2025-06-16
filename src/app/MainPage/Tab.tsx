@@ -82,10 +82,7 @@ export default function Tab({ tabKey }: TabProps) {
     <TabProvider tabKey={tabKey}>
       <div className="centered-row w-full max-w-80">
         <div className="w-8 h-full">
-          <div style={{
-            // h-10
-            height: "2.15rem"
-          }} />
+          <div className="h-[2.15rem]" />
           <div className="centered-col justify-center position-relative">
             {startingFretNum != 0 ?
               <>
