@@ -5,8 +5,6 @@ import {
   ChordTab,
   chordTabToArray,
   fillInMutedStrings,
-  getNumFrets,
-  getNumSemitones,
 } from "./music_util";
 import ChordNotePrioritizer, { NotePosition } from "./ChordNotePrioritizer";
 import ChordTabPrioritizer from "./ChordTabPrioritizer";
