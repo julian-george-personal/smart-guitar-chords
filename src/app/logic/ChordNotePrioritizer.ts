@@ -7,7 +7,8 @@ function getBassPriority(guitarNote: GuitarNote) {
   return fretNum + 1 + (stringNum + 1) * 1.1;
 }
 
-type GuitarNote = { note: string; stringNum: number; fretNum: number };
+export type NotePosition = { stringNum: number, fretNum: number }
+type GuitarNote = NotePosition & { note: NoteLiteral };
 
 export default class ChordNotePrioritizer {
   private chordNotePriorities: { [chordNote: string]: number } = {};
@@ -100,14 +101,15 @@ export default class ChordNotePrioritizer {
     return poppedGuitarNote;
   }
 
-  public useGuitarNote(guitarNote: GuitarNote) {
+  public useGuitarNote(guitarNote: GuitarNote): NotePosition {
     const note = guitarNote.note;
     if (!this.usedChordNotes.has(note)) {
-      delete this.chordNotePriorities[note];
+      delete this.chordNotePriorities[note as string];
       this.usedChordNotes.add(note);
     }
 
     this.refreshChordNoteQueue();
+    return { stringNum: guitarNote.stringNum, fretNum: guitarNote.fretNum }
   }
 
   public toArray() {

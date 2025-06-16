@@ -82,16 +82,14 @@ export default function Tab({ tabKey }: TabProps) {
     <TabProvider tabKey={tabKey}>
       <div className="centered-row w-full max-w-80">
         <div className="w-8 h-full">
-          <div style={{
-            // h-10
-            height: startingFretNum == 0 ? "2.5rem" : "2.15rem"
-          }} />
+          <div className="h-[2.15rem]" />
           <div className="centered-col justify-center position-relative">
-            {startingFretNum != 0 &&
+            {startingFretNum != 0 ?
               <>
                 <RxArrowUp className="cursor-pointer stroke-[1] sm:h-4 sm:w-4 h-6 w-6" onClick={() => incrementStartingFretNum(-1)} />
                 <div className="h-6">{startingFretNum + 1}</div>
-              </>
+              </> :
+              <div className="sm:h-10 h-12" />
             }
             <RxArrowDown className="cursor-pointer stroke-[1] sm:h-4 sm:w-4 h-6 w-6" onClick={() => incrementStartingFretNum(1)} />
           </div>

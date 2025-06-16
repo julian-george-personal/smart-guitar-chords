@@ -47,9 +47,9 @@ export default function MainPage() {
         closeModal={closeAccountModal}
       />
       <SongModal isOpen={isSongModalOpen} closeModal={closeSongModal} />
-      <header className="bg-[#fffefc] md:px-4 px-2 py-2 flex flex-row items-center justify-items-stretch min-h-[5vh]">
+      <header className="bg-[#fffefc] md:px-4 px-2 pt-2 flex flex-row items-center justify-items-stretch min-h-[5vh]">
         <div className="md:flex-1 flex flex-row items-center gap-1" >
-          <img src="/static/logo.png" className="h-8 w-8" />
+          <img src="/logo.png" className="h-8 w-8" />
           <div className="font-[Inter] font-bold text-xl tracking-tighter">Smart Guitar Chords</div>
         </div>
         <div
@@ -117,7 +117,7 @@ export default function MainPage() {
           </div>
         </div>
         <div className="centered-col w-[80%] pb-32">
-          <div className="centered-row justify-between w-full py-1">
+          <div className="centered-row justify-between w-full pb-1">
             <div className="centered-row gap-2">
               {Object.keys(songs).length > 0 && (
                 <Select
@@ -183,7 +183,7 @@ export default function MainPage() {
             />
           </div>
           <div
-            className="w-full border-2 border-gray-300 border-solid rounded-md gap-8 p-8 grid justify-items-center"
+            className="w-full border-2 border-gray-300 border-solid rounded-md gap-8 px-8 py-4 grid justify-items-center"
             style={{
               gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))",
             }}
