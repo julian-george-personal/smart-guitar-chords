@@ -9,6 +9,7 @@ import MultiStringInput from "./MultiStringInput";
 import { sanitizeNoteName } from "../logic/music_util";
 import SongModal from "./SongModal/SongModal";
 import Select from "react-select";
+import InfoModal from "./InfoModal";
 
 const MemoizedTab = memo(Tab);
 
@@ -25,6 +26,7 @@ export default function MainPage() {
   } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
   useEffect(() => {
     if (recoverPasswordToken != null) setIsAccountModalOpen(true);
   }, [recoverPasswordToken]);
@@ -40,6 +42,12 @@ export default function MainPage() {
   const closeSongModal = useCallback(() => {
     setIsSongModalOpen(false);
   }, [setIsSongModalOpen]);
+  const openInfoModal = useCallback(() => {
+    setIsInfoModalOpen(true);
+  }, [setIsInfoModalOpen]);
+  const closeInfoModal = useCallback(() => {
+    setIsInfoModalOpen(false);
+  }, [setIsInfoModalOpen]);
   return (
     <>
       <AccountModal
@@ -47,6 +55,7 @@ export default function MainPage() {
         closeModal={closeAccountModal}
       />
       <SongModal isOpen={isSongModalOpen} closeModal={closeSongModal} />
+      <InfoModal isOpen={isInfoModalOpen} closeModal={closeInfoModal} />
       <header className="bg-[#fffefc] md:px-4 px-2 pt-2 flex flex-row items-center justify-items-stretch min-h-[5vh]">
         <div className="md:flex-1 flex flex-row items-center gap-1" >
           <img src="/logo.png" className="h-8 w-8" />
@@ -198,12 +207,12 @@ export default function MainPage() {
         <div>
           © Julian George 2025
         </div>
-        {/* <div>
+        <div>
           |
         </div>
-        <div>
-          About
-        </div> */}
+        <div onClick={openInfoModal} className="cursor-pointer">
+          Bugs? Suggestions?
+        </div>
       </footer>
       <ToastContainer />
     </>
