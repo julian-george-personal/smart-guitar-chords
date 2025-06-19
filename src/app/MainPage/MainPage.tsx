@@ -205,12 +205,12 @@ export default function MainPage() {
       </main>
       <footer className="text-xs text-gray-500 px-2 gap-2 text-sm flex flex-row items-center h-[3vh] bg-[#fffefc]">
         <div>
-          © Julian George 2025
+          © <a href="https://juliangeorge.net" className="underline">Julian George 2025</a>
         </div>
         <div>
           |
         </div>
-        <div onClick={openInfoModal} className="cursor-pointer">
+        <div onClick={openInfoModal} className="cursor-pointer font-medium">
           Bugs? Suggestions?
         </div>
       </footer>
