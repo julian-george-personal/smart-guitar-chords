@@ -7,7 +7,7 @@ import {
 } from "../logic/chord_calculator";
 import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
-import { useTabByKey } from "../context/song-context";
+import { useSongData, useTabByKey } from "../context/song-context";
 import { RxArrowDown, RxArrowLeft, RxArrowRight, RxArrowUp } from "react-icons/rx";
 
 interface TabProps {
@@ -15,6 +15,7 @@ interface TabProps {
 }
 
 export default function Tab({ tabKey }: TabProps) {
+  const { song } = useSongData();
   const {
     tab,
     setManualStringNote,
@@ -82,22 +83,23 @@ export default function Tab({ tabKey }: TabProps) {
     <TabProvider tabKey={tabKey}>
       <div className="centered-row w-full max-w-80">
         <div className="w-8 h-full">
-          <div className="h-[2.15rem]" />
-          <div className="centered-col justify-center position-relative">
-            {startingFretNum != 0 ?
-              <>
-                <RxArrowUp className="cursor-pointer stroke-[1] sm:h-4 sm:w-4 h-6 w-6" onClick={() => incrementStartingFretNum(-1)} />
-                <div className="h-6">{startingFretNum + 1}</div>
-              </> :
-              <div className="sm:h-10 h-12" />
-            }
-            <RxArrowDown className="cursor-pointer stroke-[1] sm:h-4 sm:w-4 h-6 w-6" onClick={() => incrementStartingFretNum(1)} />
-          </div>
+          {
+            startingFretNum == 0 ?
+              <div className="centered-col">
+                <div className="h-10" />
+                <RxArrowDown className="cursor-pointer stroke-[1] h-6 w-6" onClick={() => incrementStartingFretNum(1)} />
+              </div> :
+              <div className="centered-col h-48 sm:h-64 justify-start relative sm:top-7 top-6">
+                <RxArrowUp className="cursor-pointer stroke-[1] h-6 w-6" onClick={() => incrementStartingFretNum(-1)} />
+                <div className="centered-col" style={{ height: Math.round(1 / song.fretCount * 100 * .6) + "%" }} ><span>{startingFretNum + 1}</span></div>
+                <RxArrowDown className="cursor-pointer stroke-[1] h-6 w-6" onClick={() => incrementStartingFretNum(1)} />
+              </div>
+          }
         </div>
-        <div className="w-full aspect-square">
+        <div className="w-full">
           <div className="w-full h-[90%] relative">
             <Box fretNumToBar={currentVoicing.fretNumToBar} />
-            <div className="absolute w-full h-full top-0 centered-row">
+            <div className="absolute w-full top-0 centered-row">
               {tabBaseNotes.map((baseNote, i) => (
                 <TunedString
                   baseNote={baseNote}
@@ -111,7 +113,7 @@ export default function Tab({ tabKey }: TabProps) {
               ))}
             </div>
           </div>
-          <div className="w-full h-[10%] centered-row">
+          <div className="w-full h-10 centered-row">
             {currentVoicing.stringNotes.map((note, stringIdx) => {
               const isModified = stringIdx in manualStringNotes;
               return (
@@ -178,8 +180,8 @@ function Box({ fretNumToBar }: BoxProps) {
   if (!tabContext) return null;
   return (
     <div className="centered-col w-full h-full">
-      <div className="h-[15%] w-full" />
-      <div className="centered-col w-full h-[85%] border-y border-solid border-black grow">
+      <div className="h-10 w-full" />
+      <div className="centered-col h-48 sm:h-64 border-y border-solid border-black max-w-[100%]" style={{ aspectRatio: `${tabContext.stringCount + 1}/${tabContext.stringCount}` }}>
         {Array.from({ length: tabContext.fretCount }, (_, idx) => (
           <div
             key={idx}

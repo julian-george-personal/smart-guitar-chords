@@ -66,7 +66,7 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
   return (
     <div className="h-full centered-col grow">
       <div
-        className="h-[15%] w-full centered-col"
+        className="h-10 w-full centered-col"
         style={{
           cursor: hoveredFretIdx === null ? "pointer" : "default",
         }}
@@ -93,7 +93,7 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
           <RxCross1 className="h-4/5 w-4/5" />
         )}
       </div>
-      <div className="w-full h-[85%] centered-col relative">
+      <div className="w-full h-48 sm:h-64 centered-col relative">
         <div className="w-full h-full centered-row absolute">
           <div className="h-full grow border-r border-solid border-black" />
           <div className="h-full grow border-l border-solid border-black" />
