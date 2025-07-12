@@ -73,6 +73,7 @@ export default function Tab({ tabKey }: TabProps) {
       setVoicingOptions(voicings);
       setVoicesChord(true);
     } else {
+      // If no voicings can be found, we still want to display an empty, changeable tab
       setVoicingOptions([
         {
           stringNotes: chordTabToArray({
