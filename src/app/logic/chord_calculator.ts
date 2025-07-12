@@ -11,7 +11,10 @@ import ChordTabPrioritizer from "./ChordTabPrioritizer";
 import { PriorityQueue } from "@datastructures-js/priority-queue";
 import { comparePriorities } from "../util";
 
-export type NotesAndBarredFret = { stringNotes: (NoteLiteral | null)[], fretNumToBar: number }
+export type NotesAndBarredFret = {
+  stringNotes: (NoteLiteral | null)[];
+  fretNumToBar: number;
+};
 
 const NumPermutations = 1;
 
@@ -22,15 +25,27 @@ export function getBestTabsForChord(
   numFrets: number,
   manualStringNotes: ChordTab
 ): NotesAndBarredFret[] {
-  if (chordName == null || Chord.get(chordName).empty) {
-    return [{
-      stringNotes: baseNotes.map((baseNote, i) =>
-        i in manualStringNotes ? manualStringNotes[i] : baseNote
-      ),
-      fretNumToBar: 0
-    }];
+  // For invalid/empty chords, we return an empty tab for users to be able to modify themselves
+  if (
+    chordName == null ||
+    Chord.get(chordName).empty ||
+    Chord.get(chordName).tonic == ""
+  ) {
+    return [
+      {
+        stringNotes: baseNotes.map((baseNote, i) =>
+          i in manualStringNotes ? manualStringNotes[i] : baseNote
+        ),
+        fretNumToBar: 0,
+      },
+    ];
   }
-  const tabNoteMatrix = generateNoteMatrix(baseNotes, startingFretNum, numFrets);
+
+  const tabNoteMatrix = generateNoteMatrix(
+    baseNotes,
+    startingFretNum,
+    numFrets
+  );
   const prioritizedChordNotes = getGuitarNotesFromChordName(chordName);
   const bassNote = getBassNoteFromChordName(chordName);
 
@@ -46,7 +61,7 @@ export function getBestTabsForChord(
       numStringsSkipped < baseNotes.length - 2 && stringIdx < baseNotes.length;
       stringIdx++
     ) {
-      // This skipping can produce a chord tab with unvoiced strings in between voiced ones, 
+      // This skipping can produce a chord tab with unvoiced strings in between voiced ones,
       //     but that behavior seems desirable when notes are manually specified
       if (stringIdx in manualStringNotes) {
         continue;
@@ -65,30 +80,34 @@ export function getBestTabsForChord(
         const numPermutations = enforceBassNote
           ? getNumPossibleBassNotes(prioritizedChordNotes[0], trimmedMatrix)
           : //TODO: this should be more precise and should allow us to get the G#m7 voicing from the chord chart
-          NumPermutations;
+            NumPermutations;
 
         for (let i = 0; i < numPermutations; i++) {
-          const [stringNotes, totalFingerDistance] = getNewChordNotesPerStringInner(
-            prioritizedChordNotes,
-            bassNote,
-            trimmedMatrix,
-            manualStringNotes,
-            enforceBassNote
-          );
+          const [stringNotes, totalFingerDistance] =
+            getNewChordNotesPerStringInner(
+              prioritizedChordNotes,
+              bassNote,
+              trimmedMatrix,
+              manualStringNotes,
+              enforceBassNote
+            );
 
-          chordTabPrioritizer.addChordTab(stringNotes, totalFingerDistance, fretToBar);
+          chordTabPrioritizer.addChordTab(
+            stringNotes,
+            totalFingerDistance,
+            fretToBar
+          );
         }
       }
       numStringsSkipped++;
     }
   }
 
-  return chordTabPrioritizer.getBestTabs().map((chordEnv) =>
-  ({
+  return chordTabPrioritizer.getBestTabs().map((chordEnv) => ({
     stringNotes: chordTabToArray(
       fillInMutedStrings(chordEnv.chordTab, baseNotes.length)
     ),
-    fretNumToBar: chordEnv.barredFret
+    fretNumToBar: chordEnv.barredFret,
   }));
 }
 
@@ -115,12 +134,17 @@ export function getChordNameFromNotes(
   notes: NoteLiteral[],
   inputtedChordName: string | null
 ) {
-  const detectedChords = Chord.detect(notes as string[], { assumePerfectFifth: true });
+  const detectedChords = Chord.detect(notes as string[], {
+    assumePerfectFifth: true,
+  });
   if (!inputtedChordName) return detectedChords[0];
   const chord = Chord.get(inputtedChordName);
   return (
     detectedChords.filter(
-      (chordName) => chordName.indexOf(chord?.tonic ? normalizeNote(chord.tonic) as string : "X") == 0
+      (chordName) =>
+        chordName.indexOf(
+          chord?.tonic ? (normalizeNote(chord.tonic) as string) : "X"
+        ) == 0
     )?.[0] || detectedChords?.[0]
   );
 }
@@ -172,7 +196,7 @@ function getNewChordNotesPerStringInner(
 
   let permutationIdx = 0;
   let bassNeedsToBeSet = prioritizeVoicingBass;
-  const notePositions: NotePosition[] = []
+  const notePositions: NotePosition[] = [];
 
   while (Object.keys(newStringNotes).length < numStrings) {
     const guitarNote = chordNotePrioritizer.popGuitarNote();
@@ -230,7 +254,7 @@ function prioritizeChordNotes(chord: Chord.Chord): NoteLiteral[] {
   const unprioritizedIntervals: number[] = [];
 
   chord.intervals.forEach((intervalName, idx) => {
-    const intervalSemitones = Interval.semitones(intervalName)
+    const intervalSemitones = Interval.semitones(intervalName);
     semitonesToIndices[intervalSemitones] = idx;
     if (
       ![...prioritizedIntervals, ...deprioritizedIntervals].includes(
@@ -261,19 +285,28 @@ function getTabFingerDistance(notePositions: NotePosition[]) {
   let totalFingerDistance = 0;
   const usedPairs = new Set<string>();
 
-  const nonOpenNotePositions = notePositions.filter(x => x.fretNum != 0)
-  const closestPositions = new PriorityQueue<[NotePosition, NotePosition]>((a, b) => comparePriorities(getNotesFingerDistance(a[0], a[1]), getNotesFingerDistance(b[0], b[1])) ?? 0)
+  const nonOpenNotePositions = notePositions.filter((x) => x.fretNum != 0);
+  const closestPositions = new PriorityQueue<[NotePosition, NotePosition]>(
+    (a, b) =>
+      comparePriorities(
+        getNotesFingerDistance(a[0], a[1]),
+        getNotesFingerDistance(b[0], b[1])
+      ) ?? 0
+  );
   for (let i = 0; i < nonOpenNotePositions.length; i++) {
     for (let j = i + 1; j < nonOpenNotePositions.length; j++) {
-      closestPositions.push([nonOpenNotePositions[i], nonOpenNotePositions[j]])
+      closestPositions.push([nonOpenNotePositions[i], nonOpenNotePositions[j]]);
     }
   }
 
   while (closestPositions.size() > 0) {
     const closestPair = closestPositions.pop() as [NotePosition, NotePosition];
-    const [aString, bString] = [JSON.stringify(closestPair[0]), JSON.stringify(closestPair[1])]
+    const [aString, bString] = [
+      JSON.stringify(closestPair[0]),
+      JSON.stringify(closestPair[1]),
+    ];
     if (usedPairs.has(aString) || usedPairs.has(bString)) continue;
-    totalFingerDistance += getNotesFingerDistance(...closestPair)
+    totalFingerDistance += getNotesFingerDistance(...closestPair);
     usedPairs.add(aString);
     usedPairs.add(bString);
   }
@@ -282,5 +315,5 @@ function getTabFingerDistance(notePositions: NotePosition[]) {
 }
 
 function getNotesFingerDistance(a: NotePosition, b: NotePosition) {
-  return Math.abs(a.stringNum - b.stringNum) + Math.abs(a.fretNum - b.fretNum)
+  return Math.abs(a.stringNum - b.stringNum) + Math.abs(a.fretNum - b.fretNum);
 }
