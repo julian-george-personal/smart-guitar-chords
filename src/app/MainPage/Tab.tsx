@@ -200,34 +200,37 @@ export default function Tab({ tabKey }: TabProps) {
                 chordName
               ) ?? "???"}
             </div>
-            {!voicesChord && <div>No voicings could be found</div>}
-            {voicesChord && (
-              <div className="flex flex-row items-center justify-center gap-2 w-full">
-                <div className="basis-1/3 flex flex-row justify-end">
-                  {voicingIdx != 0 && (
-                    <RxArrowLeft
-                      className="stroke-1 cursor-pointer"
-                      onClick={() => {
-                        incrementVoicingIdx(-1, voicingOptions.length);
-                      }}
-                    />
-                  )}
-                </div>
-                <div className="text-sm text-center">
-                  {voicingIdx + 1} of {voicingOptions.length}
-                </div>
-                <div className="basis-1/3 flex flex-row justify-start">
-                  {voicingIdx != voicingOptions.length - 1 && (
-                    <RxArrowRight
-                      className="stroke-1 cursor-pointer"
-                      onClick={() => {
-                        incrementVoicingIdx(1, voicingOptions.length);
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-            )}
+            <div className="flex flex-row items-center justify-center gap-2 w-full text-sm">
+              {voicesChord ? (
+                <>
+                  <div className="basis-1/3 flex flex-row justify-end">
+                    {voicingIdx != 0 && (
+                      <RxArrowLeft
+                        className="stroke-1 cursor-pointer"
+                        onClick={() => {
+                          incrementVoicingIdx(-1, voicingOptions.length);
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="text-center">
+                    {voicingIdx + 1} of {voicingOptions.length}
+                  </div>
+                  <div className="basis-1/3 flex flex-row justify-start">
+                    {voicingIdx != voicingOptions.length - 1 && (
+                      <RxArrowRight
+                        className="stroke-1 cursor-pointer"
+                        onClick={() => {
+                          incrementVoicingIdx(1, voicingOptions.length);
+                        }}
+                      />
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div>No voicings found</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
