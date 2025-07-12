@@ -10,7 +10,7 @@ import * as accountStore from "../store/account-store";
 import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
 import { TSong } from "./song-context";
-import { withLoading } from "../util";
+import { comparePriorities, withLoading } from "../util";
 
 export type TAccount = {
   username: string;
@@ -22,6 +22,7 @@ export type TAccountContext = {
   songs: {
     [songId: string]: TSong;
   };
+  orderedUsedStringTunings: string[];
   login: (username: string, password: string) => Promise<StoreResponse>;
   logout: () => void;
   signUp: (
@@ -51,9 +52,14 @@ export function AccountProvider({ children }: AccountProviderProps) {
   const [songs, setSongs] = useState<{
     [songId: string]: TSong;
   }>({});
+  const [orderedUsedStringTunings, setOrderedUsedStringTunings] = useState<
+    string[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const withAccountLoading = useCallback(withLoading(setIsLoading), [setIsLoading])
+  const withAccountLoading = useCallback(withLoading(setIsLoading), [
+    setIsLoading,
+  ]);
 
   const refreshSongs = useCallback(() => {
     songStore.getSongs().then((response) => {
@@ -67,6 +73,25 @@ export function AccountProvider({ children }: AccountProviderProps) {
       }
     });
   }, [setSongs, account]);
+
+  useEffect(() => {
+    const usedStringTuningsWithFrequencies: Record<string, number> = {};
+    for (const tuning of Object.values(songs).map((song) =>
+      song.stringTunings.join(",")
+    )) {
+      if (tuning in usedStringTuningsWithFrequencies) {
+        usedStringTuningsWithFrequencies[tuning]++;
+      } else {
+        usedStringTuningsWithFrequencies[tuning] = 1;
+      }
+    }
+    const newOrderedUsedStringTunings = Object.entries(
+      usedStringTuningsWithFrequencies
+    )
+      .sort((a, b) => comparePriorities(a[1], b[1]) || 0)
+      .map((tuningPair) => tuningPair[0]);
+    setOrderedUsedStringTunings(newOrderedUsedStringTunings);
+  }, [songs]);
 
   useEffect(() => {
     accountStore.getUser().then((response) => {
@@ -139,6 +164,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
         recoverPasswordToken,
         setNewPassword: withAccountLoading(setNewPassword),
         refreshSongs,
+        orderedUsedStringTunings,
       }}
     >
       {children}
