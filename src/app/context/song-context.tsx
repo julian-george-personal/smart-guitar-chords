@@ -58,7 +58,6 @@ interface SongProviderProps {
   children: ReactNode;
 }
 
-// This default is set by the UI in MainPage
 const defaultStringTunings: NoteLiteral[] = ["E", "A", "D", "G", "B", "E"];
 const defaultFretCount = 5;
 const defaultCapoFretNum = 0;
