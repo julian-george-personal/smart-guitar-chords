@@ -56,20 +56,19 @@ export default function MainPage() {
   }, [setIsInfoModalOpen]);
 
   useLayoutEffect(() => {
-    const tuningsString = song.stringTunings.join(",");
-    if (tuningsString == "") {
+    if (!stringifiedStringTunings || stringifiedStringTunings == "") {
       setStringTuningsAutocompleteSuffix("");
       return;
     }
     const autocompleteMatch: string | undefined =
       orderedUsedStringTunings.filter(
-        (tuning) => tuning.indexOf(tuningsString) == 0
+        (tuning) => tuning.indexOf(stringifiedStringTunings) == 0
       )?.[0];
     const autocompleteSuffix = autocompleteMatch
-      ? autocompleteMatch.replace(tuningsString, "")
+      ? autocompleteMatch.replace(stringifiedStringTunings, "")
       : "";
     setStringTuningsAutocompleteSuffix(autocompleteSuffix);
-  }, [song.stringTunings, setStringTuningsAutocompleteSuffix]);
+  }, [stringifiedStringTunings, setStringTuningsAutocompleteSuffix]);
 
   useEffect(() => {
     setStringifiedStringTunings(song.stringTunings.join(","));
