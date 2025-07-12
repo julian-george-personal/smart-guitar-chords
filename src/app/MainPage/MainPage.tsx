@@ -31,7 +31,7 @@ export default function MainPage() {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
   const [stringifiedStringTunings, setStringifiedStringTunings] =
     useState<string>("E,A,D,G,B,E");
-  const [stringTuningsAutocomplete, setStringTuningsAutocomplete] =
+  const [stringTuningsAutocompleteSuffix, setStringTuningsAutocompleteSuffix] =
     useState<string>("");
   useEffect(() => {
     if (recoverPasswordToken != null) setIsAccountModalOpen(true);
@@ -58,7 +58,7 @@ export default function MainPage() {
   useLayoutEffect(() => {
     const tuningsString = song.stringTunings.join(",");
     if (tuningsString == "") {
-      setStringTuningsAutocomplete("");
+      setStringTuningsAutocompleteSuffix("");
       return;
     }
     const autocompleteMatch: string | undefined =
@@ -68,12 +68,22 @@ export default function MainPage() {
     const autocompleteSuffix = autocompleteMatch
       ? autocompleteMatch.replace(tuningsString, "")
       : "";
-    setStringTuningsAutocomplete(autocompleteSuffix);
-  }, [song.stringTunings, setStringTuningsAutocomplete]);
+    setStringTuningsAutocompleteSuffix(autocompleteSuffix);
+  }, [song.stringTunings, setStringTuningsAutocompleteSuffix]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     setSongStringTunings(stringifiedStringTunings.split(","));
   }, [stringifiedStringTunings]);
+
+  const autocompleteStringTunings = useCallback(() => {
+    setStringifiedStringTunings(
+      stringifiedStringTunings + stringTuningsAutocompleteSuffix
+    );
+  }, [
+    setStringifiedStringTunings,
+    stringifiedStringTunings,
+    stringTuningsAutocompleteSuffix,
+  ]);
 
   return (
     <>
@@ -128,18 +138,22 @@ export default function MainPage() {
                       "Done",
                     ]);
                     if (autocompleteKeys.has(e.key)) {
-                      if (stringTuningsAutocomplete) {
-                        setStringifiedStringTunings(
-                          stringifiedStringTunings + stringTuningsAutocomplete
-                        );
+                      if (stringTuningsAutocompleteSuffix) {
+                        autocompleteStringTunings();
                         e.preventDefault();
                       }
                     }
                   }}
                   className="bg-transparent p-0"
                 />
-                <span className="text-gray-500">
-                  {stringTuningsAutocomplete}
+                <span
+                  className="text-gray-500 cursor-pointer"
+                  onClick={(e) => {
+                    autocompleteStringTunings();
+                    e.preventDefault();
+                  }}
+                >
+                  {stringTuningsAutocompleteSuffix}
                 </span>
               </div>
             </div>
