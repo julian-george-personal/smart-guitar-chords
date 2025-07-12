@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState, useLayoutEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import { AiOutlineSave, AiOutlineUser } from "react-icons/ai";
 import Tab from "./Tab";
@@ -10,11 +10,13 @@ import { sanitizeNoteName } from "../logic/music_util";
 import SongModal from "./SongModal/SongModal";
 import Select from "react-select";
 import InfoModal from "./InfoModal";
+import AdaptiveInput from "./AdaptiveInput";
 
 const MemoizedTab = memo(Tab);
 
 export default function MainPage() {
-  const { account, recoverPasswordToken, songs } = useAccountData();
+  const { account, recoverPasswordToken, songs, orderedUsedStringTunings } =
+    useAccountData();
   const {
     song,
     setChordNames,
@@ -27,6 +29,10 @@ export default function MainPage() {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
+  const [stringifiedStringTunings, setStringifiedStringTunings] =
+    useState<string>("E,A,D,G,B,E");
+  const [stringTuningsAutocompleteSuffix, setStringTuningsAutocompleteSuffix] =
+    useState<string>("");
   useEffect(() => {
     if (recoverPasswordToken != null) setIsAccountModalOpen(true);
   }, [recoverPasswordToken]);
@@ -48,6 +54,37 @@ export default function MainPage() {
   const closeInfoModal = useCallback(() => {
     setIsInfoModalOpen(false);
   }, [setIsInfoModalOpen]);
+
+  useLayoutEffect(() => {
+    const tuningsString = song.stringTunings.join(",");
+    if (tuningsString == "") {
+      setStringTuningsAutocompleteSuffix("");
+      return;
+    }
+    const autocompleteMatch: string | undefined =
+      orderedUsedStringTunings.filter(
+        (tuning) => tuning.indexOf(tuningsString) == 0
+      )?.[0];
+    const autocompleteSuffix = autocompleteMatch
+      ? autocompleteMatch.replace(tuningsString, "")
+      : "";
+    setStringTuningsAutocompleteSuffix(autocompleteSuffix);
+  }, [song.stringTunings, setStringTuningsAutocompleteSuffix]);
+
+  useEffect(() => {
+    setSongStringTunings(stringifiedStringTunings.split(","));
+  }, [stringifiedStringTunings]);
+
+  const autocompleteStringTunings = useCallback(() => {
+    setStringifiedStringTunings(
+      stringifiedStringTunings + stringTuningsAutocompleteSuffix
+    );
+  }, [
+    setStringifiedStringTunings,
+    stringifiedStringTunings,
+    stringTuningsAutocompleteSuffix,
+  ]);
+
   return (
     <>
       <AccountModal
@@ -57,9 +94,11 @@ export default function MainPage() {
       <SongModal isOpen={isSongModalOpen} closeModal={closeSongModal} />
       <InfoModal isOpen={isInfoModalOpen} closeModal={closeInfoModal} />
       <header className="bg-[#fffefc] md:px-4 px-2 pt-2 flex flex-row items-center justify-items-stretch min-h-[5vh]">
-        <div className="md:flex-1 flex flex-row items-center gap-1" >
+        <div className="md:flex-1 flex flex-row items-center gap-1">
           <img src="/logo.png" className="h-8 w-8" />
-          <div className="font-[Inter] font-bold text-xl tracking-tighter">Smart Guitar Chords</div>
+          <div className="font-[Inter] font-bold text-xl tracking-tighter">
+            Smart Guitar Chords
+          </div>
         </div>
         <div
           onClick={openAccountModal}
@@ -79,15 +118,44 @@ export default function MainPage() {
           <div className="centered-row gap-2 max-w-[66vw] flex-wrap">
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">String Tunings</span>
-              <input
-                value={song.stringTunings.join(",")}
-                onChange={(newValue) => {
-                  setSongStringTunings(
-                    newValue.target.value.split(",").map(sanitizeNoteName)
-                  );
-                }}
-                className="standard-input w-36"
-              />
+              <div className="standard-input w-36 centered-row justify-start">
+                <AdaptiveInput
+                  value={stringifiedStringTunings}
+                  onChange={(newValue) => {
+                    // We split and rejoin so we can sanitize the notes
+                    setStringifiedStringTunings(
+                      newValue.target.value
+                        .split(",")
+                        .map(sanitizeNoteName)
+                        .join(",")
+                    );
+                  }}
+                  onKeyDown={(e) => {
+                    const autocompleteKeys = new Set<string>([
+                      "Enter",
+                      "Tab",
+                      "Go",
+                      "Done",
+                    ]);
+                    if (autocompleteKeys.has(e.key)) {
+                      if (stringTuningsAutocompleteSuffix) {
+                        autocompleteStringTunings();
+                        e.preventDefault();
+                      }
+                    }
+                  }}
+                  className="bg-transparent p-0"
+                />
+                <span
+                  className="text-gray-500 cursor-pointer"
+                  onClick={(e) => {
+                    autocompleteStringTunings();
+                    e.preventDefault();
+                  }}
+                >
+                  {stringTuningsAutocompleteSuffix}
+                </span>
+              </div>
             </div>
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">Capo Fret</span>
@@ -132,7 +200,10 @@ export default function MainPage() {
                 <Select
                   className="w-36 p-0"
                   classNamePrefix="select"
-                  value={{ value: songId, label: songId ? songs[songId]?.title : "New Song" }}
+                  value={{
+                    value: songId,
+                    label: songId ? songs[songId]?.title : "New Song",
+                  }}
                   onChange={(option) => {
                     selectSong(option?.value ?? "");
                   }}
@@ -140,48 +211,52 @@ export default function MainPage() {
                     { value: "", label: "New Song" },
                     ...Object.entries(songs).map(([id, song]) => ({
                       value: id,
-                      label: song.title
-                    }))
+                      label: song.title,
+                    })),
                   ]}
                   styles={{
                     control: (baseStyles, state) => ({
                       ...baseStyles,
-                      border: 'none',
-                      boxShadow: 'none',
-                      minHeight: '30px',
-                      '&:hover': {
-                        border: 'none'
-                      }
+                      border: "none",
+                      boxShadow: "none",
+                      minHeight: "30px",
+                      "&:hover": {
+                        border: "none",
+                      },
                     }),
                     option: (baseStyles, state) => ({
                       ...baseStyles,
-                      backgroundColor: state.isSelected ? '#e5e7eb' : state.isFocused ? '#f3f4f6' : 'white',
-                      color: state.data.value === "" ? '#6B7280' : '#000000',
-                      '&:active': {
-                        backgroundColor: '#e5e7eb'
-                      }
+                      backgroundColor: state.isSelected
+                        ? "#e5e7eb"
+                        : state.isFocused
+                        ? "#f3f4f6"
+                        : "white",
+                      color: state.data.value === "" ? "#6B7280" : "#000000",
+                      "&:active": {
+                        backgroundColor: "#e5e7eb",
+                      },
                     }),
                     singleValue: (baseStyles, { data }) => ({
                       ...baseStyles,
-                      color: data.value === "" ? '#6B7280' : '#000000'
+                      color: data.value === "" ? "#6B7280" : "#000000",
                     }),
                     valueContainer: (baseStyles) => ({
                       ...baseStyles,
-                      padding: '0px 0px',
-                      zIndex: 50
+                      padding: "0px 0px",
+                      zIndex: 50,
                     }),
                     indicatorSeparator: () => ({
-                      display: 'none'
+                      display: "none",
                     }),
                     dropdownIndicator: (baseStyles) => ({
                       ...baseStyles,
-                      color: '#6B7280'
+                      color: "#6B7280",
                     }),
                     menu: (baseStyles) => ({
                       ...baseStyles,
-                      border: 'none',
-                      zIndex: 50
-                    })
+                      border: "none",
+                      zIndex: 50,
+                    }),
                   }}
                 />
               )}
@@ -205,11 +280,12 @@ export default function MainPage() {
       </main>
       <footer className="text-xs text-gray-500 px-2 gap-2 text-sm flex flex-row items-center h-[3vh] bg-[#fffefc]">
         <div>
-          © <a href="https://juliangeorge.net" className="underline">Julian George 2025</a>
+          ©{" "}
+          <a href="https://juliangeorge.net" className="underline">
+            Julian George 2025
+          </a>
         </div>
-        <div>
-          |
-        </div>
+        <div>|</div>
         <div onClick={openInfoModal} className="cursor-pointer font-medium">
           Bugs? Suggestions?
         </div>
