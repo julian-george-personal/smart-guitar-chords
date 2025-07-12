@@ -30,7 +30,7 @@ export default function MainPage() {
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
   const [stringifiedStringTunings, setStringifiedStringTunings] =
-    useState<string>("E,A,D,G,B,E");
+    useState<string>();
   const [stringTuningsAutocompleteSuffix, setStringTuningsAutocompleteSuffix] =
     useState<string>("");
   useEffect(() => {
@@ -72,8 +72,13 @@ export default function MainPage() {
   }, [song.stringTunings, setStringTuningsAutocompleteSuffix]);
 
   useEffect(() => {
-    setSongStringTunings(stringifiedStringTunings.split(","));
-  }, [stringifiedStringTunings]);
+    setStringifiedStringTunings(song.stringTunings.join(","));
+  }, [song, setStringifiedStringTunings]);
+
+  useEffect(() => {
+    if (stringifiedStringTunings)
+      setSongStringTunings(stringifiedStringTunings.split(","));
+  }, [stringifiedStringTunings, setSongStringTunings]);
 
   const autocompleteStringTunings = useCallback(() => {
     setStringifiedStringTunings(
