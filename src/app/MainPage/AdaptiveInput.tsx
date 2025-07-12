@@ -4,7 +4,7 @@ interface AdaptiveInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const AdaptiveInput = forwardRef<HTMLInputElement, AdaptiveInputProps>(
-  ({ className = "", ...props }, ref) => {
+  ({ className = "", style, ...props }, ref) => {
     const [inputWidth, setInputWidth] = useState(20);
     const phantomRef = useRef<HTMLSpanElement>(null);
 
@@ -20,6 +20,7 @@ const AdaptiveInput = forwardRef<HTMLInputElement, AdaptiveInputProps>(
         className="relative"
         style={{
           width: inputWidth == 0 ? "100%" : `${inputWidth}px`,
+          ...style,
         }}
       >
         <span
@@ -40,7 +41,6 @@ const AdaptiveInput = forwardRef<HTMLInputElement, AdaptiveInputProps>(
             width: "100%",
             textAlign: "left",
             outline: "none",
-            ...props.style,
           }}
         />
       </div>

@@ -145,6 +145,11 @@ export default function MainPage() {
                     }
                   }}
                   className="bg-transparent p-0"
+                  style={
+                    stringTuningsAutocompleteSuffix == ""
+                      ? { width: "100%" }
+                      : {}
+                  }
                 />
                 <span
                   className="text-gray-500 cursor-pointer"
