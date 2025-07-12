@@ -16,7 +16,7 @@ export type NotesAndBarredFret = {
   fretNumToBar: number;
 };
 
-const NumPermutations = 1;
+const NumPermutations = 3;
 
 export function getBestTabsForChord(
   chordName: string | null,
@@ -55,10 +55,14 @@ export function getBestTabsForChord(
     bassNote
   );
 
+  // If the chord has 2 notes, we want to voice them both, if it has 3 or more, we want to voice 3
+  const mandatoryChordNoteNum = Math.min(prioritizedChordNotes.length, 3);
+
   for (let fretToBar = 0; fretToBar < numFrets; fretToBar++) {
     for (
       let numStringsSkipped = 0, stringIdx = -1;
-      numStringsSkipped < baseNotes.length - 2 && stringIdx < baseNotes.length;
+      numStringsSkipped < baseNotes.length - mandatoryChordNoteNum + 1 &&
+      stringIdx < baseNotes.length;
       stringIdx++
     ) {
       // This skipping can produce a chord tab with unvoiced strings in between voiced ones,
@@ -103,7 +107,9 @@ export function getBestTabsForChord(
     }
   }
 
-  return chordTabPrioritizer.getBestTabs().map((chordEnv) => ({
+  const bestTabs = chordTabPrioritizer.getBestTabs();
+
+  return bestTabs.map((chordEnv) => ({
     stringNotes: chordTabToArray(
       fillInMutedStrings(chordEnv.chordTab, baseNotes.length)
     ),
@@ -178,6 +184,7 @@ function getNewChordNotesPerStringInner(
     bassNote,
     prioritizeVoicingBass
   );
+
   const chordNoteSet = new Set(prioritizedChordNotes);
 
   for (let stringNum = 0; stringNum < noteMatrix.length; stringNum++) {
@@ -280,7 +287,7 @@ function prioritizeChordNotes(chord: Chord.Chord): NoteLiteral[] {
   return notes;
 }
 
-// It sucks that we cant do this in one of the Prioritizers
+// It sucks that we cant do this in one of the Prioritizers, because the prioritizers only know the note names, not their positions
 function getTabFingerDistance(notePositions: NotePosition[]) {
   let totalFingerDistance = 0;
   const usedPairs = new Set<string>();
@@ -299,6 +306,7 @@ function getTabFingerDistance(notePositions: NotePosition[]) {
     }
   }
 
+  //
   while (closestPositions.size() > 0) {
     const closestPair = closestPositions.pop() as [NotePosition, NotePosition];
     const [aString, bString] = [
