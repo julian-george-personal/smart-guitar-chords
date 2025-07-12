@@ -12,10 +12,8 @@ export function normalizeNote(noteName: NoteLiteral): NoteLiteral {
 }
 
 export function getNumSemitones(baseNote: NoteLiteral, currNote: NoteLiteral) {
-  return (
-    Number(
-      Interval.semitones(Interval.simplify(Note.distance(baseNote, currNote)))
-    )
+  return Number(
+    Interval.semitones(Interval.simplify(Note.distance(baseNote, currNote)))
   );
 }
 
@@ -25,6 +23,10 @@ export function getNumFrets(baseNote: NoteLiteral, currNote: NoteLiteral) {
 
 export function getNoteFromNumFrets(baseNote: NoteLiteral, numFrets: number) {
   return Note.tr(baseNote, Interval.fromSemitones(numFrets));
+}
+
+export function arrayToChordTab(notes: NoteLiteral[]) {
+  return notes.reduce((prev, curr, idx) => ({ ...prev, [idx]: curr }), {});
 }
 
 export function chordTabToArray(chordTab: ChordTab) {

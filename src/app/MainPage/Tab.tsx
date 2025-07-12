@@ -1,5 +1,9 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getNoteFromNumFrets } from "../logic/music_util";
+import {
+  arrayToChordTab,
+  chordTabToArray,
+  getNoteFromNumFrets,
+} from "../logic/music_util";
 import {
   getChordNameFromNotes,
   getBestTabsForChord,
@@ -8,7 +12,12 @@ import {
 import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
 import { useSongData, useTabByKey } from "../context/song-context";
-import { RxArrowDown, RxArrowLeft, RxArrowRight, RxArrowUp } from "react-icons/rx";
+import {
+  RxArrowDown,
+  RxArrowLeft,
+  RxArrowRight,
+  RxArrowUp,
+} from "react-icons/rx";
 
 interface TabProps {
   tabKey: number;
@@ -22,7 +31,8 @@ export default function Tab({ tabKey }: TabProps) {
     resetManualStringNote,
     resetAllManualStringNotes,
     incrementStartingFretNum,
-    incrementVoicingIdx
+    incrementVoicingIdx,
+    setVoicesChord,
   } = useTabByKey(tabKey);
   const {
     stringTunings,
@@ -32,16 +42,21 @@ export default function Tab({ tabKey }: TabProps) {
     fretCount,
     manualStringNotes,
     voicingIdx,
+    voicesChord,
   } = tab;
 
-  const [voicingOptions, setVoicingOptions] = useState<NotesAndBarredFret[]>([])
-  const currentVoicing = useMemo(() => voicingOptions[voicingIdx], [voicingIdx, voicingOptions])
+  const [voicingOptions, setVoicingOptions] = useState<NotesAndBarredFret[]>(
+    []
+  );
+
+  const currentVoicing = useMemo<NotesAndBarredFret | undefined>(
+    () => voicingOptions[voicingIdx],
+    [voicingIdx, voicingOptions]
+  );
 
   const tabBaseNotes = useMemo(
     () =>
-      stringTunings.map((tuning) =>
-        getNoteFromNumFrets(tuning, capoFretNum)
-      ),
+      stringTunings.map((tuning) => getNoteFromNumFrets(tuning, capoFretNum)),
     [capoFretNum, stringTunings]
   );
 
@@ -54,20 +69,36 @@ export default function Tab({ tabKey }: TabProps) {
       fretCount,
       manualStringNotes
     );
-    setVoicingOptions(voicings);
+    if (voicings.length > 0) {
+      setVoicingOptions(voicings);
+      setVoicesChord(true);
+    } else {
+      // If no voicings can be found, we still want to display an empty, changeable tab
+      setVoicingOptions([
+        {
+          stringNotes: chordTabToArray({
+            ...arrayToChordTab(stringTunings),
+            ...manualStringNotes,
+          }),
+          fretNumToBar: 0,
+        },
+      ]);
+      setVoicesChord(false);
+    }
   }, [
     manualStringNotes,
     chordName,
     tabBaseNotes,
     fretCount,
-    setVoicingOptions
+    setVoicingOptions,
+    setVoicesChord,
   ]);
 
   const setManualStringFretNum = useCallback(
     (stringNum: number, newFretNum: number | null) => {
       const startingFretNotes = stringTunings.map((baseNote) =>
         getNoteFromNumFrets(baseNote, startingFretNum)
-      )
+      );
       setManualStringNote(
         stringNum,
         newFretNum == null
@@ -78,23 +109,41 @@ export default function Tab({ tabKey }: TabProps) {
     [setManualStringNote, stringTunings]
   );
 
-  if (currentVoicing == null) return null;
+  // This should only happen when the app is first loading
+  if (!currentVoicing) return null;
+
   return (
     <TabProvider tabKey={tabKey}>
       <div className="centered-row w-full max-w-80">
         <div className="w-8 h-full">
-          {
-            startingFretNum == 0 ?
-              <div className="centered-col">
-                <div className="h-10" />
-                <RxArrowDown className="cursor-pointer stroke-[1] h-6 w-6" onClick={() => incrementStartingFretNum(1)} />
-              </div> :
-              <div className="centered-col h-48 sm:h-64 justify-start relative sm:top-7 top-6">
-                <RxArrowUp className="cursor-pointer stroke-[1] h-6 w-6" onClick={() => incrementStartingFretNum(-1)} />
-                <div className="centered-col" style={{ height: Math.round(1 / song.fretCount * 100 * .6) + "%" }} ><span>{startingFretNum + 1}</span></div>
-                <RxArrowDown className="cursor-pointer stroke-[1] h-6 w-6" onClick={() => incrementStartingFretNum(1)} />
+          {startingFretNum == 0 ? (
+            <div className="centered-col">
+              <div className="h-10" />
+              <RxArrowDown
+                className="cursor-pointer stroke-[1] h-6 w-6"
+                onClick={() => incrementStartingFretNum(1)}
+              />
+            </div>
+          ) : (
+            <div className="centered-col h-48 sm:h-64 justify-start relative sm:top-7 top-6">
+              <RxArrowUp
+                className="cursor-pointer stroke-[1] h-6 w-6"
+                onClick={() => incrementStartingFretNum(-1)}
+              />
+              <div
+                className="centered-col"
+                style={{
+                  height: Math.round((1 / song.fretCount) * 100 * 0.6) + "%",
+                }}
+              >
+                <span>{startingFretNum + 1}</span>
               </div>
-          }
+              <RxArrowDown
+                className="cursor-pointer stroke-[1] h-6 w-6"
+                onClick={() => incrementStartingFretNum(1)}
+              />
+            </div>
+          )}
         </div>
         <div className="w-full">
           <div className="w-full h-[90%] relative">
@@ -138,10 +187,10 @@ export default function Tab({ tabKey }: TabProps) {
               style={
                 Object.keys(manualStringNotes).length > 0
                   ? {
-                    fontStyle: "italic",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }
+                      fontStyle: "italic",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }
                   : {}
               }
               onClick={resetAllManualStringNotes}
@@ -151,19 +200,34 @@ export default function Tab({ tabKey }: TabProps) {
                 chordName
               ) ?? "???"}
             </div>
-            <div className="flex flex-row items-center justify-center gap-2 w-full">
-              <div className="basis-1/3 flex flex-row justify-end">
-                {voicingIdx != 0 && <RxArrowLeft className="stroke-1 cursor-pointer" onClick={() => {
-                  incrementVoicingIdx(-1, voicingOptions.length)
-                }} />}
+            {!voicesChord && <div>No voicings could be found</div>}
+            {voicesChord && (
+              <div className="flex flex-row items-center justify-center gap-2 w-full">
+                <div className="basis-1/3 flex flex-row justify-end">
+                  {voicingIdx != 0 && (
+                    <RxArrowLeft
+                      className="stroke-1 cursor-pointer"
+                      onClick={() => {
+                        incrementVoicingIdx(-1, voicingOptions.length);
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="text-sm text-center">
+                  {voicingIdx + 1} of {voicingOptions.length}
+                </div>
+                <div className="basis-1/3 flex flex-row justify-start">
+                  {voicingIdx != voicingOptions.length - 1 && (
+                    <RxArrowRight
+                      className="stroke-1 cursor-pointer"
+                      onClick={() => {
+                        incrementVoicingIdx(1, voicingOptions.length);
+                      }}
+                    />
+                  )}
+                </div>
               </div>
-              <div className="text-sm text-center">{voicingIdx + 1} of {voicingOptions.length}</div>
-              <div className="basis-1/3 flex flex-row justify-start">
-                {voicingIdx != voicingOptions.length - 1 && <RxArrowRight className="stroke-1 cursor-pointer" onClick={() => {
-                  incrementVoicingIdx(1, voicingOptions.length)
-                }} />}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -181,7 +245,14 @@ function Box({ fretNumToBar }: BoxProps) {
   return (
     <div className="centered-col w-full h-full">
       <div className="h-10 w-full" />
-      <div className="centered-col h-48 sm:h-64 border-y border-solid border-black max-w-[100%]" style={{ aspectRatio: `${tabContext.stringCount + 1}/${tabContext.stringCount}` }}>
+      <div
+        className="centered-col h-48 sm:h-64 border-y border-solid border-black max-w-[100%]"
+        style={{
+          aspectRatio: `${tabContext.stringCount + 1}/${
+            tabContext.stringCount
+          }`,
+        }}
+      >
         {Array.from({ length: tabContext.fretCount }, (_, idx) => (
           <div
             key={idx}

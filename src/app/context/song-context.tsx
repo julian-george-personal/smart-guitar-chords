@@ -22,6 +22,7 @@ export type TTab = {
   capoFretNum: number;
   voicingIdx: number;
   stringTunings: NoteLiteral[];
+  voicesChord: boolean;
 };
 
 export type TSong = {
@@ -75,8 +76,9 @@ const defaultTab: TTab = {
   stringTunings: defaultStringTunings,
   capoFretNum: defaultCapoFretNum,
   startingFretNum: defaultStartingFretNum,
-  voicingIdx: 0
-}
+  voicingIdx: 0,
+  voicesChord: true,
+};
 
 export function SongProvider({ children }: SongProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -84,7 +86,9 @@ export function SongProvider({ children }: SongProviderProps) {
   const [songId, setSongId] = useState<string | undefined>();
   const { songs, refreshSongs } = useAccountData();
 
-  const withSongLoading = useCallback(withLoading(setIsLoading), [setIsLoading])
+  const withSongLoading = useCallback(withLoading(setIsLoading), [
+    setIsLoading,
+  ]);
 
   useEffect(() => {
     if (!songId || !songs?.[songId]) {
@@ -126,8 +130,7 @@ export function SongProvider({ children }: SongProviderProps) {
   }, [song.chordNames]);
 
   const setSongCapoFretNum = useCallback(
-    (capoFretNum: number) =>
-      setSong((prev) => ({ ...prev, capoFretNum })),
+    (capoFretNum: number) => setSong((prev) => ({ ...prev, capoFretNum })),
     [setSong]
   );
 
@@ -227,22 +230,24 @@ export function useTabByKey(key: number) {
   // NOTE: whenever you add a property to TTab, you need to change this
   const tab = useMemo(
     () =>
-    ({
-      ...song.tabs[key],
-      ...{
-        fretCount: song.fretCount,
-        // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
-        stringTunings: song.stringTunings.filter((s) => s !== ""),
-        capoFretNum: song.capoFretNum,
-        startingFretNum: song.tabs[key].startingFretNum,
-        voicingIdx: song.tabs[key].voicingIdx
-      },
-    } as Required<TTab>),
+      ({
+        ...song.tabs[key],
+        ...{
+          fretCount: song.fretCount,
+          // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
+          stringTunings: song.stringTunings.filter((s) => s !== ""),
+          capoFretNum: song.capoFretNum,
+          startingFretNum: song.tabs[key].startingFretNum,
+          voicingIdx: song.tabs[key].voicingIdx,
+          voicesChord: song.tabs[key].voicesChord,
+        },
+      } as Required<TTab>),
     [
       song.tabs[key].chordName,
       song.tabs[key].manualStringNotes,
       song.tabs[key].startingFretNum,
       song.tabs[key].voicingIdx,
+      song.tabs[key].voicesChord,
       song.fretCount,
       song.stringTunings,
       song.capoFretNum,
@@ -288,15 +293,33 @@ export function useTabByKey(key: number) {
   const incrementStartingFretNum = useCallback(
     (fretDiff: number) =>
       updateTab((prev) => {
-        return prev.startingFretNum != null ? ({ ...prev, startingFretNum: prev.startingFretNum + fretDiff }) : prev
+        return prev.startingFretNum != null
+          ? { ...prev, startingFretNum: prev.startingFretNum + fretDiff }
+          : prev;
       }),
     [updateTab]
   );
-  const incrementVoicingIdx = useCallback((idxDiff: number, numVoicingOptions: number) => {
-    updateTab((prev) => {
-      return ({ ...prev, voicingIdx: Math.min(Math.max(prev.voicingIdx + idxDiff, 0), numVoicingOptions - 1) })
-    })
-  }, [updateTab])
+  const incrementVoicingIdx = useCallback(
+    (idxDiff: number, numVoicingOptions: number) => {
+      updateTab((prev) => {
+        return {
+          ...prev,
+          voicingIdx: Math.min(
+            Math.max(prev.voicingIdx + idxDiff, 0),
+            numVoicingOptions - 1
+          ),
+        };
+      });
+    },
+    [updateTab]
+  );
+  const setVoicesChord = useCallback(
+    (newValue: boolean) =>
+      updateTab((prev) => {
+        return { ...prev, voicesChord: newValue };
+      }),
+    [updateTab]
+  );
   return {
     tab,
     setManualStringNote,
@@ -304,6 +327,7 @@ export function useTabByKey(key: number) {
     setStartingFretNum,
     resetAllManualStringNotes,
     incrementStartingFretNum,
-    incrementVoicingIdx
+    incrementVoicingIdx,
+    setVoicesChord,
   };
 }
