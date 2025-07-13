@@ -106,7 +106,7 @@ export default function Tab({ tabKey }: TabProps) {
           : getNoteFromNumFrets(startingFretNotes[stringNum], newFretNum)
       );
     },
-    [setManualStringNote, stringTunings]
+    [setManualStringNote, tabBaseNotes]
   );
 
   // This should only happen when the app is first loading
