@@ -96,7 +96,7 @@ export default function Tab({ tabKey }: TabProps) {
 
   const setManualStringFretNum = useCallback(
     (stringNum: number, newFretNum: number | null) => {
-      const startingFretNotes = stringTunings.map((baseNote) =>
+      const startingFretNotes = tabBaseNotes.map((baseNote) =>
         getNoteFromNumFrets(baseNote, startingFretNum)
       );
       setManualStringNote(
