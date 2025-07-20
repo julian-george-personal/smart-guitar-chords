@@ -25,13 +25,13 @@ interface TabProps {
 }
 
 export default function Tab({ tabKey }: TabProps) {
-  const { song } = useSongData();
   const {
     tab,
     setManualStringNote,
     resetManualStringNote,
     resetAllManualStringNotes,
     incrementStartingFretNum,
+    resetVoicingIdx,
     incrementVoicingIdx,
     setVoicesChord,
   } = useTabByKey(tabKey);
@@ -96,6 +96,10 @@ export default function Tab({ tabKey }: TabProps) {
     setVoicingOptions,
     setVoicesChord,
   ]);
+
+  useEffect(() => {
+    resetVoicingIdx()
+  }, [chordName])
 
   const setManualStringFretNum = useCallback(
     (stringNum: number, newFretNum: number | null) => {
