@@ -1,8 +1,9 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState, useRef } from "react";
 import {
   arrayToChordTab,
   chordTabToArray,
   getNoteFromNumFrets,
+  sanitizeNoteNameForDisplay,
 } from "../logic/music_util";
 import {
   getChordNameFromNotes,
@@ -48,6 +49,8 @@ export default function Tab({ tabKey }: TabProps) {
   const [voicingOptions, setVoicingOptions] = useState<NotesAndBarredFret[]>(
     []
   );
+  // This is used to keep the displayed fret number centered on the first fret
+  const [firstFretRect, setFirstRowRect] = useState<DOMRect | null>();
 
   const currentVoicing = useMemo<NotesAndBarredFret | undefined>(
     () => voicingOptions[voicingIdx],
@@ -125,16 +128,15 @@ export default function Tab({ tabKey }: TabProps) {
               />
             </div>
           ) : (
-            <div className="centered-col h-48 sm:h-64 justify-start relative sm:top-7 top-6">
+            <div className="centered-col justify-start relative" style={{
+              top: `calc(2.5rem - 2.25rem + ${(firstFretRect?.height ?? 0) / 2}px)`
+            }}>
               <RxArrowUp
                 className="cursor-pointer stroke-[1] h-6 w-6"
                 onClick={() => incrementStartingFretNum(-1)}
               />
               <div
-                className="centered-col"
-                style={{
-                  height: Math.round((1 / song.fretCount) * 100 * 0.6) + "%",
-                }}
+                className="centered-col h-6"
               >
                 <span>{startingFretNum + 1}</span>
               </div>
@@ -147,7 +149,7 @@ export default function Tab({ tabKey }: TabProps) {
         </div>
         <div className="w-full">
           <div className="w-full h-[90%] relative">
-            <Box fretNumToBar={currentVoicing.fretNumToBar} />
+            <Box fretNumToBar={currentVoicing.fretNumToBar} setFirstRowRect={setFirstRowRect} />
             <div className="absolute w-full top-0 centered-row">
               {tabBaseNotes.map((baseNote, i) => (
                 <TunedString
@@ -176,7 +178,7 @@ export default function Tab({ tabKey }: TabProps) {
                   }}
                   onClick={() => resetManualStringNote(stringIdx)}
                 >
-                  {note?.toString() || "X"}
+                  {note ? sanitizeNoteNameForDisplay(note) : "X"}
                 </div>
               );
             })}
@@ -187,10 +189,10 @@ export default function Tab({ tabKey }: TabProps) {
               style={
                 Object.keys(manualStringNotes).length > 0
                   ? {
-                      fontStyle: "italic",
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                    }
+                    fontStyle: "italic",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }
                   : {}
               }
               onClick={resetAllManualStringNotes}
@@ -240,10 +242,24 @@ export default function Tab({ tabKey }: TabProps) {
 
 interface BoxProps {
   fretNumToBar: number;
+  setFirstRowRect: (rect: DOMRect) => void
 }
 
-function Box({ fretNumToBar }: BoxProps) {
+function Box({ fretNumToBar, setFirstRowRect }: BoxProps) {
   const tabContext = useContext(TabContext);
+  const firstRowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!firstRowRef.current) return;
+
+    const rect = firstRowRef.current?.getBoundingClientRect();
+    if (rect) {
+      setFirstRowRect(rect);
+    }
+
+  }, [tabContext?.fretCount]);
+
+
   if (!tabContext) return null;
   return (
     <div className="centered-col w-full h-full">
@@ -251,15 +267,15 @@ function Box({ fretNumToBar }: BoxProps) {
       <div
         className="centered-col h-48 sm:h-64 border-y border-solid border-black max-w-[100%]"
         style={{
-          aspectRatio: `${tabContext.stringCount + 1}/${
-            tabContext.stringCount
-          }`,
+          aspectRatio: `${tabContext.stringCount + 1}/${tabContext.stringCount
+            }`,
         }}
       >
         {Array.from({ length: tabContext.fretCount }, (_, idx) => (
           <div
             key={idx}
             className="centered-col border-y border-solid border-black w-full grow"
+            ref={idx === 0 ? firstRowRef : undefined}
           >
             {idx + 1 == fretNumToBar && <Bar />}
           </div>

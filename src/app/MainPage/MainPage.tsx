@@ -6,7 +6,7 @@ import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
 import { useSongData } from "../context/song-context";
 import MultiStringInput from "./MultiStringInput";
-import { sanitizeNoteName } from "../logic/music_util";
+import { sanitizeNoteNameForDisplay, sanitizeNoteNameForLogic } from "../logic/music_util";
 import SongModal from "./SongModal/SongModal";
 import Select from "react-select";
 import InfoModal from "./InfoModal";
@@ -71,12 +71,12 @@ export default function MainPage() {
   }, [stringifiedStringTunings, setStringTuningsAutocompleteSuffix]);
 
   useEffect(() => {
-    setStringifiedStringTunings(song.stringTunings.join(","));
+    setStringifiedStringTunings(song.stringTunings.map(sanitizeNoteNameForDisplay).join(","));
   }, [song, setStringifiedStringTunings]);
 
   useEffect(() => {
     if (stringifiedStringTunings)
-      setSongStringTunings(stringifiedStringTunings.split(","));
+      setSongStringTunings(stringifiedStringTunings.split(",").map(note => `${note}1`));
   }, [stringifiedStringTunings, setSongStringTunings]);
 
   const autocompleteStringTunings = useCallback(() => {
@@ -130,7 +130,7 @@ export default function MainPage() {
                     setStringifiedStringTunings(
                       newValue.target.value
                         .split(",")
-                        .map(sanitizeNoteName)
+                        .map(sanitizeNoteNameForLogic)
                         .join(",")
                     );
                   }}
@@ -181,13 +181,14 @@ export default function MainPage() {
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">Fret Window Size</span>
               <input
-                value={song.fretCount}
+                value={song.fretCount.toString()}
                 onChange={(newValue) => {
                   let parsedValue = parseInt(newValue.target.value);
                   if (isNaN(parsedValue)) parsedValue = 0;
                   if (parsedValue <= 12 && parsedValue >= 0)
                     setSongFretCount(parsedValue);
                 }}
+                type="number"
                 className="standard-input w-36"
               />
             </div>
@@ -238,8 +239,8 @@ export default function MainPage() {
                       backgroundColor: state.isSelected
                         ? "#e5e7eb"
                         : state.isFocused
-                        ? "#f3f4f6"
-                        : "white",
+                          ? "#f3f4f6"
+                          : "white",
                       color: state.data.value === "" ? "#6B7280" : "#000000",
                       "&:active": {
                         backgroundColor: "#e5e7eb",

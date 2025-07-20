@@ -21,6 +21,7 @@ export type TTab = {
   startingFretNum: number;
   capoFretNum: number;
   voicingIdx: number;
+  // These include octave nums, but they're relative. i.e. on the high E string in standard tuning, F1 is fret 1 and F2 is fret 13
   stringTunings: NoteLiteral[];
   voicesChord: boolean;
 };
@@ -58,7 +59,7 @@ interface SongProviderProps {
   children: ReactNode;
 }
 
-const defaultStringTunings: NoteLiteral[] = ["E", "A", "D", "G", "B", "E"];
+const defaultStringTunings: NoteLiteral[] = ["E1", "A1", "D1", "G1", "B1", "E1"];
 const defaultFretCount = 5;
 const defaultCapoFretNum = 0;
 const defaultStartingFretNum = 0;
@@ -230,18 +231,18 @@ export function useTabByKey(key: number) {
   // NOTE: whenever you add a property to TTab, you need to change this
   const tab = useMemo(
     () =>
-      ({
-        ...song.tabs[key],
-        ...{
-          fretCount: song.fretCount,
-          // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
-          stringTunings: song.stringTunings.filter((s) => s !== ""),
-          capoFretNum: song.capoFretNum,
-          startingFretNum: song.tabs[key].startingFretNum,
-          voicingIdx: song.tabs[key].voicingIdx,
-          voicesChord: song.tabs[key].voicesChord,
-        },
-      } as Required<TTab>),
+    ({
+      ...song.tabs[key],
+      ...{
+        fretCount: song.fretCount,
+        // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
+        stringTunings: song.stringTunings.filter((s) => s !== ""),
+        capoFretNum: song.capoFretNum,
+        startingFretNum: song.tabs[key].startingFretNum,
+        voicingIdx: song.tabs[key].voicingIdx,
+        voicesChord: song.tabs[key].voicesChord,
+      },
+    } as Required<TTab>),
     [
       song.tabs[key].chordName,
       song.tabs[key].manualStringNotes,

@@ -22,6 +22,7 @@ export type TAccountContext = {
   songs: {
     [songId: string]: TSong;
   };
+  // Used to create suggestions for string tuning autocomplete
   orderedUsedStringTunings: string[];
   login: (username: string, password: string) => Promise<StoreResponse>;
   logout: () => void;

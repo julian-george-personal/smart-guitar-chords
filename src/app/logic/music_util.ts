@@ -18,7 +18,7 @@ export function getNumSemitones(baseNote: NoteLiteral, currNote: NoteLiteral) {
 }
 
 export function getNumFrets(baseNote: NoteLiteral, currNote: NoteLiteral) {
-  return getNumSemitones(baseNote, currNote) % 12;
+  return getNumSemitones(baseNote, currNote);
 }
 
 export function getNoteFromNumFrets(baseNote: NoteLiteral, numFrets: number) {
@@ -52,6 +52,10 @@ export function sanitizeChordName(chordString: string) {
   return chordString.trim().replace(/[^a-zA-G0-9#//]/g, "");
 }
 
-export function sanitizeNoteName(noteString: string) {
+export function sanitizeNoteNameForLogic(noteString: string): NoteLiteral {
   return noteString.trim().replace(/[^A-G#b]/g, "");
+}
+
+export function sanitizeNoteNameForDisplay(note: NoteLiteral): string {
+  return Note.simplify((note as string).replace(/\d/g, ""));
 }
