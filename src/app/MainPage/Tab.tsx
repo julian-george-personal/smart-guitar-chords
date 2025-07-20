@@ -3,6 +3,7 @@ import {
   arrayToChordTab,
   chordTabToArray,
   getNoteFromNumFrets,
+  sanitizeNoteNameForDisplay,
 } from "../logic/music_util";
 import {
   getChordNameFromNotes,
@@ -176,7 +177,7 @@ export default function Tab({ tabKey }: TabProps) {
                   }}
                   onClick={() => resetManualStringNote(stringIdx)}
                 >
-                  {note?.toString() || "X"}
+                  {note ? sanitizeNoteNameForDisplay(note) : "X"}
                 </div>
               );
             })}
@@ -187,10 +188,10 @@ export default function Tab({ tabKey }: TabProps) {
               style={
                 Object.keys(manualStringNotes).length > 0
                   ? {
-                      fontStyle: "italic",
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                    }
+                    fontStyle: "italic",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }
                   : {}
               }
               onClick={resetAllManualStringNotes}
@@ -251,9 +252,8 @@ function Box({ fretNumToBar }: BoxProps) {
       <div
         className="centered-col h-48 sm:h-64 border-y border-solid border-black max-w-[100%]"
         style={{
-          aspectRatio: `${tabContext.stringCount + 1}/${
-            tabContext.stringCount
-          }`,
+          aspectRatio: `${tabContext.stringCount + 1}/${tabContext.stringCount
+            }`,
         }}
       >
         {Array.from({ length: tabContext.fretCount }, (_, idx) => (
