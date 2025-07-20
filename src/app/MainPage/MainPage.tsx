@@ -181,13 +181,14 @@ export default function MainPage() {
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">Fret Window Size</span>
               <input
-                value={song.fretCount}
+                value={song.fretCount.toString()}
                 onChange={(newValue) => {
                   let parsedValue = parseInt(newValue.target.value);
                   if (isNaN(parsedValue)) parsedValue = 0;
                   if (parsedValue <= 12 && parsedValue >= 0)
                     setSongFretCount(parsedValue);
                 }}
+                type="number"
                 className="standard-input w-36"
               />
             </div>
