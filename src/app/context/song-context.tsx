@@ -300,6 +300,14 @@ export function useTabByKey(key: number) {
       }),
     [updateTab]
   );
+  const resetVoicingIdx = useCallback(() => {
+    updateTab((prev) => {
+      return {
+        ...prev,
+        voicingIdx: 0
+      };
+    });
+  }, [updateTab])
   const incrementVoicingIdx = useCallback(
     (idxDiff: number, numVoicingOptions: number) => {
       updateTab((prev) => {
@@ -328,6 +336,7 @@ export function useTabByKey(key: number) {
     setStartingFretNum,
     resetAllManualStringNotes,
     incrementStartingFretNum,
+    resetVoicingIdx,
     incrementVoicingIdx,
     setVoicesChord,
   };
