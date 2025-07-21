@@ -110,7 +110,9 @@ export default function Tab({ tabKey }: TabProps) {
         stringNum,
         newFretNum == null
           ? null
-          : getNoteFromNumFrets(startingFretNotes[stringNum], newFretNum)
+          : getNoteFromNumFrets(newFretNum == 0 ?
+            stringTunings[stringNum] :
+            startingFretNotes[stringNum], newFretNum)
       );
     },
     [setManualStringNote, tabBaseNotes]
