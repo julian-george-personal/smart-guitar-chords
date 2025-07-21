@@ -6,7 +6,7 @@ export async function hashPassword(password:string) {
 }
 
 export function generateToken(object: object) {
-  return jwt.sign(object, config.jwtSecret, { expiresIn: "1h" });
+  return jwt.sign(object, config.jwtSecret, { expiresIn: "14d" });
 }
 
 export function verifyToken<T>(token: string): T | null {
