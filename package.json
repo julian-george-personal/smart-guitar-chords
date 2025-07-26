@@ -23,6 +23,7 @@
     "bcrypt": "^5.1.1",
     "bun": "^1.2.6",
     "cors": "^2.8.5",
+    "deep-equal": "^2.2.3",
     "jsonwebtoken": "^9.0.2",
     "mobx": "^6.13.7",
     "react": "^18.3.1",
@@ -39,6 +40,7 @@
   "devDependencies": {
     "@eslint/js": "^9.23.0",
     "@types/css-modules": "^1.0.5",
+    "@types/deep-equal": "^1.0.4",
     "@types/react": "^18.3.19",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react-swc": "^3.8.1",

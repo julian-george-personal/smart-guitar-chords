@@ -8,6 +8,7 @@ import {
   useCallback,
   useEffect,
 } from "react";
+import deepEquals from "deep-equal"
 import { ChordTab } from "../logic/music_util";
 import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
@@ -46,11 +47,12 @@ type TSongContext = {
   setSongFretCount: (fretCount: number) => void;
   setSongStringTunings: (stringTunings: NoteLiteral[]) => void;
   saveSong: (
-    updates: Partial<TSong>
+    updates?: Partial<TSong>
   ) => Promise<StoreResponse & { songId?: string }>;
   deleteCurrentSong: () => Promise<StoreResponse>;
   duplicateCurrentSong: () => Promise<StoreResponse & { songId?: string }>;
   isLoading: boolean;
+  isSongUnsaved: boolean | null;
 };
 
 const SongContext = createContext<TSongContext | null>(null);
@@ -84,6 +86,8 @@ const defaultTab: TTab = {
 export function SongProvider({ children }: SongProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [song, setSong] = useState<TSong>(defaultSong);
+  const [savedSong, setSavedSong] = useState<TSong | null>(null)
+  const [isSongUnsaved, setisSongUnsaved] = useState<boolean | null>(null);
   const [songId, setSongId] = useState<string | undefined>();
   const { songs, refreshSongs } = useAccountData();
 
@@ -97,7 +101,13 @@ export function SongProvider({ children }: SongProviderProps) {
       return;
     }
     setSong(songs[songId]);
+    setSavedSong(songs[songId])
   }, [songId, songs, setSong]);
+
+  useEffect(() => {
+    if (!songId) setisSongUnsaved(null)
+    else setisSongUnsaved(!deepEquals(song, savedSong))
+  }, [song, savedSong])
 
   const setTitle = useCallback(
     (newTitle: string) => {
@@ -147,7 +157,7 @@ export function SongProvider({ children }: SongProviderProps) {
   );
 
   const saveSong = useCallback(
-    async (updates: Partial<TSong>) => {
+    async (updates: Partial<TSong> = {}) => {
       const newSong = { ...song, ...updates };
       const songJson = JSON.stringify(newSong);
       let response: StoreResponse & { songId?: string };
@@ -210,6 +220,7 @@ export function SongProvider({ children }: SongProviderProps) {
         deleteCurrentSong: withSongLoading(deleteCurrentSong),
         duplicateCurrentSong: withSongLoading(duplicateCurrentSong),
         isLoading,
+        isSongUnsaved
       }}
     >
       {children}
