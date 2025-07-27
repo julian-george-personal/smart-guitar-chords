@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useCallback } from "react";
-import { PulseLoader, SyncLoader } from "react-spinners";
+import { PulseLoader } from "react-spinners";
 import { useAccountData } from "../../context/account-context";
 import { UnknownServerErrorMessage } from "../constants";
 
@@ -54,7 +54,7 @@ export default function LoginPage({
     } else {
       onFinished();
     }
-  }, []);
+  }, [login, onFinished, setError]);
 
   return (
     <>

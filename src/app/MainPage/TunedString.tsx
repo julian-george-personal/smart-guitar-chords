@@ -18,18 +18,17 @@ export function TunedString({
   interactive,
 }: TunedStringProps) {
   const tabContext = useContext(TabContext);
-  if (!tabContext) return null;
-  const { fretCount, startingFretNum } = tabContext;
   const fretNumber = useMemo(() => {
     if (currNote == null || !tabContext) return null;
     let numSemitones = getNumFrets(baseNote, currNote);
     if (numSemitones == 0) return 0;
-    numSemitones = getNumFrets(getNoteFromNumFrets(baseNote, startingFretNum), currNote)
-    if (numSemitones > fretCount) {
+    numSemitones = getNumFrets(getNoteFromNumFrets(baseNote, tabContext.startingFretNum), currNote)
+    if (numSemitones > tabContext.fretCount) {
       return null;
     }
     return numSemitones;
-  }, [baseNote, currNote, startingFretNum, fretCount]);
+  }, [baseNote, currNote, tabContext]);
+  if (!tabContext) return null;
   return (
     <String
       fretNumber={fretNumber}

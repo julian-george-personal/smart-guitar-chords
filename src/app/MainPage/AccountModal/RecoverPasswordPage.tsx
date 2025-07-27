@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useAccountData } from "../../context/account-context";
@@ -55,7 +55,7 @@ export default function RecoverPasswordPage({
         onFinished();
       }
     },
-    [onFinished]
+    [onFinished, recoverPassword, setError]
   );
 
   return (

@@ -23,7 +23,7 @@ interface ConfirmSongDeletionPageProps {
 export default function ConfirmSongDeletionPage({
   onFinished,
 }: ConfirmSongDeletionPageProps) {
-  const { deleteCurrentSong, selectSong, isLoading } = useSongData();
+  const { deleteCurrentSong, setSongId, isLoading } = useSongData();
   const {
     handleSubmit,
     formState: { errors },
@@ -37,11 +37,11 @@ export default function ConfirmSongDeletionPage({
         message: GetErrorStatusMessage(response),
       });
     } else {
-      selectSong("");
+      setSongId("");
       onFinished();
       toast.success("Succesfully deleted song");
     }
-  }, [deleteCurrentSong, onFinished]);
+  }, [deleteCurrentSong, onFinished, setError, setSongId]);
   return (
     <>
       {errors.root && (

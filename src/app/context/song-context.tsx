@@ -12,7 +12,7 @@ import deepEquals from "deep-equal"
 import { ChordTab } from "../logic/music_util";
 import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
-import { useAccountData } from "./account-context";
+import { useAccountData, useSongById } from "./account-context";
 import { withLoading } from "../util";
 
 export type TTab = {
@@ -38,8 +38,8 @@ export type TSong = {
 
 type TSongContext = {
   song: TSong;
-  songId?: string;
-  selectSong: (songId: string) => void;
+  songId: string | null;
+  setSongId: (songId: string | null) => void;
   setTitle: (title: string) => void;
   setChordNames: (chordNames: string[]) => void;
   updateTabByKey: (key: number, newTab: TTab) => void;
@@ -52,7 +52,7 @@ type TSongContext = {
   deleteCurrentSong: () => Promise<StoreResponse>;
   duplicateCurrentSong: () => Promise<StoreResponse & { songId?: string }>;
   isLoading: boolean;
-  isSongUnsaved: boolean | null;
+  isSongSaved: boolean;
 };
 
 const SongContext = createContext<TSongContext | null>(null);
@@ -85,29 +85,20 @@ const defaultTab: TTab = {
 
 export function SongProvider({ children }: SongProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [song, setSong] = useState<TSong>(defaultSong);
-  const [savedSong, setSavedSong] = useState<TSong | null>(null)
-  const [isSongUnsaved, setisSongUnsaved] = useState<boolean | null>(null);
-  const [songId, setSongId] = useState<string | undefined>();
-  const { songs, refreshSongs } = useAccountData();
+  const [unsavedSong, setUnsavedSong] = useState<TSong>(defaultSong);
+  const [songId, setSongId] = useState<string | null>(null);
+  const { refreshSongs, areAllSongsSaved } = useAccountData();
+  const savedSongData = useSongById(songId)
+
+  const song = useMemo<TSong>(() => savedSongData?.song ?? unsavedSong, [savedSongData?.song, unsavedSong])
+  const setSong = useCallback((updater: (prev: TSong) => TSong) => {
+    savedSongData ? savedSongData.setSong(updater) : setUnsavedSong(updater)
+  }, [savedSongData, setUnsavedSong])
+  const isSongSaved = useMemo(() => savedSongData ? savedSongData.isSongSaved : deepEquals(unsavedSong, defaultSong), [savedSongData, unsavedSong])
 
   const withSongLoading = useCallback(withLoading(setIsLoading), [
     setIsLoading,
   ]);
-
-  useEffect(() => {
-    if (!songId || !songs?.[songId]) {
-      setSong(defaultSong);
-      return;
-    }
-    setSong(songs[songId]);
-    setSavedSong(songs[songId])
-  }, [songId, songs, setSong]);
-
-  useEffect(() => {
-    if (!songId) setisSongUnsaved(null)
-    else setisSongUnsaved(!deepEquals(song, savedSong))
-  }, [song, savedSong])
 
   const setTitle = useCallback(
     (newTitle: string) => {
@@ -120,25 +111,6 @@ export function SongProvider({ children }: SongProviderProps) {
     (chordNames: string[]) => setSong((prev) => ({ ...prev, chordNames })),
     [setSong]
   );
-
-  useEffect(() => {
-    setSong((prev) => {
-      const newSong = { ...prev };
-      for (let i = 0; i < prev.chordNames.length; i++) {
-        if (i >= newSong.tabs.length) {
-          newSong.tabs.push({
-            ...defaultTab,
-            chordName: prev.chordNames[i],
-          });
-        } else {
-          newSong.tabs[i].chordName = prev.chordNames[i];
-        }
-      }
-      // Delete any chords that no longer exist
-      newSong.tabs = newSong.tabs.slice(0, prev.chordNames.length);
-      return newSong;
-    });
-  }, [song.chordNames]);
 
   const setSongCapoFretNum = useCallback(
     (capoFretNum: number) => setSong((prev) => ({ ...prev, capoFretNum })),
@@ -170,15 +142,15 @@ export function SongProvider({ children }: SongProviderProps) {
       if (response.songId) setSongId(response.songId);
       return response;
     },
-    [song, songId, setSong, refreshSongs]
+    [song, songId, setSongId, refreshSongs]
   );
 
   const deleteCurrentSong = useCallback(async () => {
     if (!songId) throw new Error();
-    let response = await songStore.deleteSong(songId);
+    const response = await songStore.deleteSong(songId);
     refreshSongs();
     return response;
-  }, [song, songId]);
+  }, [songId, refreshSongs]);
 
   const duplicateCurrentSong = useCallback(async () => {
     if (!songId) throw new Error();
@@ -204,12 +176,49 @@ export function SongProvider({ children }: SongProviderProps) {
     [setSong]
   );
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isSongSaved || !areAllSongsSaved) {
+        e.preventDefault();
+        // Modern browsers require returnValue to be set
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isSongSaved, areAllSongsSaved]);
+
+  //TODO this is infinitely running when on an unsaved song :()
+  useEffect(() => {
+    setSong((prev) => {
+      const newSong = { ...prev };
+      for (let i = 0; i < prev.chordNames.length; i++) {
+        if (i >= newSong.tabs.length) {
+          newSong.tabs.push({
+            ...defaultTab,
+            chordName: prev.chordNames[i],
+          });
+        } else {
+          newSong.tabs[i].chordName = prev.chordNames[i];
+        }
+      }
+      // Delete any chords that no longer exist
+      newSong.tabs = newSong.tabs.slice(0, prev.chordNames.length);
+      return newSong;
+    });
+  }, [setSong, song.chordNames]);
+
   return (
     <SongContext.Provider
       value={{
         song,
         songId,
-        selectSong: setSongId,
+        setSongId: setSongId,
         setTitle,
         setChordNames,
         updateTabByKey,
@@ -220,7 +229,7 @@ export function SongProvider({ children }: SongProviderProps) {
         deleteCurrentSong: withSongLoading(deleteCurrentSong),
         duplicateCurrentSong: withSongLoading(duplicateCurrentSong),
         isLoading,
-        isSongUnsaved
+        isSongSaved
       }}
     >
       {children}
@@ -239,7 +248,6 @@ export const useSongData = () => {
 export function useTabByKey(key: number) {
   const { song, updateTabByKey } = useSongData();
 
-  // NOTE: whenever you add a property to TTab, you need to change this
   const tab = useMemo(
     () =>
     ({
@@ -255,11 +263,9 @@ export function useTabByKey(key: number) {
       },
     } as Required<TTab>),
     [
-      song.tabs[key].chordName,
-      song.tabs[key].manualStringNotes,
-      song.tabs[key].startingFretNum,
-      song.tabs[key].voicingIdx,
-      song.tabs[key].voicesChord,
+      key,
+      song.tabs,
+      Object.values(song.tabs[key]),
       song.fretCount,
       song.stringTunings,
       song.capoFretNum,
@@ -269,7 +275,7 @@ export function useTabByKey(key: number) {
     (setter: (prev: TTab) => TTab) => {
       updateTabByKey(key, setter(tab));
     },
-    [updateTabByKey, tab]
+    [updateTabByKey, tab, key]
   );
   const setManualStringNote = useCallback(
     (stringIdx: number, note: NoteLiteral | null) => {
@@ -340,7 +346,7 @@ export function useTabByKey(key: number) {
       }),
     [updateTab]
   );
-  return {
+  return useMemo(() => ({
     tab,
     setManualStringNote,
     resetManualStringNote,
@@ -350,5 +356,15 @@ export function useTabByKey(key: number) {
     resetVoicingIdx,
     incrementVoicingIdx,
     setVoicesChord,
-  };
+  }), [
+    tab,
+    setManualStringNote,
+    resetManualStringNote,
+    setStartingFretNum,
+    resetAllManualStringNotes,
+    incrementStartingFretNum,
+    resetVoicingIdx,
+    incrementVoicingIdx,
+    setVoicesChord,
+  ]);
 }

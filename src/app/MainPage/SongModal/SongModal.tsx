@@ -44,7 +44,7 @@ export default function SongModal({ isOpen, closeModal }: SongModalProps) {
         });
         break;
     }
-  }, [activePage, setActivePageInfo]);
+  }, [activePage, setActivePageInfo, onFinished]);
   return (
     <>
       <Modal

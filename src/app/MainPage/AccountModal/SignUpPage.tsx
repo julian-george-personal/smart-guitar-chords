@@ -64,7 +64,7 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
       toast.success("Successfully created account. Log in to use it.");
       onFinished();
     }
-  }, []);
+  }, [onFinished, setError, signUp]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

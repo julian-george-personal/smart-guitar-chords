@@ -87,7 +87,7 @@ export default function AccountModal({
         });
         break;
     }
-  }, [activePage, setActivePageInfo]);
+  }, [activePage, setActivePageInfo, onFinished]);
   if (!activePageInfo) return null;
   return (
     <>

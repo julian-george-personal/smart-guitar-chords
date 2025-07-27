@@ -1,9 +1,6 @@
 import { forwardRef, useLayoutEffect, useRef, useState } from "react";
 
-interface AdaptiveInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
-
-const AdaptiveInput = forwardRef<HTMLInputElement, AdaptiveInputProps>(
+const AdaptiveInput = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className = "", style, ...props }, ref) => {
     const [inputWidth, setInputWidth] = useState(20);
     const phantomRef = useRef<HTMLSpanElement>(null);

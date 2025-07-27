@@ -23,10 +23,10 @@ export default function MainPage() {
     setSongStringTunings,
     setSongCapoFretNum,
     setSongFretCount,
-    selectSong,
+    setSongId,
     songId,
     saveSong,
-    isSongUnsaved
+    isSongSaved
   } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
@@ -70,7 +70,7 @@ export default function MainPage() {
       ? autocompleteMatch.replace(stringifiedStringTunings, "")
       : "";
     setStringTuningsAutocompleteSuffix(autocompleteSuffix);
-  }, [stringifiedStringTunings, setStringTuningsAutocompleteSuffix]);
+  }, [stringifiedStringTunings, setStringTuningsAutocompleteSuffix, orderedUsedStringTunings]);
 
   useEffect(() => {
     setStringifiedStringTunings(song.stringTunings.map(sanitizeNoteNameForDisplay).join(","));
@@ -207,27 +207,27 @@ export default function MainPage() {
         </div>
         <div className="centered-col w-[80%] pb-32">
           <div className="centered-row justify-between w-full pb-1">
-            <div className="centered-row gap-2">
+            <div className="centered-row gap-2 max-w-56 flex-grow justify-start">
               {Object.keys(songs).length > 0 && (
                 <Select
-                  className="w-36 p-0"
+                  className="w-full p-0"
                   classNamePrefix="select"
                   value={{
                     value: songId,
                     label: songId ? songs[songId]?.title : "New Song",
                   }}
                   onChange={(option) => {
-                    selectSong(option?.value ?? "");
+                    setSongId(option?.value ?? null);
                   }}
                   options={[
-                    { value: "", label: "New Song" },
+                    { value: null, label: "New Song" },
                     ...Object.entries(songs).map(([id, song]) => ({
                       value: id,
                       label: song.title,
                     })),
                   ]}
                   styles={{
-                    control: (baseStyles, state) => ({
+                    control: (baseStyles) => ({
                       ...baseStyles,
                       border: "none",
                       boxShadow: "none",
@@ -275,7 +275,7 @@ export default function MainPage() {
             </div>
             <div className="centered-row gap-1">
               <AiOutlineSave
-                className={`${isSongUnsaved ? "text-black" : "text-gray-500"} w-6 h-6 cursor-pointer`}
+                className={`${isSongSaved ? "text-gray-500" : "text-black"} w-6 h-6 cursor-pointer`}
                 onClick={
                   songId == null ? openSongModal : async () => await saveSong()
                 }

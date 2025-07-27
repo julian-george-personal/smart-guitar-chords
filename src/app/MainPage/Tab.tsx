@@ -12,7 +12,7 @@ import {
 } from "../logic/chord_calculator";
 import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
-import { useSongData, useTabByKey } from "../context/song-context";
+import { useTabByKey } from "../context/song-context";
 import {
   RxArrowDown,
   RxArrowLeft,
@@ -95,11 +95,13 @@ export default function Tab({ tabKey }: TabProps) {
     fretCount,
     setVoicingOptions,
     setVoicesChord,
+    startingFretNum,
+    stringTunings
   ]);
 
   useEffect(() => {
     resetVoicingIdx()
-  }, [chordName])
+  }, [chordName, resetVoicingIdx])
 
   const setManualStringFretNum = useCallback(
     (stringNum: number, newFretNum: number | null) => {
@@ -115,7 +117,7 @@ export default function Tab({ tabKey }: TabProps) {
             startingFretNotes[stringNum], newFretNum)
       );
     },
-    [setManualStringNote, tabBaseNotes]
+    [setManualStringNote, tabBaseNotes, startingFretNum, stringTunings]
   );
 
   // This should only happen when the app is first loading
@@ -263,7 +265,7 @@ function Box({ fretNumToBar, setFirstRowRect }: BoxProps) {
       setFirstRowRect(rect);
     }
 
-  }, [tabContext?.fretCount]);
+  }, [tabContext?.fretCount, setFirstRowRect]);
 
 
   if (!tabContext) return null;
