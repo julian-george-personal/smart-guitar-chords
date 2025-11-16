@@ -2,10 +2,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { toast } from "react-toastify";
-import { useAccountData } from "../../context/account-context";
 import { useCallback } from "react";
 import { UnknownServerErrorMessage } from "../constants";
-import { StoreResponse } from "../../store/store";
+import { StoreResponse } from "../../state/store";
+import { useAccountData } from "../../state/account/account-hooks";
 
 type TSetNewPasswordFields = {
   password: string;
@@ -59,7 +59,7 @@ export default function SetNewPasswordPage() {
         window.location.replace(window.location.href.split("?")[0]);
       }, 2500);
     }
-  }, []);
+  }, [setError, setNewPassword]);
 
   return (
     <>

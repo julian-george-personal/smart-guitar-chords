@@ -7,7 +7,6 @@ import {
   TDuplicateSongResponse,
   TGetSongsResponse,
   TUpdateSongRequest,
-  TUpdateSongResponse,
 } from "./song-requests";
 import * as songRepository from "./song-repository";
 import { songIdLength } from "./song-store";
@@ -20,7 +19,7 @@ export enum SongStatus {
   UnknownError,
 }
 
-const maxJsonBytes = 2000;
+const maxJsonBytes = 5000;
 
 export enum SongErrors {
   SongJsonInvalidFormat = "Song data must be valid JSON with all required fields",
@@ -57,7 +56,7 @@ const songSchema = z.object({
       // TODO: add validation here that the JSON has all the required song properties (title, tab, etc)
       try {
         validateSongJson(str);
-      } catch (e) {
+      } catch {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: SongErrors.SongJsonInvalidFormat,
@@ -81,7 +80,7 @@ export async function updateSong(
     }
     return [SongStatus.InvalidRequest, error.errors[0].message as SongErrors];
   }
-  const result = await songRepository.updateSong(username, {
+  await songRepository.updateSong(username, {
     songId: request.songId,
     songJson: request.songJson,
   });

@@ -1,17 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccountData } from "../../context/account-context";
 import SaveSongPage from "./SaveSongPage";
 import Modal, { PageInfo } from "../Modal";
 import ConfirmSongDeletionPage from "./ConfirmSongDeletionPage";
+import { SongModalPages } from "./SongModalPages";
+import { useAccountData } from "../../state/account/account-hooks";
 
 interface SongModalProps {
   isOpen: boolean;
   closeModal: () => void;
-}
-
-export enum SongModalPages {
-  Save,
-  ConfirmDeletion,
 }
 
 export default function SongModal({ isOpen, closeModal }: SongModalProps) {
@@ -44,7 +40,7 @@ export default function SongModal({ isOpen, closeModal }: SongModalProps) {
         });
         break;
     }
-  }, [activePage, setActivePageInfo]);
+  }, [activePage, setActivePageInfo, onFinished]);
   return (
     <>
       <Modal

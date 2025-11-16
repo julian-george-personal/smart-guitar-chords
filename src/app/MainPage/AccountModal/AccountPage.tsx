@@ -1,5 +1,5 @@
 import { PulseLoader } from "react-spinners";
-import { useAccountData } from "../../context/account-context";
+import { useAccountData } from "../../state/account/account-hooks";
 
 export default function AccountPage() {
   const { account, logout, isLoading } = useAccountData();

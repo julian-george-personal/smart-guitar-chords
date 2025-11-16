@@ -44,7 +44,7 @@ Bun.serve({
     ...addResponseMiddleware(accountRoutes),
     ...addResponseMiddleware(songRoutes),
     "/*": {
-      OPTIONS: async (req) => {
+      OPTIONS: async (_req) => {
         return addCorsHeaders(new Response(null, { status: 200 }));
       },
     },
@@ -60,12 +60,12 @@ Bun.serve({
         }
         return new Response(null, { status: 404 });
       }
-    } catch (e) {
+    } catch {
       return new Response(null, { status: 404 });
     }
   },
   websocket: {
-    message(ws, message) { },
+    message(_ws, _message) { },
   },
   port,
 });

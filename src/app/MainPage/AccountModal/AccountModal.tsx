@@ -1,23 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccountData } from "../../context/account-context";
 import SignUpPage from "./SignUpPage";
 import LoginPage from "./LoginPage";
 import RecoverPasswordPage from "./RecoverPasswordPage";
 import AccountPage from "./AccountPage";
 import SetNewPasswordPage from "./SetNewPasswordPage";
 import Modal, { PageInfo } from "../Modal";
+import { AccountModalPages } from "./AccountModalPages";
+import { useAccountData } from "../../state/account/account-hooks";
 
 interface AccountModalProps {
   isOpen: boolean;
   closeModal: () => void;
-}
-
-export enum AccountModalPages {
-  SignUp,
-  Login,
-  RecoverPassword,
-  Account,
-  SetNewPassword,
 }
 
 export default function AccountModal({
@@ -87,7 +80,7 @@ export default function AccountModal({
         });
         break;
     }
-  }, [activePage, setActivePageInfo]);
+  }, [activePage, setActivePageInfo, onFinished]);
   if (!activePageInfo) return null;
   return (
     <>

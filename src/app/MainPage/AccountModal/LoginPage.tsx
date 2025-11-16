@@ -2,9 +2,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useCallback } from "react";
-import { PulseLoader, SyncLoader } from "react-spinners";
-import { useAccountData } from "../../context/account-context";
+import { PulseLoader } from "react-spinners";
 import { UnknownServerErrorMessage } from "../constants";
+import { useAccountData } from "../../state/account/account-hooks";
 
 type TLoginFormFields = {
   username: string;
@@ -54,7 +54,7 @@ export default function LoginPage({
     } else {
       onFinished();
     }
-  }, []);
+  }, [login, onFinished, setError]);
 
   return (
     <>

@@ -1,10 +1,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { useAccountData } from "../../context/account-context";
 import { useCallback } from "react";
 import { toast } from "react-toastify";
 import { UnknownServerErrorMessage } from "../constants";
+import { useAccountData } from "../../state/account/account-hooks";
 
 type TRecoverPasswordFields = {
   email: string;
@@ -55,7 +55,7 @@ export default function RecoverPasswordPage({
         onFinished();
       }
     },
-    [onFinished]
+    [onFinished, recoverPassword, setError]
   );
 
   return (

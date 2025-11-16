@@ -10,15 +10,16 @@ import {
   getBestTabsForChord,
   NotesAndBarredFret,
 } from "../logic/chord_calculator";
-import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
-import { useSongData, useTabByKey } from "../context/song-context";
 import {
   RxArrowDown,
   RxArrowLeft,
   RxArrowRight,
   RxArrowUp,
 } from "react-icons/rx";
+import { useTabByKey } from "../state/song/song-hooks";
+import { TabContext } from "../state/tab/tab-context";
+import { TabProvider } from "../state/tab/tab-provider";
 
 interface TabProps {
   tabKey: number;
@@ -88,17 +89,22 @@ export default function Tab({ tabKey }: TabProps) {
       ]);
       setVoicesChord(false);
     }
-  }, [
-    manualStringNotes,
-    chordName,
-    tabBaseNotes,
-    fretCount,
-    setVoicingOptions,
-    setVoicesChord,
-  ]);
+
+  },
+    // Adding setVoicesChord here causes infinite rerenders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      manualStringNotes,
+      chordName,
+      tabBaseNotes,
+      fretCount,
+      startingFretNum,
+      stringTunings,
+    ]);
 
   useEffect(() => {
     resetVoicingIdx()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chordName])
 
   const setManualStringFretNum = useCallback(
@@ -115,7 +121,7 @@ export default function Tab({ tabKey }: TabProps) {
             startingFretNotes[stringNum], newFretNum)
       );
     },
-    [setManualStringNote, tabBaseNotes]
+    [setManualStringNote, tabBaseNotes, startingFretNum, stringTunings]
   );
 
   // This should only happen when the app is first loading
@@ -262,7 +268,7 @@ function Box({ fretNumToBar, setFirstRowRect }: BoxProps) {
     if (rect) {
       setFirstRowRect(rect);
     }
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabContext?.fretCount]);
 
 

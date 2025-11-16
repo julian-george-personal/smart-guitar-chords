@@ -3,10 +3,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import { useCallback } from "react";
-import { useSongData } from "../../context/song-context";
 import { UnknownServerErrorMessage } from "../constants";
-import { StoreResponse } from "../../store/store";
+import { StoreResponse } from "../../state/store";
 import { PulseLoader } from "react-spinners";
+import { useSongData } from "../../state/song/song-hooks";
 
 type TSaveSongFormFields = {
   title: string;
@@ -35,7 +35,7 @@ export default function SaveSongPage({
   onFinished,
   onDelete,
 }: SaveSongPageProps) {
-  const { song, songId, setTitle, saveSong, selectSong, duplicateCurrentSong, isLoading } = useSongData();
+  const { song, songId, saveSong, duplicateCurrentSong, isLoading } = useSongData();
   const {
     register,
     handleSubmit,
@@ -48,8 +48,6 @@ export default function SaveSongPage({
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = useCallback((data: TSaveSongFormFields) => onSave(data, true), [])
-
   const onSave = useCallback(
     async (data: TSaveSongFormFields, shouldFinish: boolean) => {
       const response = await saveSong({ title: data.title });
@@ -59,12 +57,15 @@ export default function SaveSongPage({
           message: GetErrorStatusMessage(response),
         });
       } else {
-        !!songId ? toast.success("Song saved") : toast.success("New song saved");
+        if (songId) toast.success("Song saved")
+        else toast.success("New song saved");
         if (shouldFinish) onFinished();
       }
     },
-    [setTitle, saveSong, selectSong]
+    [saveSong, setError, songId, onFinished]
   );
+
+  const onSubmit = useCallback((data: TSaveSongFormFields) => onSave(data, true), [onSave])
 
   const onDuplicate = useCallback(async (data: TSaveSongFormFields) => {
     onSave(data, false);

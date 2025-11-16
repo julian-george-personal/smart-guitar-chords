@@ -2,11 +2,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { toast } from "react-toastify";
-import { useAccountData } from "../../context/account-context";
 import { useCallback } from "react";
-import { StoreResponse } from "../../store/store";
+import { StoreResponse } from "../../state/store";
 import { UnknownServerErrorMessage } from "../constants";
 import { PulseLoader } from "react-spinners";
+import { useAccountData } from "../../state/account/account-hooks";
 
 type TSignUpFormFields = {
   username: string;
@@ -64,7 +64,7 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
       toast.success("Successfully created account. Log in to use it.");
       onFinished();
     }
-  }, []);
+  }, [onFinished, setError, signUp]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

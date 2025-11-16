@@ -4,7 +4,7 @@ import {
   apiUrl,
   authHeaders,
   toStoreResponse,
-} from "./store";
+} from "../store";
 
 const accountUrl = apiUrl + "/account";
 
@@ -64,7 +64,7 @@ export async function getUser(): Promise<
   StoreResponse & Partial<LoginResponse>
 > {
   try {
-    var { data } = await axios.get<GetUserResponse>(
+    const { data } = await axios.get<GetUserResponse>(
       accountUrl + "/get",
       authHeaders()
     );

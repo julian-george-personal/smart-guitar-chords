@@ -35,7 +35,7 @@ function getPriority(chordTabEnvelope: ChordTabEnvelope) {
     numStringsUnvoiced,
     totalFingerDistance
   } = chordTabEnvelope;
-  let priority =
+  const priority =
     numFingers +
     numStringsUnvoiced +
     (barredFret > 0 ? 3.1 : 0) +
@@ -152,10 +152,6 @@ export default class ChordTabPrioritizer {
   public toArray() {
     return this.chordTabQueue.toArray();
   }
-}
-
-function getFingerDistance() {
-
 }
 
 const InnerStringsCanBeMuted = false;

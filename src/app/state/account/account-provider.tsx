@@ -1,44 +1,16 @@
 import {
-  createContext,
   useState,
   useCallback,
-  useContext,
   useEffect,
   ReactNode,
 } from "react";
-import * as accountStore from "../store/account-store";
-import * as songStore from "../store/song-store";
-import { StoreResponse } from "../store/store";
-import { TSong } from "./song-context";
-import { comparePriorities, withLoading } from "../util";
-
-export type TAccount = {
-  username: string;
-  email: string;
-};
-
-export type TAccountContext = {
-  account: TAccount | null;
-  songs: {
-    [songId: string]: TSong;
-  };
-  // Used to create suggestions for string tuning autocomplete
-  orderedUsedStringTunings: string[];
-  login: (username: string, password: string) => Promise<StoreResponse>;
-  logout: () => void;
-  signUp: (
-    username: string,
-    email: string,
-    password: string
-  ) => Promise<StoreResponse>;
-  recoverPassword: (email: string) => Promise<StoreResponse>;
-  recoverPasswordToken: string | null;
-  setNewPassword: (newPassword: string) => Promise<StoreResponse>;
-  refreshSongs: () => void;
-  isLoading: boolean;
-};
-
-const AccountContext = createContext<TAccountContext | null>(null);
+import * as accountStore from "./account-store";
+import * as songStore from "../song/song-store";
+import { StoreResponse } from "../store";
+import { comparePriorities, withLoading } from "../../util";
+import { AccountContext } from "./account-context";
+import { TSong } from "../song/song-types";
+import { TAccount } from "./account-types";
 
 interface AccountProviderProps {
   children: ReactNode;
@@ -58,6 +30,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const withAccountLoading = useCallback(withLoading(setIsLoading), [
     setIsLoading,
   ]);
@@ -73,7 +46,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
         );
       }
     });
-  }, [setSongs, account]);
+  }, [setSongs]);
 
   useEffect(() => {
     const usedStringTuningsWithFrequencies: Record<string, number> = {};
@@ -173,10 +146,4 @@ export function AccountProvider({ children }: AccountProviderProps) {
   );
 }
 
-export const useAccountData = () => {
-  const context = useContext(AccountContext);
-  if (context === null) {
-    throw new Error("AccountContext is null");
-  }
-  return context;
-};
+

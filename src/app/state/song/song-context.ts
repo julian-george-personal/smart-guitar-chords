@@ -1,0 +1,27 @@
+import { createContext } from "react";
+import { NoteLiteral } from "tonal";
+import { StoreResponse } from "../store";
+import { TSong, TTab } from "./song-types";
+
+type TSongContext = {
+    song: TSong;
+    songId?: string;
+    selectSong: (songId: string) => void;
+    setTitle: (title: string) => void;
+    setChordNames: (chordNames: string[]) => void;
+    updateTabByKey: (key: number, newTab: TTab) => void;
+    setSongCapoFretNum: (capoFretNum: number) => void;
+    setSongFretCount: (fretCount: number) => void;
+    setSongStringTunings: (stringTunings: NoteLiteral[]) => void;
+    saveSong: (
+      updates: Partial<TSong>
+    ) => Promise<StoreResponse & { songId?: string }>;
+    deleteCurrentSong: () => Promise<StoreResponse>;
+    duplicateCurrentSong: () => Promise<StoreResponse & { songId?: string }>;
+    undoUnsavedChanges: () => void;
+    isLoading: boolean;
+    isCurrentSongUnsaved: boolean;
+    unsavedSongIds: Set<string>
+  };
+
+export const SongContext = createContext<TSongContext | null>(null);

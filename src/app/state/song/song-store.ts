@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
-import { TSong } from "../context/song-context";
-import { apiUrl, authHeaders, StoreResponse, toStoreResponse } from "./store";
+import { apiUrl, authHeaders, StoreResponse, toStoreResponse } from "../store";
+import { TSong } from "./song-types";
 
 const songUrl = apiUrl + "/song";
 
@@ -75,7 +75,7 @@ export async function duplicateSong(
   songId: string
 ): Promise<CreateSongResponse & StoreResponse> {
   try {
-    const result = await axios.post<{}, AxiosResponse<CreateSongResponse>>(
+    const result = await axios.post<Record<string, never>, AxiosResponse<CreateSongResponse>>(
       songUrl + "/duplicate/" + songId,
       {},
       authHeaders()
