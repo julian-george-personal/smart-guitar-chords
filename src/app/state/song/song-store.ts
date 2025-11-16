@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
-import { TSong } from "../context/song-context";
-import { apiUrl, authHeaders, StoreResponse, toStoreResponse } from "./store";
+import { apiUrl, authHeaders, StoreResponse, toStoreResponse } from "../store";
+import { TSong } from "./song-types";
 
 const songUrl = apiUrl + "/song";
 

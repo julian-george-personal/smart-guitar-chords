@@ -1,6 +1,6 @@
 import { useCallback, useContext, useMemo, useState } from "react";
 import { getNoteFromNumFrets, getNumFrets } from "../logic/music_util";
-import { TabContext } from "../context/tab-context";
+import { TabContext } from "../state/tab/tab-context";
 import { RxCircle, RxCross1 } from "react-icons/rx";
 import { NoteLiteral } from "tonal";
 

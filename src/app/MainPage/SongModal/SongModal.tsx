@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccountData } from "../../context/account-context";
 import SaveSongPage from "./SaveSongPage";
 import Modal, { PageInfo } from "../Modal";
 import ConfirmSongDeletionPage from "./ConfirmSongDeletionPage";
 import { SongModalPages } from "./SongModalPages";
+import { useAccountData } from "../../state/account/account-hooks";
 
 interface SongModalProps {
   isOpen: boolean;

@@ -1,16 +1,16 @@
 import { memo, useCallback, useEffect, useState, useLayoutEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
-import { AiOutlineEdit, AiOutlineSave, AiOutlineUser } from "react-icons/ai";
+import { AiOutlineEdit, AiOutlineSave, AiOutlineUser, AiOutlineUndo } from "react-icons/ai";
 import Tab from "./Tab";
-import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
-import { useSongData } from "../context/song-context";
 import MultiStringInput from "./MultiStringInput";
 import { sanitizeNoteNameForDisplay, sanitizeNoteNameForLogic } from "../logic/music_util";
 import SongModal from "./SongModal/SongModal";
 import Select from "react-select";
 import InfoModal from "./InfoModal";
 import AdaptiveInput from "./AdaptiveInput";
+import { useAccountData } from "../state/account/account-hooks";
+import { useSongData } from "../state/song/song-hooks";
 
 const MemoizedTab = memo(Tab);
 
@@ -25,8 +25,10 @@ export default function MainPage() {
     setSongFretCount,
     selectSong,
     songId,
-    isUnsaved,
+    isCurrentSongUnsaved,
     saveSong,
+    unsavedSongIds,
+    undoUnsavedChanges
   } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
@@ -57,6 +59,20 @@ export default function MainPage() {
     setIsInfoModalOpen(false);
   }, [setIsInfoModalOpen]);
 
+  const onSave = useCallback(
+    async () => {
+      const response = await saveSong({});
+      if (response.isError) {
+        toast.error("Failed to save song, please try again.")
+      } else if (songId) {
+        toast.success("Song saved");
+      } else {
+        toast.success("New song saved");
+      }
+    },
+    [saveSong, songId]
+  );
+
   useLayoutEffect(() => {
     if (!stringifiedStringTunings || stringifiedStringTunings == "") {
       setStringTuningsAutocompleteSuffix("");
@@ -73,6 +89,7 @@ export default function MainPage() {
   }, [stringifiedStringTunings, setStringTuningsAutocompleteSuffix, orderedUsedStringTunings]);
 
   useEffect(() => {
+    if (!song) return;
     setStringifiedStringTunings(song.stringTunings.map(sanitizeNoteNameForDisplay).join(","));
   }, [song, setStringifiedStringTunings]);
 
@@ -90,20 +107,6 @@ export default function MainPage() {
     stringifiedStringTunings,
     stringTuningsAutocompleteSuffix,
   ]);
-
-  const onSave = useCallback(
-    async () => {
-      const response = await saveSong({});
-      if (response.isError) {
-        toast.error("Failed to save song, please try again.")
-      } else if (songId) {
-        toast.success("Song saved");
-      } else {
-        toast.success("New song saved");
-      }
-    },
-    [saveSong, songId]
-  );
 
   return (
     <>
@@ -185,7 +188,7 @@ export default function MainPage() {
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">Capo Fret</span>
               <input
-                value={song.capoFretNum}
+                value={song?.capoFretNum}
                 onChange={(newValue) => {
                   let parsedValue = parseInt(newValue.target.value);
                   if (isNaN(parsedValue)) parsedValue = 0;
@@ -197,7 +200,7 @@ export default function MainPage() {
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">Fret Window Size</span>
               <input
-                value={song.fretCount.toString()}
+                value={song?.fretCount?.toString()}
                 onChange={(newValue) => {
                   let parsedValue = parseInt(newValue.target.value);
                   if (isNaN(parsedValue)) parsedValue = 0;
@@ -214,7 +217,7 @@ export default function MainPage() {
               <span className="text-[12px]">Chord Names</span>
               <MultiStringInput
                 onChange={setChordNames}
-                values={song.chordNames}
+                values={song?.chordNames || []}
               />
             </div>
           </div>
@@ -257,6 +260,7 @@ export default function MainPage() {
                         : state.isFocused
                           ? "#f3f4f6"
                           : "white",
+                      fontWeight: unsavedSongIds.has(state.data.value ?? "") ? "bold" : "normal",
                       color: state.data.value === "" ? "#6B7280" : "#000000",
                       "&:active": {
                         backgroundColor: "#e5e7eb",
@@ -265,6 +269,7 @@ export default function MainPage() {
                     singleValue: (baseStyles, { data }) => ({
                       ...baseStyles,
                       color: data.value === "" ? "#6B7280" : "#000000",
+                      fontWeight: unsavedSongIds.has(data.value ?? "") ? "bold" : "normal",
                     }),
                     valueContainer: (baseStyles) => ({
                       ...baseStyles,
@@ -288,8 +293,15 @@ export default function MainPage() {
               )}
             </div>
             <div className="centered-row gap-2">
+              {
+                songId &&
+                isCurrentSongUnsaved &&
+                <AiOutlineUndo
+                  className="cursor-pointer w-6 h-6 text-black"
+                  onClick={undoUnsavedChanges} />
+              }
               <AiOutlineSave
-                className={`${isUnsaved || !songId ? 'text-black' : 'text-gray-500'} w-6 h-6 cursor-pointer`}
+                className={`${isCurrentSongUnsaved || !songId ? 'text-black' : 'text-gray-500'} w-6 h-6 cursor-pointer`}
                 onClick={songId ? onSave : openSongModal}
               />
               {songId && <AiOutlineEdit
@@ -304,7 +316,7 @@ export default function MainPage() {
               gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))",
             }}
           >
-            {song.tabs.map((_, i) => (
+            {song?.tabs?.map((_, i) => (
               <MemoizedTab key={i} tabKey={i} />
             ))}
           </div>
@@ -323,6 +335,5 @@ export default function MainPage() {
         </div>
       </footer>
       <ToastContainer />
-    </>
-  );
+    </>);
 }

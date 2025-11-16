@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccountData } from "../../context/account-context";
 import SignUpPage from "./SignUpPage";
 import LoginPage from "./LoginPage";
 import RecoverPasswordPage from "./RecoverPasswordPage";
@@ -7,6 +6,7 @@ import AccountPage from "./AccountPage";
 import SetNewPasswordPage from "./SetNewPasswordPage";
 import Modal, { PageInfo } from "../Modal";
 import { AccountModalPages } from "./AccountModalPages";
+import { useAccountData } from "../../state/account/account-hooks";
 
 interface AccountModalProps {
   isOpen: boolean;

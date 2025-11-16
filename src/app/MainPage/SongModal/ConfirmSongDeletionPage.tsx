@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 import { toast } from "react-toastify";
-import { useSongData } from "../../context/song-context";
 import { useForm } from "react-hook-form";
-import { StoreResponse } from "../../store/store";
+import { StoreResponse } from "../../state/store";
 import { UnknownServerErrorMessage } from "../constants";
 import { PulseLoader } from "react-spinners";
+import { useSongData } from "../../state/song/song-hooks";
 
 const GetErrorStatusMessage = (response: StoreResponse) => {
   if (response.errorCode === 400) {

@@ -18,7 +18,9 @@ export function processInputString(input: string): string {
   return input.trim();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export const withLoading = (setIsLoading: (isLoading: boolean) => void) => function (func: Function) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (...args: any[]) => {
     setIsLoading(true);
     try {

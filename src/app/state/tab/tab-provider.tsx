@@ -1,13 +1,6 @@
-import { createContext, ReactNode } from "react";
-import { useTabByKey } from "./song-context";
-
-type TTabContext = {
-  fretCount: number;
-  stringCount: number;
-  startingFretNum: number;
-};
-
-export const TabContext = createContext<TTabContext | null>(null);
+import { ReactNode } from "react";
+import { TabContext } from "./tab-context";
+import { useTabByKey } from "../song/song-hooks";
 
 interface TabProviderProps {
   children: ReactNode;

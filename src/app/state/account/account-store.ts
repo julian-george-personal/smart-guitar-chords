@@ -4,7 +4,7 @@ import {
   apiUrl,
   authHeaders,
   toStoreResponse,
-} from "./store";
+} from "../store";
 
 const accountUrl = apiUrl + "/account";
 

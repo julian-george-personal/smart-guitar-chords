@@ -10,15 +10,16 @@ import {
   getBestTabsForChord,
   NotesAndBarredFret,
 } from "../logic/chord_calculator";
-import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
-import { useTabByKey } from "../context/song-context";
 import {
   RxArrowDown,
   RxArrowLeft,
   RxArrowRight,
   RxArrowUp,
 } from "react-icons/rx";
+import { useTabByKey } from "../state/song/song-hooks";
+import { TabContext } from "../state/tab/tab-context";
+import { TabProvider } from "../state/tab/tab-provider";
 
 interface TabProps {
   tabKey: number;
@@ -88,14 +89,18 @@ export default function Tab({ tabKey }: TabProps) {
       ]);
       setVoicesChord(false);
     }
-  }, [
-    manualStringNotes,
-    chordName,
-    tabBaseNotes,
-    fretCount,
-    startingFretNum,
-    stringTunings,
-  ]);
+
+  },
+    // Adding setVoicesChord here causes infinite rerenders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      manualStringNotes,
+      chordName,
+      tabBaseNotes,
+      fretCount,
+      startingFretNum,
+      stringTunings,
+    ]);
 
   useEffect(() => {
     resetVoicingIdx()
