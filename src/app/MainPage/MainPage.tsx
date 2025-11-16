@@ -298,15 +298,18 @@ export default function MainPage() {
                 isCurrentSongUnsaved &&
                 <AiOutlineUndo
                   className="cursor-pointer w-6 h-6 text-black"
-                  onClick={undoUnsavedChanges} />
+                  onClick={undoUnsavedChanges}
+                  title="Undo Unsaved Changes" />
               }
               <AiOutlineSave
                 className={`${isCurrentSongUnsaved || !songId ? 'text-black' : 'text-gray-500'} w-6 h-6 cursor-pointer`}
                 onClick={songId ? onSave : openSongModal}
+                title="Save Changes"
               />
               {songId && <AiOutlineEdit
                 className="text-black w-6 h-6 cursor-pointer"
                 onClick={openSongModal}
+                title="Edit Details"
               />}
             </div>
           </div>
