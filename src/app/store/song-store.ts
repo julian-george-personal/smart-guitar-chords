@@ -75,7 +75,7 @@ export async function duplicateSong(
   songId: string
 ): Promise<CreateSongResponse & StoreResponse> {
   try {
-    const result = await axios.post<{}, AxiosResponse<CreateSongResponse>>(
+    const result = await axios.post<Record<string, never>, AxiosResponse<CreateSongResponse>>(
       songUrl + "/duplicate/" + songId,
       {},
       authHeaders()

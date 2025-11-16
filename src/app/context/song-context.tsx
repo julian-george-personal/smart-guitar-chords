@@ -106,7 +106,7 @@ export function SongProvider({ children }: SongProviderProps) {
       return;
     }
     setSong(songs[songId]);
-  }, [songId, savedSongs, setSong]);
+  }, [songId, savedSongs, setSong, songs]);
 
   useEffect(() => {
     if (!songId && !deepEqual(song, defaultSong)) {
@@ -147,7 +147,7 @@ export function SongProvider({ children }: SongProviderProps) {
   const selectSong = useCallback((newSongId: string) => {
     if (songId) setSongs((prev) => ({ ...prev, [songId]: song }));
     setSongId(newSongId);
-  }, [setSongId, setSongs, song]);
+  }, [setSongId, setSongs, song, songId]);
 
   const setTitle = useCallback(
     (newTitle: string) => {
@@ -210,7 +210,7 @@ export function SongProvider({ children }: SongProviderProps) {
       if (response.songId) setSongId(response.songId);
       return response;
     },
-    [song, songId, setSong, refreshSongs]
+    [song, songId, refreshSongs]
   );
 
   const deleteCurrentSong = useCallback(async () => {
@@ -218,7 +218,7 @@ export function SongProvider({ children }: SongProviderProps) {
     const response = await songStore.deleteSong(songId);
     refreshSongs();
     return response;
-  }, [song, songId]);
+  }, [songId, refreshSongs]);
 
   const duplicateCurrentSong = useCallback(async () => {
     if (!songId) throw new Error();
@@ -268,6 +268,7 @@ export function SongProvider({ children }: SongProviderProps) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSongData = () => {
   const context = useContext(SongContext);
   if (context === null) {
@@ -276,40 +277,54 @@ export const useSongData = () => {
   return context;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTabByKey(key: number) {
   const { song, updateTabByKey } = useSongData();
 
   // NOTE: whenever you add a property to TTab, you need to change this
+  const currentTabData = song.tabs[key];
+  const startingFretNum = currentTabData?.startingFretNum;
+  const voicingIdx = currentTabData?.voicingIdx;
+  const voicesChord = currentTabData?.voicesChord;
+  const fretCount = song.fretCount;
+  const stringTunings = song.stringTunings;
+  const capoFretNum = song.capoFretNum;
+
+  // Memoize the filtered stringTunings to prevent new array references on every render
+  const filteredStringTunings = useMemo(
+    () => stringTunings.filter((s) => s !== ""),
+    [stringTunings]
+  );
+
   const tab = useMemo(
     () =>
     ({
-      ...song.tabs[key],
+      ...currentTabData,
       ...{
-        fretCount: song.fretCount,
+        fretCount,
         // TODO this is probably a gross way to do this. inputted data and displayed data shouldnt be the same
-        stringTunings: song.stringTunings.filter((s) => s !== ""),
-        capoFretNum: song.capoFretNum,
-        startingFretNum: song.tabs[key].startingFretNum,
-        voicingIdx: song.tabs[key].voicingIdx,
-        voicesChord: song.tabs[key].voicesChord,
+        stringTunings: filteredStringTunings,
+        capoFretNum,
+        startingFretNum,
+        voicingIdx,
+        voicesChord,
       },
     } as Required<TTab>),
     [
-      song.tabs[key].chordName,
-      song.tabs[key].manualStringNotes,
-      song.tabs[key].startingFretNum,
-      song.tabs[key].voicingIdx,
-      song.tabs[key].voicesChord,
-      song.fretCount,
-      song.stringTunings,
-      song.capoFretNum,
+      startingFretNum,
+      voicingIdx,
+      voicesChord,
+      fretCount,
+      filteredStringTunings,
+      capoFretNum,
+      currentTabData,
     ]
   );
   const updateTab = useCallback(
     (setter: (prev: TTab) => TTab) => {
       updateTabByKey(key, setter(tab));
     },
-    [updateTabByKey, tab]
+    [updateTabByKey, tab, key]
   );
   const setManualStringNote = useCallback(
     (stringIdx: number, note: NoteLiteral | null) => {
@@ -376,6 +391,7 @@ export function useTabByKey(key: number) {
   const setVoicesChord = useCallback(
     (newValue: boolean) =>
       updateTab((prev) => {
+        if (prev.voicesChord === newValue) return prev;
         return { ...prev, voicesChord: newValue };
       }),
     [updateTab]

@@ -12,7 +12,7 @@ export function generateToken(object: object) {
 export function verifyToken<T>(token: string): T | null {
   try {
     return jwt.verify(token, config.jwtSecret) as T;
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -25,7 +25,7 @@ export function verifyAuthorization(req: Bun.BunRequest): string | null {
   if (!token) return null;
   try {
     return verifyToken<{ username: string }>(token)?.username ?? null;
-  } catch (err) {
+  } catch {
     return null;
   }
 }

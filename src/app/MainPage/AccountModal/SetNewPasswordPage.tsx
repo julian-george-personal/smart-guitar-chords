@@ -59,7 +59,7 @@ export default function SetNewPasswordPage() {
         window.location.replace(window.location.href.split("?")[0]);
       }, 2500);
     }
-  }, []);
+  }, [setError, setNewPassword]);
 
   return (
     <>

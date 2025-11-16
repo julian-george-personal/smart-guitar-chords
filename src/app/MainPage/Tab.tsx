@@ -12,7 +12,7 @@ import {
 } from "../logic/chord_calculator";
 import { TabContext, TabProvider } from "../context/tab-context";
 import { TunedString } from "./TunedString";
-import { useSongData, useTabByKey } from "../context/song-context";
+import { useTabByKey } from "../context/song-context";
 import {
   RxArrowDown,
   RxArrowLeft,
@@ -93,12 +93,13 @@ export default function Tab({ tabKey }: TabProps) {
     chordName,
     tabBaseNotes,
     fretCount,
-    setVoicingOptions,
-    setVoicesChord,
+    startingFretNum,
+    stringTunings,
   ]);
 
   useEffect(() => {
     resetVoicingIdx()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chordName])
 
   const setManualStringFretNum = useCallback(
@@ -115,7 +116,7 @@ export default function Tab({ tabKey }: TabProps) {
             startingFretNotes[stringNum], newFretNum)
       );
     },
-    [setManualStringNote, tabBaseNotes]
+    [setManualStringNote, tabBaseNotes, startingFretNum, stringTunings]
   );
 
   // This should only happen when the app is first loading
@@ -262,7 +263,7 @@ function Box({ fretNumToBar, setFirstRowRect }: BoxProps) {
     if (rect) {
       setFirstRowRect(rect);
     }
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabContext?.fretCount]);
 
 

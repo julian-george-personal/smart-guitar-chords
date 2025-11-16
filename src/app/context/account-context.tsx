@@ -73,7 +73,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
         );
       }
     });
-  }, [setSongs, account]);
+  }, [setSongs]);
 
   useEffect(() => {
     const usedStringTuningsWithFrequencies: Record<string, number> = {};

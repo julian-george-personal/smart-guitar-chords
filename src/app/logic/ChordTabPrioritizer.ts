@@ -154,10 +154,6 @@ export default class ChordTabPrioritizer {
   }
 }
 
-function getFingerDistance() {
-
-}
-
 const InnerStringsCanBeMuted = false;
 const EnforceBassNote = false;
 

@@ -41,7 +41,7 @@ export default function ConfirmSongDeletionPage({
       onFinished();
       toast.success("Succesfully deleted song");
     }
-  }, [deleteCurrentSong, onFinished]);
+  }, [deleteCurrentSong, onFinished, selectSong, setError]);
   return (
     <>
       {errors.root && (

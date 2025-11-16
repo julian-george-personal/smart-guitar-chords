@@ -55,7 +55,7 @@ export default function RecoverPasswordPage({
         onFinished();
       }
     },
-    [onFinished]
+    [onFinished, recoverPassword, setError]
   );
 
   return (

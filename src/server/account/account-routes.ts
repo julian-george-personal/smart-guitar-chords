@@ -83,7 +83,7 @@ const accountRoutes: TRoutes = {
     },
   },
   "/api/account/logout": {
-    DELETE: async (req) => {
+    DELETE: async (_req) => {
       let response = new Response(null, { status: 200 });
       response = addCookieHeader(response, null);
       return response;

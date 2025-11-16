@@ -32,7 +32,7 @@ export default function MainPage() {
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState<boolean>(false);
   const [stringifiedStringTunings, setStringifiedStringTunings] =
-    useState<string>();
+    useState<string>("");
   const [stringTuningsAutocompleteSuffix, setStringTuningsAutocompleteSuffix] =
     useState<string>("");
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function MainPage() {
       ? autocompleteMatch.replace(stringifiedStringTunings, "")
       : "";
     setStringTuningsAutocompleteSuffix(autocompleteSuffix);
-  }, [stringifiedStringTunings, setStringTuningsAutocompleteSuffix]);
+  }, [stringifiedStringTunings, setStringTuningsAutocompleteSuffix, orderedUsedStringTunings]);
 
   useEffect(() => {
     setStringifiedStringTunings(song.stringTunings.map(sanitizeNoteNameForDisplay).join(","));
@@ -96,11 +96,13 @@ export default function MainPage() {
       const response = await saveSong({});
       if (response.isError) {
         toast.error("Failed to save song, please try again.")
+      } else if (songId) {
+        toast.success("Song saved");
       } else {
-        songId ? toast.success("Song saved") : toast.success("New song saved");
+        toast.success("New song saved");
       }
     },
-    [saveSong]
+    [saveSong, songId]
   );
 
   return (
@@ -239,7 +241,7 @@ export default function MainPage() {
                     })),
                   ]}
                   styles={{
-                    control: (baseStyles, state) => ({
+                    control: (baseStyles, _state) => ({
                       ...baseStyles,
                       border: "none",
                       boxShadow: "none",

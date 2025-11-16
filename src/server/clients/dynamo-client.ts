@@ -32,9 +32,9 @@ const db = DynamoDBDocumentClient.from(client);
 
 const defaultSk = "0";
 
-function filterItem(item?: any) {
+function filterItem(item?: Record<string, unknown>) {
   if (!item) return null;
-  const { PK, SK, ...filteredItem } = item;
+  const { PK: _PK, SK: _SK, ...filteredItem } = item;
   return filteredItem;
 }
 function parseItem(item?: Record<string, AttributeValue>) {
