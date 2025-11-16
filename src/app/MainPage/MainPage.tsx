@@ -188,7 +188,7 @@ export default function MainPage() {
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">Capo Fret</span>
               <input
-                value={song?.capoFretNum}
+                value={song?.capoFretNum ?? 0}
                 onChange={(newValue) => {
                   let parsedValue = parseInt(newValue.target.value);
                   if (isNaN(parsedValue)) parsedValue = 0;
@@ -200,7 +200,7 @@ export default function MainPage() {
             <div className="flex flex-col min-w-16">
               <span className="text-[12px]">Fret Window Size</span>
               <input
-                value={song?.fretCount?.toString()}
+                value={song?.fretCount ?? 0}
                 onChange={(newValue) => {
                   let parsedValue = parseInt(newValue.target.value);
                   if (isNaN(parsedValue)) parsedValue = 0;

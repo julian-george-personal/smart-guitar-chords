@@ -125,7 +125,9 @@ export function SongProvider({ children }: SongProviderProps) {
   );
 
   const setChordNames = useCallback(
-    (chordNames: string[]) => setSong((prev) => ({ ...prev, chordNames })),
+    (chordNames: string[]) => {
+      setSong((prev) => ({ ...prev, chordNames }))
+    },
     [setSong]
   );
 
