@@ -20,7 +20,7 @@ export enum SongStatus {
   UnknownError,
 }
 
-const maxJsonBytes = 2000;
+const maxJsonBytes = 5000;
 
 export enum SongErrors {
   SongJsonInvalidFormat = "Song data must be valid JSON with all required fields",

@@ -59,7 +59,7 @@ export default function SaveSongPage({
           message: GetErrorStatusMessage(response),
         });
       } else {
-        !!songId ? toast.success("Song saved") : toast.success("New song saved");
+        songId ? toast.success("Song saved") : toast.success("New song saved");
         if (shouldFinish) onFinished();
       }
     },

@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState, useLayoutEffect } from "react";
-import { ToastContainer } from "react-toastify";
-import { AiOutlineSave, AiOutlineUser } from "react-icons/ai";
+import { toast, ToastContainer } from "react-toastify";
+import { AiOutlineEdit, AiOutlineSave, AiOutlineUser } from "react-icons/ai";
 import Tab from "./Tab";
 import { useAccountData } from "../context/account-context";
 import AccountModal from "./AccountModal/AccountModal";
@@ -25,6 +25,8 @@ export default function MainPage() {
     setSongFretCount,
     selectSong,
     songId,
+    isUnsaved,
+    saveSong,
   } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
@@ -88,6 +90,18 @@ export default function MainPage() {
     stringifiedStringTunings,
     stringTuningsAutocompleteSuffix,
   ]);
+
+  const onSave = useCallback(
+    async () => {
+      const response = await saveSong({});
+      if (response.isError) {
+        toast.error("Failed to save song, please try again.")
+      } else {
+        songId ? toast.success("Song saved") : toast.success("New song saved");
+      }
+    },
+    [saveSong]
+  );
 
   return (
     <>
@@ -271,10 +285,16 @@ export default function MainPage() {
                 />
               )}
             </div>
-            <AiOutlineSave
-              className="text-gray-500 w-6 h-6 cursor-pointer"
-              onClick={openSongModal}
-            />
+            <div className="centered-row gap-2">
+              <AiOutlineSave
+                className={`${isUnsaved || !songId ? 'text-black' : 'text-gray-500'} w-6 h-6 cursor-pointer`}
+                onClick={songId ? onSave : openSongModal}
+              />
+              {songId && <AiOutlineEdit
+                className="text-black w-6 h-6 cursor-pointer"
+                onClick={openSongModal}
+              />}
+            </div>
           </div>
           <div
             className="w-full border-2 border-gray-300 border-solid rounded-md gap-8 px-8 py-4 grid justify-items-center"

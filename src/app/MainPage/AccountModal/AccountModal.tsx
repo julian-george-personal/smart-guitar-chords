@@ -6,18 +6,11 @@ import RecoverPasswordPage from "./RecoverPasswordPage";
 import AccountPage from "./AccountPage";
 import SetNewPasswordPage from "./SetNewPasswordPage";
 import Modal, { PageInfo } from "../Modal";
+import { AccountModalPages } from "./AccountModalPages";
 
 interface AccountModalProps {
   isOpen: boolean;
   closeModal: () => void;
-}
-
-export enum AccountModalPages {
-  SignUp,
-  Login,
-  RecoverPassword,
-  Account,
-  SetNewPassword,
 }
 
 export default function AccountModal({

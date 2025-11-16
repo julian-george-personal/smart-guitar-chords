@@ -8,6 +8,7 @@ import {
   useCallback,
   useEffect,
 } from "react";
+import deepEqual from 'fast-deep-equal';
 import { ChordTab } from "../logic/music_util";
 import * as songStore from "../store/song-store";
 import { StoreResponse } from "../store/store";
@@ -51,6 +52,7 @@ type TSongContext = {
   deleteCurrentSong: () => Promise<StoreResponse>;
   duplicateCurrentSong: () => Promise<StoreResponse & { songId?: string }>;
   isLoading: boolean;
+  isUnsaved: boolean;
 };
 
 const SongContext = createContext<TSongContext | null>(null);
@@ -85,19 +87,67 @@ export function SongProvider({ children }: SongProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [song, setSong] = useState<TSong>(defaultSong);
   const [songId, setSongId] = useState<string | undefined>();
-  const { songs, refreshSongs } = useAccountData();
+  const [isCurrentSongUnsaved, setIsCurrentSongUnsaved] = useState(false);
+  const [isAnySongUnsaved, setIsAnySongUnsaved] = useState(false);
+  const [songs, setSongs] = useState<{ [songId: string]: TSong }>({});
+  const { songs: savedSongs, refreshSongs } = useAccountData();
 
   const withSongLoading = useCallback(withLoading(setIsLoading), [
     setIsLoading,
   ]);
 
   useEffect(() => {
-    if (!songId || !songs?.[songId]) {
+    setSongs(structuredClone(savedSongs));
+  }, [savedSongs, setSongs]);
+
+  useEffect(() => {
+    if (!songId || !savedSongs?.[songId]) {
       setSong(defaultSong);
       return;
     }
     setSong(songs[songId]);
-  }, [songId, songs, setSong]);
+  }, [songId, savedSongs, setSong]);
+
+  useEffect(() => {
+    if (!songId && !deepEqual(song, defaultSong)) {
+      setIsCurrentSongUnsaved(true);
+    }
+    else if (songId && !deepEqual(song, savedSongs[songId])) {
+      setIsCurrentSongUnsaved(true);
+    }
+    else {
+      setIsCurrentSongUnsaved(false)
+    }
+  }, [song, songId, savedSongs, setIsCurrentSongUnsaved]);
+
+  useEffect(() => {
+    if (!deepEqual(songs, savedSongs)) {
+      setIsAnySongUnsaved(true)
+    }
+    else {
+      setIsAnySongUnsaved(false)
+    }
+  }, [songs, savedSongs, setIsAnySongUnsaved]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isAnySongUnsaved || isCurrentSongUnsaved) {
+        e.preventDefault();
+        e.returnValue = ''; // Chrome requires returnValue to be set
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isAnySongUnsaved, isCurrentSongUnsaved]);
+
+  const selectSong = useCallback((newSongId: string) => {
+    if (songId) setSongs((prev) => ({ ...prev, [songId]: song }));
+    setSongId(newSongId);
+  }, [setSongId, setSongs, song]);
 
   const setTitle = useCallback(
     (newTitle: string) => {
@@ -165,7 +215,7 @@ export function SongProvider({ children }: SongProviderProps) {
 
   const deleteCurrentSong = useCallback(async () => {
     if (!songId) throw new Error();
-    let response = await songStore.deleteSong(songId);
+    const response = await songStore.deleteSong(songId);
     refreshSongs();
     return response;
   }, [song, songId]);
@@ -199,7 +249,7 @@ export function SongProvider({ children }: SongProviderProps) {
       value={{
         song,
         songId,
-        selectSong: setSongId,
+        selectSong,
         setTitle,
         setChordNames,
         updateTabByKey,
@@ -210,6 +260,7 @@ export function SongProvider({ children }: SongProviderProps) {
         deleteCurrentSong: withSongLoading(deleteCurrentSong),
         duplicateCurrentSong: withSongLoading(duplicateCurrentSong),
         isLoading,
+        isUnsaved: isCurrentSongUnsaved,
       }}
     >
       {children}
