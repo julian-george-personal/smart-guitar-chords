@@ -1,14 +1,14 @@
 import { createContext } from "react";
 import { NoteLiteral } from "tonal";
 import { StoreResponse } from "../store";
-import { TSong, TTab } from "./song-types";
+import { TChord, TSong, TTab } from "./song-types";
 
 type TSongContext = {
     song: TSong;
     songId?: string;
     selectSong: (songId: string) => void;
     setTitle: (title: string) => void;
-    setChordNames: (chordNames: string[]) => void;
+    updateChords: (chords: (Partial<TChord> & Pick<TChord, 'id'>)[]) => void;
     updateTabByKey: (key: number, newTab: TTab) => void;
     setSongCapoFretNum: (capoFretNum: number) => void;
     setSongFretCount: (fretCount: number) => void;

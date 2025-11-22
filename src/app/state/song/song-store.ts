@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import { apiUrl, authHeaders, StoreResponse, toStoreResponse } from "../store";
 import { TSong } from "./song-types";
+import { migrateLegacySong } from "./song-migrations";
 
 const songUrl = apiUrl + "/song";
 
@@ -24,7 +25,7 @@ export async function getSongs(): Promise<GetSongsResponse & StoreResponse> {
     );
     const parsedResult = result.data.songs.map((unparsedSongData) => ({
       songId: unparsedSongData.songId,
-      song: JSON.parse(unparsedSongData.songJson) as TSong,
+      song: migrateLegacySong(JSON.parse(unparsedSongData.songJson)),
     }));
     return { songs: parsedResult, isError: false };
   } catch (e) {

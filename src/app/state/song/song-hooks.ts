@@ -20,11 +20,11 @@ export function useTabByKey(key: number) {
     [song.stringTunings]
   );
 
-  const chordName = useMemo(()=>song.tabs[key].chordName, [key, song.tabs])
-  const manualStringNotes = useMemo(()=>song.tabs[key].manualStringNotes, [key, song.tabs])
-  const startingFretNum = useMemo(()=>song.tabs[key].startingFretNum, [key, song.tabs])
-  const voicingIdx = useMemo(()=>song.tabs[key].voicingIdx, [key, song.tabs])
-  const voicesChord = useMemo(()=>song.tabs[key].voicesChord, [key, song.tabs])
+  const chordName = useMemo(()=>song.chords[key]?.tab?.chordName, [key, song.chords])
+  const manualStringNotes = useMemo(()=>song.chords[key]?.tab?.manualStringNotes, [key, song.chords])
+  const startingFretNum = useMemo(()=>song.chords[key]?.tab?.startingFretNum, [key, song.chords])
+  const voicingIdx = useMemo(()=>song.chords[key]?.tab?.voicingIdx, [key, song.chords])
+  const voicesChord = useMemo(()=>song.chords[key]?.tab?.voicesChord, [key, song.chords])
 
   // NOTE: whenever you add a property to TTab, you need to change this
   const tab = useMemo(
@@ -35,11 +35,11 @@ export function useTabByKey(key: number) {
         fretCount: song.fretCount,
         capoFretNum: song.capoFretNum,
         stringTunings: filteredStringTunings,
-        manualStringNotes,
+        manualStringNotes: manualStringNotes || {},
         chordName,
-        startingFretNum,
-        voicingIdx,
-        voicesChord,
+        startingFretNum: startingFretNum || 0,
+        voicingIdx: voicingIdx || 0,
+        voicesChord: voicesChord ?? true,
       } as Required<TTab>),
     [
       song.fretCount,

@@ -19,7 +19,7 @@ export default function MainPage() {
     useAccountData();
   const {
     song,
-    setChordNames,
+    updateChords,
     setSongStringTunings,
     setSongCapoFretNum,
     setSongFretCount,
@@ -107,6 +107,15 @@ export default function MainPage() {
     stringifiedStringTunings,
     stringTuningsAutocompleteSuffix,
   ]);
+
+  const handleChordsChange = useCallback((newValues: Record<string, { index: number; value: string }>) => {
+    const updatedChords = Object.entries(newValues).map(([id, data]) => ({
+      id,
+      chordName: data.value,
+      index: data.index,
+    }));
+    updateChords(updatedChords);
+  }, [updateChords]);
 
   return (
     <>
@@ -216,8 +225,8 @@ export default function MainPage() {
             <div className="flex flex-col max-w-[66vw]">
               <span className="text-[12px]">Chord Names</span>
               <MultiStringInput
-                onChange={setChordNames}
-                values={song?.chordNames || []}
+                onChange={handleChordsChange}
+                values={song?.chords.reduce((acc, chord) => { acc[chord.id] = { index: chord.index, value: chord.chordName }; return acc; }, {} as Record<string, { index: number; value: string }>) || {}}
               />
             </div>
           </div>
@@ -319,7 +328,7 @@ export default function MainPage() {
               gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))",
             }}
           >
-            {song?.tabs?.map((_, i) => (
+            {song?.chords?.map((_, i) => (
               <MemoizedTab key={i} tabKey={i} />
             ))}
           </div>
