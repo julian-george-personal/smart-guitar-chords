@@ -31,12 +31,11 @@ export enum SongErrors {
 function validateSongJson(songJson: string) {
   const song = JSON.parse(songJson);
   const requiredFields = new Set([
-    "tabs",
+    "chords",
     "title",
     "fretCount",
     "capoFretNum",
     "stringTunings",
-    "chordNames",
   ]);
   const songFields = new Set(Object.keys(song));
   if (songFields.intersection(requiredFields).size != requiredFields.size) {

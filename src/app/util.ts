@@ -18,6 +18,13 @@ export function processInputString(input: string): string {
   return input.trim();
 }
 
+/**
+ * Generate a random 8-character hexadecimal ID
+ */
+export function generateId(): string {
+  return Math.random().toString(16).substring(2, 10);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export const withLoading = (setIsLoading: (isLoading: boolean) => void) => function (func: Function) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

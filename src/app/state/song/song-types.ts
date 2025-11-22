@@ -12,12 +12,18 @@ export type TTab = {
     stringTunings: NoteLiteral[];
     voicesChord: boolean;
   };
+
+  export type TChord = {
+    id: string;
+    chordName: string;
+    index: number;
+    tab?: TTab;
+  }
   
   export type TSong = {
-    tabs: TTab[];
     title?: string;
     fretCount: number;
     capoFretNum: number;
     stringTunings: NoteLiteral[];
-    chordNames: string[];
+    chords: TChord[];
   };

@@ -11,7 +11,7 @@ import * as songStore from "./song-store";
 import { StoreResponse } from "../store";
 import { withLoading } from "../../util";
 import { useAccountData } from "../account/account-hooks";
-import { TSong, TTab } from "./song-types";
+import { TChord, TSong, TTab } from "./song-types";
 import { SongContext } from "./song-context";
 
 interface SongProviderProps {
@@ -22,15 +22,9 @@ const defaultStringTunings: NoteLiteral[] = ["E1", "A1", "D1", "G1", "B1", "E1"]
 const defaultFretCount = 5;
 const defaultCapoFretNum = 0;
 const defaultStartingFretNum = 0;
-const defaultSong: TSong = {
-  chordNames: ["C"],
-  tabs: [],
-  capoFretNum: defaultCapoFretNum,
-  fretCount: defaultFretCount,
-  stringTunings: defaultStringTunings,
-};
+const defaultChordName = "C"
 const defaultTab: TTab = {
-  chordName: defaultSong.chordNames[0],
+  chordName: defaultChordName,
   manualStringNotes: {},
   fretCount: defaultFretCount,
   stringTunings: defaultStringTunings,
@@ -38,6 +32,12 @@ const defaultTab: TTab = {
   startingFretNum: defaultStartingFretNum,
   voicingIdx: 0,
   voicesChord: true,
+};
+const defaultSong: TSong = {
+  chords: [{ id: "default0", chordName: defaultChordName, index: 0, tab: defaultTab }],
+  capoFretNum: defaultCapoFretNum,
+  fretCount: defaultFretCount,
+  stringTunings: defaultStringTunings,
 };
 
 export function SongProvider({ children }: SongProviderProps) {
@@ -124,31 +124,62 @@ export function SongProvider({ children }: SongProviderProps) {
     [setSong]
   );
 
-  const setChordNames = useCallback(
-    (chordNames: string[]) => {
-      setSong((prev) => ({ ...prev, chordNames }))
+  const updateChords = useCallback(
+    (chords: (Partial<TChord> & Pick<TChord, "id">)[]) => {
+      setSong((prev) => {
+        // Merge incoming chords with existing chords to preserve tab data
+        const mergedChords = chords.map(chord => {
+          const existingChord = prev.chords.find(c => c.id === chord.id);
+          return existingChord
+            ? { ...existingChord, ...chord }
+            : chord;
+        });
+        return { ...prev, chords: mergedChords as TChord[] };
+      });
     },
     [setSong]
   );
 
   useEffect(() => {
     setSong((prev) => {
-      const newSong = { ...prev };
-      for (let i = 0; i < prev.chordNames.length; i++) {
-        if (i >= newSong.tabs.length) {
-          newSong.tabs.push({
-            ...defaultTab,
-            chordName: prev.chordNames[i],
-          });
-        } else {
-          newSong.tabs[i].chordName = prev.chordNames[i];
-        }
+      // Safety check in case prev is undefined
+      if (!prev || !prev.chords) {
+        return prev;
       }
-      // Delete any chords that no longer exist
-      newSong.tabs = newSong.tabs.slice(0, prev.chordNames.length);
-      return newSong;
+
+      let hasChanges = false;
+      const updatedChords = prev.chords.map((chord) => {
+        if (!chord.tab) {
+          hasChanges = true;
+          return {
+            ...chord,
+            tab: {
+              ...defaultTab,
+              chordName: chord.chordName,
+            },
+          };
+        }
+        // Update tab's chordName if chord's chordName changed
+        if (chord.tab.chordName !== chord.chordName) {
+          hasChanges = true;
+          return {
+            ...chord,
+            tab: {
+              ...chord.tab,
+              chordName: chord.chordName,
+            },
+          };
+        }
+        return chord;
+      });
+
+      // Only update if something actually changed
+      if (hasChanges) {
+        return { ...prev, chords: updatedChords };
+      }
+      return prev;
     });
-  }, [song?.chordNames]);
+  }, [song?.chords]);
 
   const setSongCapoFretNum = useCallback(
     (capoFretNum: number) => setSong((prev) => ({ ...prev, capoFretNum })),
@@ -209,9 +240,16 @@ export function SongProvider({ children }: SongProviderProps) {
       setSong((prev) => {
         return {
           ...prev,
-          tabs: prev.tabs.map((prevTab, i) =>
-            key == i ? { ...prevTab, ...changes } : prevTab
-          ),
+          chords: prev.chords.map((chord, i) => {
+            if (key == i) {
+              // Skip update if tab doesn't exist yet - it will be created by the useEffect
+              if (!chord.tab) {
+                return chord;
+              }
+              return { ...chord, tab: { ...chord.tab, ...changes } as TTab };
+            }
+            return chord;
+          }),
         };
       });
     },
@@ -225,7 +263,7 @@ export function SongProvider({ children }: SongProviderProps) {
         songId,
         selectSong,
         setTitle,
-        setChordNames,
+        updateChords,
         updateTabByKey,
         setSongCapoFretNum,
         setSongFretCount,
