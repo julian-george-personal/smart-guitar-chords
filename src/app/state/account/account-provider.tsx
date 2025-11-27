@@ -81,7 +81,7 @@ export function AccountProvider({ children }: AccountProviderProps) {
 
   useEffect(() => {
     refreshSongs();
-  }, [refreshSongs]);
+  }, [refreshSongs, account]);
 
   const signUp = useCallback(
     async (

@@ -1,11 +1,6 @@
 import { TSong, TChord } from "./song-types";
 import { generateId } from "../../util";
 
-/**
- * Migrate legacy TSong format to the current format
- * Legacy format: { tabs: TTab[], chordNames: string[], ... }
- * Current format: { chords: TChord[], ... }
- */
 export function migrateLegacySong(song: any): TSong {
   // If already in new format, return as-is
   if (song.chords && !song.tabs && !song.chordNames) {
