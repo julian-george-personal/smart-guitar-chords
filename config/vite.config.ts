@@ -1,3 +1,4 @@
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { defineConfig } from "vite";
 import { Plugin } from "postcss";
 import react from "@vitejs/plugin-react-swc";
@@ -5,10 +6,17 @@ import tailwindcss from "tailwindcss";
 import autoprefixer from "autoprefixer";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    sentryVitePlugin({
+      org: "julian-george-f0",
+      project: "bun",
+    }),
+  ],
   root: "src/app",
   build: {
-    outDir: "../../dist"
+    outDir: "../../dist",
+    sourcemap: true,
   },
   css: {
     postcss: {

@@ -9,4 +9,4 @@ COPY . .
 
 RUN bun pack
 
-CMD ["bun", "run", "./src/server/server.ts"]
+CMD ["bun", "run", "start"]

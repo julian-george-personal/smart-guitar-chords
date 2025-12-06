@@ -16,7 +16,7 @@ export type TConfig = {
     recoverPasswordTemplateId: string;
   };
   sentry: {
-    dsn: string;
+    dsn: string | undefined;
   };
 };
 
@@ -55,11 +55,6 @@ if (!sendgridRecoverPasswordTemplateId) {
   throw new Error("No RECOVER_PASSWORD_TEMPLATE_ID was found");
 }
 
-const sentryDsn = process.env.SENTRY_DSN;
-if (!sentryDsn) {
-  throw new Error("No SENTRY_DSN was found");
-}
-
 const config: TConfig = {
   environment,
   port,
@@ -73,7 +68,7 @@ const config: TConfig = {
     recoverPasswordTemplateId: sendgridRecoverPasswordTemplateId,
   },
   sentry: {
-    dsn: sentryDsn,
+    dsn: process.env.SENTRY_DSN,
   },
 };
 export default config;
