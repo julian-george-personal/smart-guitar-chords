@@ -1,4 +1,5 @@
 import Bun from "bun";
+import * as Sentry from "@sentry/bun";
 import config, { Environment } from "./config";
 import accountRoutes from "./account/account-routes";
 import { TRoutes } from "./types";
@@ -69,5 +70,13 @@ Bun.serve({
   },
   port,
 });
+
+setTimeout(() => {
+  try {
+    throw new Error("TEST");
+  } catch (e) {
+    Sentry.captureException(e);
+  }
+}, 99);
 
 console.log("server.ts listening on port", port);
