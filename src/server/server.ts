@@ -3,6 +3,7 @@ import config, { Environment } from "./config";
 import accountRoutes from "./account/account-routes";
 import { TRoutes } from "./types";
 import songRoutes from "./song/song-routes";
+import * as Sentry from "@sentry/bun";
 
 const port = config.port;
 
@@ -38,6 +39,15 @@ function addResponseMiddleware(routes: TRoutes) {
   return newRoutes;
 }
 
+Sentry.init({
+  dsn: config.sentry.dsn,
+  enableLogs: true,
+  integrations: [
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+  ],
+  tracesSampleRate: 1.0, // Capture 100% of the transactions
+});
+
 // TODO: this needs top-level try-catch for 500s
 Bun.serve({
   routes: {
@@ -65,7 +75,7 @@ Bun.serve({
     }
   },
   websocket: {
-    message(_ws, _message) { },
+    message(_ws, _message) {},
   },
   port,
 });
