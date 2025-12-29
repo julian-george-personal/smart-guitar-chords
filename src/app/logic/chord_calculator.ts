@@ -5,6 +5,7 @@ import {
   ChordTab,
   chordTabToArray,
   fillInMutedStrings,
+  chordTabToFretNums,
 } from "./music_util";
 import ChordNotePrioritizer, { NotePosition } from "./ChordNotePrioritizer";
 import ChordTabPrioritizer from "./ChordTabPrioritizer";
@@ -58,7 +59,16 @@ export function getBestTabsForChord(
   // If the chord has 2 notes, we want to voice them both, if it has 3 or more, we want to voice 3
   const mandatoryChordNoteAmount = Math.min(prioritizedChordNotes.length, 3);
 
-  for (let fretToBar = 0; fretToBar < numFrets; fretToBar++) {
+  // If the user has manually specified a note on fret 1, we shouldn't try generating chords for a fret 2
+  let maxBarrableFret = Math.min(
+    ...chordTabToFretNums(manualStringNotes, baseNotes)
+      .filter((stringNote) => stringNote != null)
+      .map((fretNum) => fretNum - startingFretNum),
+    // It'll fall back to this if there are no manual voicings or no non-null ones
+    numFrets - 1
+  );
+
+  for (let fretToBar = 0; fretToBar <= maxBarrableFret; fretToBar++) {
     for (
       let numStringsSkipped = 0, stringIdx = -1;
       numStringsSkipped < baseNotes.length - mandatoryChordNoteAmount + 1 &&
