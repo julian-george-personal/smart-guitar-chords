@@ -33,7 +33,7 @@ function getPriority(chordTabEnvelope: ChordTabEnvelope) {
     numChordNotesMissing,
     isValid,
     numStringsUnvoiced,
-    totalFingerDistance
+    totalFingerDistance,
   } = chordTabEnvelope;
   const priority =
     numFingers +
@@ -42,7 +42,7 @@ function getPriority(chordTabEnvelope: ChordTabEnvelope) {
     (!bassOnBottom ? 2.1 : 0) +
     (numChordNotesMissing > 0 ? 2.2 : 0) +
     (!isValid ? 5 : 0) +
-    totalFingerDistance * 0.75
+    totalFingerDistance * 0.75;
   return priority;
 }
 
@@ -107,21 +107,28 @@ export default class ChordTabPrioritizer {
         chordTab,
         this.prioritizedChordNotes,
         this.noteMatrix.map((s) => s[barredFret]),
-        barredFret != 0
+        barredFret
       ),
       numStringsUnvoiced: tabArray.length - voicedNotes.length,
-      priority: Infinity
+      priority: Infinity,
     };
   }
 
-
-  public addChordTab(chordTab: ChordTab, totalFingerDistance: number, barredFret: number) {
+  public addChordTab(
+    chordTab: ChordTab,
+    totalFingerDistance: number,
+    barredFret: number
+  ) {
     const stringifiedTab = JSON.stringify(chordTab);
     if (this.existingStringifiedTabs.has(stringifiedTab)) {
       return;
     }
 
-    const chordEnvelope = this.buildChordTabEnvelope(chordTab, totalFingerDistance, barredFret);
+    const chordEnvelope = this.buildChordTabEnvelope(
+      chordTab,
+      totalFingerDistance,
+      barredFret
+    );
 
     this.existingStringifiedTabs.add(stringifiedTab);
     this.chordTabQueue.enqueue(chordEnvelope);
@@ -136,14 +143,17 @@ export default class ChordTabPrioritizer {
   private MaxTabsToReturn = 10;
 
   public getBestTabs(): ChordTabEnvelope[] {
-    const bestTabs: ChordTabEnvelope[] = []
+    const bestTabs: ChordTabEnvelope[] = [];
 
     while (bestTabs.length <= this.MaxTabsToReturn) {
       const tab = this.chordTabQueue.pop();
-      if (tab != null && (bestTabs.length == 0 || (tab?.isValid && tab.priority < this.ScoreThreshold))) {
+      if (
+        tab != null &&
+        (bestTabs.length == 0 ||
+          (tab?.isValid && tab.priority < this.ScoreThreshold))
+      ) {
         bestTabs.push(tab);
-      }
-      else break;
+      } else break;
     }
 
     return bestTabs;
@@ -162,9 +172,10 @@ function chordNotesAreValid(
   stringNotes: ChordTab,
   chordNotes: NoteLiteral[],
   baseNotes: NoteLiteral[],
-  isTabbed: boolean
+  barredFret: number
 ) {
   const stringNoteValues = chordTabToArray(stringNotes);
+  const isBarred = barredFret != 0;
 
   if (
     stringNoteValues.filter((note) => note != null)[0] != chordNotes[0] &&
@@ -178,7 +189,7 @@ function chordNotesAreValid(
     stringNoteValues.filter(
       (a, i) => a != null && getNumFrets(baseNotes[i], a) > 0
     ).length +
-    (isTabbed ? 1 : 0) >
+      (isBarred ? 1 : 0) >
     4
   ) {
     return false;

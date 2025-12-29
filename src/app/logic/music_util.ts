@@ -39,6 +39,15 @@ export function chordTabToArray(chordTab: ChordTab) {
   return notes;
 }
 
+export function chordTabToFretNums(
+  chordTab: ChordTab,
+  baseNotes: NoteLiteral[]
+) {
+  return baseNotes.map((baseNote, i) =>
+    chordTab[i] != null ? getNumFrets(baseNote, chordTab[i]) : null
+  );
+}
+
 export function fillInMutedStrings(stringNotes: ChordTab, numStrings: number) {
   for (let i = 0; i < numStrings; i++) {
     if (!(i in stringNotes)) {
