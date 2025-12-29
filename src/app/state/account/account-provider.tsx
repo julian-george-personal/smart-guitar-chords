@@ -1,9 +1,4 @@
-import {
-  useState,
-  useCallback,
-  useEffect,
-  ReactNode,
-} from "react";
+import { useState, useCallback, useEffect, ReactNode } from "react";
 import * as accountStore from "./account-store";
 import * as songStore from "../song/song-store";
 import { StoreResponse } from "../store";
@@ -145,5 +140,3 @@ export function AccountProvider({ children }: AccountProviderProps) {
     </AccountContext.Provider>
   );
 }
-
-

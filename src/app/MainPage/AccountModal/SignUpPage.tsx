@@ -56,15 +56,24 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
     resolver: zodResolver(validationSchema),
   });
 
-  const onSubmit = useCallback(async (data: TSignUpFormFields) => {
-    const response = await signUp(data.username, data.email, data.password);
-    if (response.isError) {
-      setError("root", { type: "server", message: GetErrorStatusMessage(response) });
-    } else {
-      toast.success("Successfully created account. Log in to use it.");
-      onFinished();
-    }
-  }, [onFinished, setError, signUp]);
+  const onSubmit = useCallback(
+    async (data: TSignUpFormFields) => {
+      const response = await signUp(data.username, data.email, data.password);
+      if (response.isError) {
+        setError("root", {
+          type: "server",
+          message: GetErrorStatusMessage(response),
+        });
+      } else {
+        toast.success("Successfully created account. Log in to use it.");
+        onFinished();
+
+        //@ts-ignore
+        gtag_report_conversion();
+      }
+    },
+    [onFinished, setError, signUp]
+  );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -88,7 +97,6 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
             )}
           </div>
 
-
           <div>
             <label htmlFor="email" className="block">
               Email
@@ -99,7 +107,9 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
               {...register("email")}
               className="border p-2 w-full"
             />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-sm">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
@@ -128,14 +138,24 @@ export default function SignUpPage({ onFinished }: SignUpPageProps) {
               className="border p-2 w-full"
             />
             {errors.confirmPassword && (
-              <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>
+              <p className="text-red-500 text-sm">
+                {errors.confirmPassword.message}
+              </p>
             )}
           </div>
         </div>
       </div>
 
       <button type="submit" className="p-2 w-full">
-        {isLoading ? <PulseLoader size={12} cssOverride={{ margin: 0 }} speedMultiplier={0.5} /> : "Sign Up"}
+        {isLoading ? (
+          <PulseLoader
+            size={12}
+            cssOverride={{ margin: 0 }}
+            speedMultiplier={0.5}
+          />
+        ) : (
+          "Sign Up"
+        )}
       </button>
     </form>
   );
