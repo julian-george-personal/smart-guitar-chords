@@ -11,12 +11,16 @@ export function migrateLegacySong(song: any): TSong {
   const chordNames = song.chordNames || [];
   const tabs = song.tabs || [];
 
-  const chords: TChord[] = chordNames.map((chordName: string, index: number) => ({
-    id: generateId(),
-    chordName,
-    index,
-    tab: tabs[index] || undefined,
-  }));
+  const chords: Record<string, TChord> = {};
+  chordNames.forEach((chordName: string, index: number) => {
+    const id = generateId();
+    chords[id] = {
+      id,
+      chordName,
+      index,
+      tab: tabs[index] || undefined,
+    };
+  });
 
   // Remove old properties and add new ones
   const { tabs: _tabs, chordNames: _chordNames, ...rest } = song;
