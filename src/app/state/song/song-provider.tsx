@@ -149,7 +149,7 @@ export function SongProvider({ children }: SongProviderProps) {
             updatedChords[id] = chord as TChord;
           }
         }
-        return { ...prev, chords: { ...prev.chords, ...updatedChords } };
+        return { ...prev, chords: { ...updatedChords } };
       });
     },
     [setSong]
