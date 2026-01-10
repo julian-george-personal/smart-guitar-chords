@@ -24,25 +24,24 @@ import {
   RxArrowRight,
   RxArrowUp,
 } from "react-icons/rx";
-import { useTabByKey } from "../state/song/song-hooks";
+import { useTabById } from "../state/song/song-hooks";
 import { TabContext } from "../state/tab/tab-context";
 import { TabProvider } from "../state/tab/tab-provider";
 
 interface TabProps {
-  tabKey: number;
+  tabId: string;
 }
 
-export default function Tab({ tabKey }: TabProps) {
+export default function Tab({ tabId }: TabProps) {
   const {
     tab,
     setManualStringNote,
     resetManualStringNote,
     resetAllManualStringNotes,
     incrementStartingFretNum,
-    resetVoicingIdx,
     incrementVoicingIdx,
     setVoicesChord,
-  } = useTabByKey(tabKey);
+  } = useTabById(tabId);
   const {
     stringTunings,
     startingFretNum,
@@ -110,11 +109,6 @@ export default function Tab({ tabKey }: TabProps) {
     ]
   );
 
-  useEffect(() => {
-    resetVoicingIdx();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chordName, manualStringNotes]);
-
   const setManualStringFretNum = useCallback(
     (stringNum: number, newFretNum: number | null) => {
       const startingFretNotes = tabBaseNotes.map((baseNote) =>
@@ -139,7 +133,7 @@ export default function Tab({ tabKey }: TabProps) {
   if (!currentVoicing) return null;
 
   return (
-    <TabProvider tabKey={tabKey}>
+    <TabProvider tabId={tabId}>
       <div className="centered-row w-full max-w-80">
         <div className="w-8 h-full">
           {startingFretNum == 0 ? (

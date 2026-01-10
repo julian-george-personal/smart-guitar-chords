@@ -1,20 +1,20 @@
 import { ReactNode } from "react";
 import { TabContext } from "./tab-context";
-import { useTabByKey } from "../song/song-hooks";
+import { useTabById } from "../song/song-hooks";
 
 interface TabProviderProps {
   children: ReactNode;
-  tabKey: number;
+  tabId: string;
 }
 
-export function TabProvider({ children, tabKey }: TabProviderProps) {
-  const { tab } = useTabByKey(tabKey);
+export function TabProvider({ children, tabId }: TabProviderProps) {
+  const { tab } = useTabById(tabId);
   return (
     <TabContext.Provider
       value={{
         fretCount: tab.fretCount,
         stringCount: tab.stringTunings.length,
-        startingFretNum: tab.startingFretNum
+        startingFretNum: tab.startingFretNum,
       }}
     >
       {children}

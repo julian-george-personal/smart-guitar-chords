@@ -1,16 +1,32 @@
-import { memo, useCallback, useEffect, useState, useLayoutEffect } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+  useLayoutEffect,
+  useMemo,
+} from "react";
 import { toast, ToastContainer } from "react-toastify";
-import { AiOutlineEdit, AiOutlineSave, AiOutlineUser, AiOutlineUndo } from "react-icons/ai";
+import {
+  AiOutlineEdit,
+  AiOutlineSave,
+  AiOutlineUser,
+  AiOutlineUndo,
+} from "react-icons/ai";
 import Tab from "./Tab";
 import AccountModal from "./AccountModal/AccountModal";
 import MultiStringInput from "./MultiStringInput";
-import { sanitizeNoteNameForDisplay, sanitizeNoteNameForLogic } from "../logic/music_util";
+import {
+  sanitizeNoteNameForDisplay,
+  sanitizeNoteNameForLogic,
+} from "../logic/music_util";
 import SongModal from "./SongModal/SongModal";
 import Select from "react-select";
 import InfoModal from "./InfoModal";
 import AdaptiveInput from "./AdaptiveInput";
 import { useAccountData } from "../state/account/account-hooks";
 import { useSongData } from "../state/song/song-hooks";
+import { TChord } from "../state/song/song-types";
 
 const MemoizedTab = memo(Tab);
 
@@ -28,7 +44,7 @@ export default function MainPage() {
     isCurrentSongUnsaved,
     saveSong,
     unsavedSongIds,
-    undoUnsavedChanges
+    undoUnsavedChanges,
   } = useSongData();
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [isSongModalOpen, setIsSongModalOpen] = useState<boolean>(false);
@@ -59,19 +75,16 @@ export default function MainPage() {
     setIsInfoModalOpen(false);
   }, [setIsInfoModalOpen]);
 
-  const onSave = useCallback(
-    async () => {
-      const response = await saveSong({});
-      if (response.isError) {
-        toast.error("Failed to save song, please try again.")
-      } else if (songId) {
-        toast.success("Song saved");
-      } else {
-        toast.success("New song saved");
-      }
-    },
-    [saveSong, songId]
-  );
+  const onSave = useCallback(async () => {
+    const response = await saveSong({});
+    if (response.isError) {
+      toast.error("Failed to save song, please try again.");
+    } else if (songId) {
+      toast.success("Song saved");
+    } else {
+      toast.success("New song saved");
+    }
+  }, [saveSong, songId]);
 
   useLayoutEffect(() => {
     if (!stringifiedStringTunings || stringifiedStringTunings == "") {
@@ -86,16 +99,24 @@ export default function MainPage() {
       ? autocompleteMatch.replace(stringifiedStringTunings, "")
       : "";
     setStringTuningsAutocompleteSuffix(autocompleteSuffix);
-  }, [stringifiedStringTunings, setStringTuningsAutocompleteSuffix, orderedUsedStringTunings]);
+  }, [
+    stringifiedStringTunings,
+    setStringTuningsAutocompleteSuffix,
+    orderedUsedStringTunings,
+  ]);
 
   useEffect(() => {
     if (!song) return;
-    setStringifiedStringTunings(song.stringTunings.map(sanitizeNoteNameForDisplay).join(","));
+    setStringifiedStringTunings(
+      song.stringTunings.map(sanitizeNoteNameForDisplay).join(",")
+    );
   }, [song, setStringifiedStringTunings]);
 
   useEffect(() => {
     if (stringifiedStringTunings)
-      setSongStringTunings(stringifiedStringTunings.split(",").map(note => `${note}1`));
+      setSongStringTunings(
+        stringifiedStringTunings.split(",").map((note) => `${note}1`)
+      );
   }, [stringifiedStringTunings, setSongStringTunings]);
 
   const autocompleteStringTunings = useCallback(() => {
@@ -108,14 +129,31 @@ export default function MainPage() {
     stringTuningsAutocompleteSuffix,
   ]);
 
-  const handleChordsChange = useCallback((newValues: Record<string, { index: number; value: string }>) => {
-    const updatedChords = Object.entries(newValues).map(([id, data]) => ({
-      id,
-      chordName: data.value,
-      index: data.index,
-    }));
-    updateChords(updatedChords);
-  }, [updateChords]);
+  const handleChordNamesChange = useCallback(
+    (newValues: Record<string, { index: number; value: string }>) => {
+      const updatedChords: Record<
+        string,
+        Partial<TChord> & Pick<TChord, "id">
+      > = {};
+      for (const [id, data] of Object.entries(newValues)) {
+        updatedChords[id] = {
+          id,
+          chordName: data.value,
+          index: data.index,
+        };
+      }
+      updateChords(updatedChords);
+    },
+    [updateChords]
+  );
+
+  const orderedTabIds = useMemo(
+    () =>
+      Object.values(song?.chords)
+        .sort((a, b) => a.index - b.index)
+        .map((chord) => chord.id),
+    [song?.chords]
+  );
 
   return (
     <>
@@ -225,8 +263,17 @@ export default function MainPage() {
             <div className="flex flex-col max-w-[66vw]">
               <span className="text-[12px]">Chord Names</span>
               <MultiStringInput
-                onChange={handleChordsChange}
-                values={song?.chords.reduce((acc, chord) => { acc[chord.id] = { index: chord.index, value: chord.chordName }; return acc; }, {} as Record<string, { index: number; value: string }>) || {}}
+                onChange={handleChordNamesChange}
+                values={
+                  Object.entries(song.chords).reduce((acc, [id, chord]) => {
+                    acc[id] = {
+                      index: chord.index,
+                      value: chord.chordName,
+                    };
+                    return acc;
+                  }, {} as Record<string, { index: number; value: string }>) ||
+                  {}
+                }
               />
             </div>
           </div>
@@ -267,9 +314,11 @@ export default function MainPage() {
                       backgroundColor: state.isSelected
                         ? "#e5e7eb"
                         : state.isFocused
-                          ? "#f3f4f6"
-                          : "white",
-                      fontWeight: unsavedSongIds.has(state.data.value ?? "") ? "bold" : "normal",
+                        ? "#f3f4f6"
+                        : "white",
+                      fontWeight: unsavedSongIds.has(state.data.value ?? "")
+                        ? "bold"
+                        : "normal",
                       color: state.data.value === "" ? "#6B7280" : "#000000",
                       "&:active": {
                         backgroundColor: "#e5e7eb",
@@ -278,7 +327,9 @@ export default function MainPage() {
                     singleValue: (baseStyles, { data }) => ({
                       ...baseStyles,
                       color: data.value === "" ? "#6B7280" : "#000000",
-                      fontWeight: unsavedSongIds.has(data.value ?? "") ? "bold" : "normal",
+                      fontWeight: unsavedSongIds.has(data.value ?? "")
+                        ? "bold"
+                        : "normal",
                     }),
                     valueContainer: (baseStyles) => ({
                       ...baseStyles,
@@ -302,24 +353,29 @@ export default function MainPage() {
               )}
             </div>
             <div className="centered-row gap-2">
-              {
-                songId &&
-                isCurrentSongUnsaved &&
+              {songId && isCurrentSongUnsaved && (
                 <AiOutlineUndo
                   className="cursor-pointer w-6 h-6 text-black"
                   onClick={undoUnsavedChanges}
-                  title="Undo Unsaved Changes" />
-              }
+                  title="Undo Unsaved Changes"
+                />
+              )}
               <AiOutlineSave
-                className={`${isCurrentSongUnsaved || !songId ? 'text-black' : 'text-gray-500'} w-6 h-6 cursor-pointer`}
+                className={`${
+                  isCurrentSongUnsaved || !songId
+                    ? "text-black"
+                    : "text-gray-500"
+                } w-6 h-6 cursor-pointer`}
                 onClick={songId ? onSave : openSongModal}
                 title="Save Changes"
               />
-              {songId && <AiOutlineEdit
-                className="text-black w-6 h-6 cursor-pointer"
-                onClick={openSongModal}
-                title="Edit Details"
-              />}
+              {songId && (
+                <AiOutlineEdit
+                  className="text-black w-6 h-6 cursor-pointer"
+                  onClick={openSongModal}
+                  title="Edit Details"
+                />
+              )}
             </div>
           </div>
           <div
@@ -328,8 +384,8 @@ export default function MainPage() {
               gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))",
             }}
           >
-            {song?.chords?.map((_, i) => (
-              <MemoizedTab key={i} tabKey={i} />
+            {orderedTabIds.map((id) => (
+              <MemoizedTab key={id} tabId={id} />
             ))}
           </div>
         </div>
@@ -347,5 +403,6 @@ export default function MainPage() {
         </div>
       </footer>
       <ToastContainer />
-    </>);
+    </>
+  );
 }

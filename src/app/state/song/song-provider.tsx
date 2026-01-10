@@ -1,12 +1,6 @@
 import { NoteLiteral } from "tonal";
-import {
-  useState,
-  ReactNode,
-  useMemo,
-  useCallback,
-  useEffect,
-} from "react";
-import deepEqual from 'fast-deep-equal';
+import { useState, ReactNode, useMemo, useCallback, useEffect } from "react";
+import deepEqual from "fast-deep-equal";
 import * as songStore from "./song-store";
 import { StoreResponse } from "../store";
 import { withLoading } from "../../util";
@@ -18,11 +12,18 @@ interface SongProviderProps {
   children: ReactNode;
 }
 
-const defaultStringTunings: NoteLiteral[] = ["E1", "A1", "D1", "G1", "B1", "E1"];
+const defaultStringTunings: NoteLiteral[] = [
+  "E1",
+  "A1",
+  "D1",
+  "G1",
+  "B1",
+  "E1",
+];
 const defaultFretCount = 5;
 const defaultCapoFretNum = 0;
 const defaultStartingFretNum = 0;
-const defaultChordName = "C"
+const defaultChordName = "C";
 const defaultTab: TTab = {
   chordName: defaultChordName,
   manualStringNotes: {},
@@ -34,7 +35,14 @@ const defaultTab: TTab = {
   voicesChord: true,
 };
 const defaultSong: TSong = {
-  chords: [{ id: "default0", chordName: defaultChordName, index: 0, tab: defaultTab }],
+  chords: {
+    default0: {
+      id: "default0",
+      chordName: defaultChordName,
+      index: 0,
+      tab: defaultTab,
+    },
+  },
   capoFretNum: defaultCapoFretNum,
   fretCount: defaultFretCount,
   stringTunings: defaultStringTunings,
@@ -47,38 +55,41 @@ export function SongProvider({ children }: SongProviderProps) {
   const [songs, setSongs] = useState<{ [songId: string]: TSong }>({});
   const { songs: savedSongs, refreshSongs } = useAccountData();
 
-  const isCurrentSongUnsaved = useMemo(() => {
-    if (!songId && !deepEqual(song, defaultSong)) {
-      return true;
-    }
-    if (songId && !deepEqual(song, savedSongs[songId])) {
-      return true;
-    }
-    return false;
-  },
-    // Omit songId because we only want to rerender once the song itself has changed
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [song, savedSongs]);
-
-  const unsavedSongIds = useMemo(() => {
-    const unsaved = new Set<string>();
-
-    Object.keys(songs).forEach((id) => {
-      if (!deepEqual(songs[id], savedSongs[id])) {
-        unsaved.add(id);
+  const isCurrentSongUnsaved = useMemo(
+    () => {
+      if (!songId && !deepEqual(song, defaultSong)) {
+        return true;
       }
-    });
-
-    if (songId && isCurrentSongUnsaved) {
-      unsaved.add(songId);
-    }
-
-    return unsaved;
-
-  },
+      if (songId && !deepEqual(song, savedSongs[songId])) {
+        return true;
+      }
+      return false;
+    },
     // Omit songId because we only want to rerender once the song itself has changed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [songs, savedSongs, isCurrentSongUnsaved]);
+    [song, savedSongs]
+  );
+
+  const unsavedSongIds = useMemo(
+    () => {
+      const unsaved = new Set<string>();
+
+      Object.keys(songs).forEach((id) => {
+        if (!deepEqual(songs[id], savedSongs[id])) {
+          unsaved.add(id);
+        }
+      });
+
+      if (songId && isCurrentSongUnsaved) {
+        unsaved.add(songId);
+      }
+
+      return unsaved;
+    },
+    // Omit songId because we only want to rerender once the song itself has changed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [songs, savedSongs, isCurrentSongUnsaved]
+  );
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const withSongLoading = useCallback(withLoading(setIsLoading), [
@@ -101,21 +112,24 @@ export function SongProvider({ children }: SongProviderProps) {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (unsavedSongIds.size > 0 || isCurrentSongUnsaved) {
         e.preventDefault();
-        e.returnValue = ''; // Chrome requires returnValue to be set
+        e.returnValue = ""; // Chrome requires returnValue to be set
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [unsavedSongIds, isCurrentSongUnsaved]);
 
-  const selectSong = useCallback((newSongId: string) => {
-    if (songId) setSongs((prev) => ({ ...prev, [songId]: song }));
-    setSongId(newSongId);
-  }, [setSongId, setSongs, song, songId]);
+  const selectSong = useCallback(
+    (newSongId: string) => {
+      if (songId) setSongs((prev) => ({ ...prev, [songId]: song }));
+      setSongId(newSongId);
+    },
+    [setSongId, setSongs, song, songId]
+  );
 
   const setTitle = useCallback(
     (newTitle: string) => {
@@ -125,21 +139,24 @@ export function SongProvider({ children }: SongProviderProps) {
   );
 
   const updateChords = useCallback(
-    (chords: (Partial<TChord> & Pick<TChord, "id">)[]) => {
+    (chords: Record<string, Partial<TChord> & Pick<TChord, "id">>) => {
       setSong((prev) => {
-        // Merge incoming chords with existing chords to preserve tab data
-        const mergedChords = chords.map(chord => {
-          const existingChord = prev.chords.find(c => c.id === chord.id);
-          return existingChord
-            ? { ...existingChord, ...chord }
-            : chord;
-        });
-        return { ...prev, chords: mergedChords as TChord[] };
+        const updatedChords: Record<string, TChord> = {};
+        for (const [id, chord] of Object.entries(chords)) {
+          if (id in prev.chords) {
+            updatedChords[id] = { ...prev.chords[id], ...chord };
+          } else {
+            updatedChords[id] = chord as TChord;
+          }
+        }
+        return { ...prev, chords: { ...updatedChords } };
       });
     },
     [setSong]
   );
 
+  // This looks like it detects when chord.chordName has changed and updates chord.tab.chordName accordingly
+  // if so this is really dumb and we should change this at some point to just use one place for the chord name
   useEffect(() => {
     setSong((prev) => {
       // Safety check in case prev is undefined
@@ -148,30 +165,33 @@ export function SongProvider({ children }: SongProviderProps) {
       }
 
       let hasChanges = false;
-      const updatedChords = prev.chords.map((chord) => {
-        if (!chord.tab) {
+      const updatedChords: Record<string, TChord> = {};
+      for (const [id, chord] of Object.entries(prev.chords)) {
+        if (!chord?.tab) {
           hasChanges = true;
-          return {
+          updatedChords[id] = {
             ...chord,
             tab: {
               ...defaultTab,
               chordName: chord.chordName,
             },
           };
+          continue;
         }
         // Update tab's chordName if chord's chordName changed
         if (chord.tab.chordName !== chord.chordName) {
           hasChanges = true;
-          return {
+          updatedChords[id] = {
             ...chord,
             tab: {
               ...chord.tab,
               chordName: chord.chordName,
             },
           };
+          continue;
         }
-        return chord;
-      });
+        updatedChords[id] = chord;
+      }
 
       // Only update if something actually changed
       if (hasChanges) {
@@ -232,24 +252,23 @@ export function SongProvider({ children }: SongProviderProps) {
   }, [songId, refreshSongs]);
 
   const undoUnsavedChanges = useCallback(() => {
-    if (songId) setSong(savedSongs[songId])
-  }, [songId, setSong, savedSongs])
+    if (songId) setSong(savedSongs[songId]);
+  }, [songId, setSong, savedSongs]);
 
-  const updateTabByKey = useCallback(
-    (key: number, changes: Partial<TTab>) => {
+  const updateTabById = useCallback(
+    (id: string, setter: (prev: TTab) => Partial<TTab>) => {
       setSong((prev) => {
+        const chord = prev.chords[id];
+        if (!chord?.tab) {
+          return prev;
+        }
+        const updates = setter(chord.tab);
         return {
           ...prev,
-          chords: prev.chords.map((chord, i) => {
-            if (key == i) {
-              // Skip update if tab doesn't exist yet - it will be created by the useEffect
-              if (!chord.tab) {
-                return chord;
-              }
-              return { ...chord, tab: { ...chord.tab, ...changes } as TTab };
-            }
-            return chord;
-          }),
+          chords: {
+            ...prev.chords,
+            [id]: { ...chord, tab: { ...chord.tab, ...updates } },
+          },
         };
       });
     },
@@ -264,7 +283,7 @@ export function SongProvider({ children }: SongProviderProps) {
         selectSong,
         setTitle,
         updateChords,
-        updateTabByKey,
+        updateTabById,
         setSongCapoFretNum,
         setSongFretCount,
         setSongStringTunings,
@@ -274,11 +293,10 @@ export function SongProvider({ children }: SongProviderProps) {
         undoUnsavedChanges,
         isLoading,
         isCurrentSongUnsaved,
-        unsavedSongIds
+        unsavedSongIds,
       }}
     >
       {children}
     </SongContext.Provider>
   );
 }
-
