@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useMemo, useState, useRef } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import {
   arrayToChordTab,
   chordTabToArray,
@@ -65,32 +72,32 @@ export default function Tab({ tabKey }: TabProps) {
   );
 
   // The voicing is calculated here:
-  useEffect(() => {
-    const voicings = getBestTabsForChord(
-      chordName,
-      tabBaseNotes,
-      startingFretNum,
-      fretCount,
-      manualStringNotes
-    );
-    if (voicings.length > 0) {
-      setVoicingOptions(voicings);
-      setVoicesChord(true);
-    } else {
-      // If no voicings can be found, we still want to display an empty, changeable tab
-      setVoicingOptions([
-        {
-          stringNotes: chordTabToArray({
-            ...arrayToChordTab(stringTunings),
-            ...manualStringNotes,
-          }),
-          fretNumToBar: 0,
-        },
-      ]);
-      setVoicesChord(false);
-    }
-
-  },
+  useEffect(
+    () => {
+      const voicings = getBestTabsForChord(
+        chordName,
+        tabBaseNotes,
+        startingFretNum,
+        fretCount,
+        manualStringNotes
+      );
+      if (voicings.length > 0) {
+        setVoicingOptions(voicings);
+        setVoicesChord(true);
+      } else {
+        // If no voicings can be found, we still want to display an empty, changeable tab
+        setVoicingOptions([
+          {
+            stringNotes: chordTabToArray({
+              ...arrayToChordTab(stringTunings),
+              ...manualStringNotes,
+            }),
+            fretNumToBar: 0,
+          },
+        ]);
+        setVoicesChord(false);
+      }
+    },
     // Adding setVoicesChord here causes infinite rerenders
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -100,12 +107,13 @@ export default function Tab({ tabKey }: TabProps) {
       fretCount,
       startingFretNum,
       stringTunings,
-    ]);
+    ]
+  );
 
   useEffect(() => {
-    resetVoicingIdx()
+    resetVoicingIdx();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chordName])
+  }, [chordName, manualStringNotes]);
 
   const setManualStringFretNum = useCallback(
     (stringNum: number, newFretNum: number | null) => {
@@ -116,9 +124,12 @@ export default function Tab({ tabKey }: TabProps) {
         stringNum,
         newFretNum == null
           ? null
-          : getNoteFromNumFrets(newFretNum == 0 ?
-            stringTunings[stringNum] :
-            startingFretNotes[stringNum], newFretNum)
+          : getNoteFromNumFrets(
+              newFretNum == 0
+                ? stringTunings[stringNum]
+                : startingFretNotes[stringNum],
+              newFretNum
+            )
       );
     },
     [setManualStringNote, tabBaseNotes, startingFretNum, stringTunings]
@@ -140,16 +151,19 @@ export default function Tab({ tabKey }: TabProps) {
               />
             </div>
           ) : (
-            <div className="centered-col justify-start relative" style={{
-              top: `calc(2.5rem - 2.25rem + ${(firstFretRect?.height ?? 0) / 2}px)`
-            }}>
+            <div
+              className="centered-col justify-start relative"
+              style={{
+                top: `calc(2.5rem - 2.25rem + ${
+                  (firstFretRect?.height ?? 0) / 2
+                }px)`,
+              }}
+            >
               <RxArrowUp
                 className="cursor-pointer stroke-[1] h-6 w-6"
                 onClick={() => incrementStartingFretNum(-1)}
               />
-              <div
-                className="centered-col h-6"
-              >
+              <div className="centered-col h-6">
                 <span>{startingFretNum + 1}</span>
               </div>
               <RxArrowDown
@@ -161,7 +175,10 @@ export default function Tab({ tabKey }: TabProps) {
         </div>
         <div className="w-full">
           <div className="w-full h-[90%] relative">
-            <Box fretNumToBar={currentVoicing.fretNumToBar} setFirstRowRect={setFirstRowRect} />
+            <Box
+              fretNumToBar={currentVoicing.fretNumToBar}
+              setFirstRowRect={setFirstRowRect}
+            />
             <div className="absolute w-full top-0 centered-row">
               {tabBaseNotes.map((baseNote, i) => (
                 <TunedString
@@ -201,10 +218,10 @@ export default function Tab({ tabKey }: TabProps) {
               style={
                 Object.keys(manualStringNotes).length > 0
                   ? {
-                    fontStyle: "italic",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }
+                      fontStyle: "italic",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }
                   : {}
               }
               onClick={resetAllManualStringNotes}
@@ -254,7 +271,7 @@ export default function Tab({ tabKey }: TabProps) {
 
 interface BoxProps {
   fretNumToBar: number;
-  setFirstRowRect: (rect: DOMRect) => void
+  setFirstRowRect: (rect: DOMRect) => void;
 }
 
 function Box({ fretNumToBar, setFirstRowRect }: BoxProps) {
@@ -271,7 +288,6 @@ function Box({ fretNumToBar, setFirstRowRect }: BoxProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabContext?.fretCount]);
 
-
   if (!tabContext) return null;
   return (
     <div className="centered-col w-full h-full">
@@ -279,8 +295,9 @@ function Box({ fretNumToBar, setFirstRowRect }: BoxProps) {
       <div
         className="centered-col h-48 sm:h-64 border-y border-solid border-black max-w-[100%]"
         style={{
-          aspectRatio: `${tabContext.stringCount + 1}/${tabContext.stringCount
-            }`,
+          aspectRatio: `${tabContext.stringCount + 1}/${
+            tabContext.stringCount
+          }`,
         }}
       >
         {Array.from({ length: tabContext.fretCount }, (_, idx) => (

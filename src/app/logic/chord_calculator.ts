@@ -59,7 +59,7 @@ export function getBestTabsForChord(
   // If the chord has 2 notes, we want to voice them both, if it has 3 or more, we want to voice 3
   const mandatoryChordNoteAmount = Math.min(prioritizedChordNotes.length, 3);
 
-  // If the user has manually specified a note on fret 1, we shouldn't try generating chords for a fret 2
+  // If the user has manually specified a note on fret 1, we shouldn't try generating chords for a fret 2 bar
   let maxBarrableFret = Math.min(
     ...chordTabToFretNums(manualStringNotes, baseNotes)
       .filter((stringNote) => stringNote != null)
