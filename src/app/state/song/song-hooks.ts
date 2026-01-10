@@ -1,4 +1,4 @@
-import { useContext, useMemo, useCallback, useEffect, useRef } from "react";
+import { useContext, useMemo, useCallback, useEffect } from "react";
 import { NoteLiteral } from "tonal";
 import { SongContext } from "./song-context";
 import { TTab } from "./song-types";
@@ -74,23 +74,10 @@ export function useTabById(id: string) {
     [updateTabById, id]
   );
 
-  const prevManualStringNotesRef = useRef(manualStringNotes);
-  const prevChordNameRef = useRef(chordName);
-
   useEffect(() => {
-    const manualStringNotesChanged = !deepEqual(
-      prevManualStringNotesRef.current,
-      manualStringNotes
-    );
-    const chordNameChanged = prevChordNameRef.current !== chordName;
-
-    if (manualStringNotesChanged || chordNameChanged) {
-      console.log("voicing idx reset");
-      resetVoicingIdx();
-      prevManualStringNotesRef.current = manualStringNotes;
-      prevChordNameRef.current = chordName;
-    }
-  }, [manualStringNotes, chordName, resetVoicingIdx]);
+    resetVoicingIdx();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manualStringNotes, chordName]);
 
   const setManualStringNote = useCallback(
     (stringIdx: number, note: NoteLiteral | null) => {
@@ -158,6 +145,7 @@ export function useTabById(id: string) {
       }),
     [updateTab]
   );
+
   return {
     tab,
     setManualStringNote,

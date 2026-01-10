@@ -39,7 +39,6 @@ export default function Tab({ tabId }: TabProps) {
     resetManualStringNote,
     resetAllManualStringNotes,
     incrementStartingFretNum,
-    resetVoicingIdx,
     incrementVoicingIdx,
     setVoicesChord,
   } = useTabById(tabId);
@@ -115,7 +114,6 @@ export default function Tab({ tabId }: TabProps) {
       const startingFretNotes = tabBaseNotes.map((baseNote) =>
         getNoteFromNumFrets(baseNote, startingFretNum)
       );
-      console.log(tabId, "tsx");
       setManualStringNote(
         stringNum,
         newFretNum == null

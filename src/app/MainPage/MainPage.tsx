@@ -384,8 +384,8 @@ export default function MainPage() {
               gridTemplateColumns: "repeat(auto-fit, minmax(12rem, 1fr))",
             }}
           >
-            {orderedTabIds.map((id, i) => (
-              <MemoizedTab key={i} tabId={id} />
+            {orderedTabIds.map((id) => (
+              <MemoizedTab key={id} tabId={id} />
             ))}
           </div>
         </div>
