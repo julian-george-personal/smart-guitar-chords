@@ -74,11 +74,6 @@ export function useTabById(id: string) {
     [updateTabById, id]
   );
 
-  useEffect(() => {
-    resetVoicingIdx();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [manualStringNotes, chordName]);
-
   const setManualStringNote = useCallback(
     (stringIdx: number, note: NoteLiteral | null) => {
       updateTab((prev) => ({

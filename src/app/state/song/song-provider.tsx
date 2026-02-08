@@ -186,6 +186,7 @@ export function SongProvider({ children }: SongProviderProps) {
             tab: {
               ...chord.tab,
               chordName: chord.chordName,
+              voicingIdx: 0,
             },
           };
           continue;
