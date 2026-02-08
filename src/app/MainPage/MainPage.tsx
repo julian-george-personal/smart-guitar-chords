@@ -394,7 +394,7 @@ export default function MainPage() {
         <div>
           ©{" "}
           <a href="https://juliangeorge.net" className="underline">
-            Julian George 2025
+            Julian George 2026
           </a>
         </div>
         <div>|</div>
