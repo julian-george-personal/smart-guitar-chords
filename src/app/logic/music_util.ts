@@ -62,7 +62,7 @@ export function sanitizeChordName(chordString: string) {
 }
 
 export function sanitizeNoteNameForLogic(noteString: string): NoteLiteral {
-  return noteString.trim().replace(/[^A-G#b]/g, "");
+  return noteString.toUpperCase().trim().replace(/[^A-G#b]/g, "");
 }
 
 export function sanitizeNoteNameForDisplay(note: NoteLiteral): string {

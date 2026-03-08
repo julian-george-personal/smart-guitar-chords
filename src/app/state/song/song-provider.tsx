@@ -214,7 +214,24 @@ export function SongProvider({ children }: SongProviderProps) {
 
   const setSongStringTunings = useCallback(
     (stringTunings: NoteLiteral[]) =>
-      setSong((prev) => ({ ...prev, stringTunings })),
+      setSong((prev) => {
+        // Skip reset if tunings haven't changed — this can be called from the
+        // MainPage effect chain on song load, not just on user input
+        if (deepEqual(prev.stringTunings, stringTunings)) {
+          return { ...prev, stringTunings };
+        }
+        // Reset per-chord state tied to string tunings whenever they change
+        const updatedChords: Record<string, TChord> = {};
+        for (const [id, chord] of Object.entries(prev.chords)) {
+          updatedChords[id] = {
+            ...chord,
+            tab: chord.tab
+              ? { ...chord.tab, manualStringNotes: {}, voicingIdx: 0 }
+              : chord.tab,
+          };
+        }
+        return { ...prev, stringTunings, chords: updatedChords };
+      }),
     [setSong]
   );
 

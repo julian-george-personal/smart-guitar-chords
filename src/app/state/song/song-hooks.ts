@@ -1,4 +1,4 @@
-import { useContext, useMemo, useCallback, useEffect } from "react";
+import { useContext, useMemo, useCallback } from "react";
 import { NoteLiteral } from "tonal";
 import { SongContext } from "./song-context";
 import { TTab } from "./song-types";
@@ -81,6 +81,7 @@ export function useTabById(id: string) {
           ...prev.manualStringNotes,
           [stringIdx]: note,
         },
+        voicingIdx: 0,
       }));
     },
     [updateTab]
@@ -90,7 +91,7 @@ export function useTabById(id: string) {
       updateTab((prev) => {
         const newManualStringNotes = { ...prev.manualStringNotes };
         delete newManualStringNotes[stringIdx];
-        return { manualStringNotes: newManualStringNotes };
+        return { manualStringNotes: newManualStringNotes, voicingIdx: 0 };
       });
     },
     [updateTab]
