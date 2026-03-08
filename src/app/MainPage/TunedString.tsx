@@ -70,10 +70,14 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
         style={{
           cursor: hoveredFretIdx === null ? "pointer" : "default",
         }}
-        onMouseEnter={() =>
-          setHoveredFretIdxIfInteractive(fretNumber == null ? 0 : null)
-        }
-        onMouseLeave={() => setHoveredFretIdxIfInteractive(undefined)}
+        onPointerEnter={(e) => {
+          if (e.pointerType !== "touch")
+            setHoveredFretIdxIfInteractive(fretNumber == null ? 0 : null);
+        }}
+        onPointerLeave={(e) => {
+          if (e.pointerType !== "touch")
+            setHoveredFretIdxIfInteractive(undefined);
+        }}
         onClick={() => {
           if (fretNumber == null) {
             onFretChangeIfInteractive(0);
@@ -109,11 +113,13 @@ function String({ fretNumber, onFretChange, interactive }: StringProps) {
                 style={{
                   cursor: isHovered ? "pointer" : "default",
                 }}
-                onMouseEnter={() => setHoveredFretIdxIfInteractive(fretIdx)}
-                onMouseLeave={() => {
-                  if (isHovered) {
+                onPointerEnter={(e) => {
+                  if (e.pointerType !== "touch")
+                    setHoveredFretIdxIfInteractive(fretIdx);
+                }}
+                onPointerLeave={(e) => {
+                  if (e.pointerType !== "touch" && isHovered)
                     setHoveredFretIdxIfInteractive(undefined);
-                  }
                 }}
                 onClick={() => {
                   setHoveredFretIdxIfInteractive(undefined);
