@@ -11,9 +11,8 @@ export type TConfig = {
   dynamoEndpoint: string | undefined;
   jwtSecret: string;
   domain: string;
-  sendgrid: {
+  resend: {
     apiKey: string;
-    recoverPasswordTemplateId: string;
   };
   sentry: {
     dsn: string | undefined;
@@ -43,16 +42,9 @@ if (!domain) {
   throw new Error("No DOMAIN was found");
 }
 
-const sendgridApiKey = process.env.SENDGRID_API_KEY;
-if (!sendgridApiKey) {
-  throw new Error("No SENDGRID_API_KEY was found");
-}
-
-// TODO: it really sucks that I have to do this. twilio api designers are brain dead
-const sendgridRecoverPasswordTemplateId =
-  process.env.RECOVER_PASSWORD_TEMPLATE_ID;
-if (!sendgridRecoverPasswordTemplateId) {
-  throw new Error("No RECOVER_PASSWORD_TEMPLATE_ID was found");
+const resendApiKey = process.env.RESEND_API_KEY;
+if (!resendApiKey) {
+  throw new Error("No RESEND_API_KEY was found");
 }
 
 const config: TConfig = {
@@ -63,9 +55,8 @@ const config: TConfig = {
   dynamoEndpoint: process.env.DYNAMO_ENDPOINT,
   jwtSecret: jwtSecret,
   domain,
-  sendgrid: {
-    apiKey: sendgridApiKey,
-    recoverPasswordTemplateId: sendgridRecoverPasswordTemplateId,
+  resend: {
+    apiKey: resendApiKey,
   },
   sentry: {
     dsn: process.env.SENTRY_DSN,

@@ -1,32 +1,26 @@
-import sgMail, { MailDataRequired } from "@sendgrid/mail";
+import { Resend } from "resend";
 import config, { Environment } from "../config";
 
-sgMail.setApiKey(config.sendgrid.apiKey);
+const resend = new Resend(config.resend.apiKey);
 
 export async function sendRecoverPasswordEmail(email: string, token: string) {
-  const tokenLink = `${
-    config.environment == Environment.Local ? "http" : "https"
-  }://${config.domain}?recoverPasswordToken=${token}`;
+  const isLocal = config.environment == Environment.Local;
+  // 5173 is the Vite dev server port
+  const tokenLink = `${isLocal ? "http" : "https"}://${config.domain}${isLocal ? ":5173" : ""}?recoverPasswordToken=${token}`;
 
-  const msg: MailDataRequired = {
-    to: email,
-    from: `noreply@smartguitarchords.com`,
-    templateId: config.sendgrid.recoverPasswordTemplateId,
-    dynamicTemplateData: {
-      user_email: email,
-      reset_url: tokenLink,
-    },
-    mailSettings: {
-      sandboxMode: { enable: config.environment == Environment.Local },
-    },
-  };
+  if (isLocal) {
+    console.log(`Password reset email successfully sent to ${email}`);
+    console.log("Reset Url:", tokenLink);
+    return;
+  }
 
   try {
-    await sgMail.send(msg);
-    if (config.environment == Environment.Local) {
-      console.log(`Password reset email successfully sent to ${email}`);
-      console.log("Reset Url:", tokenLink);
-    }
+    await resend.emails.send({
+      from: "noreply@smartguitarchords.com",
+      to: email,
+      subject: "Reset your Smart Guitar Chords password",
+      html: `<p>Click <a href="${tokenLink}">here</a> to reset your password.</p><p>Or copy this link: ${tokenLink}</p>`,
+    });
   } catch (error) {
     console.error("Error sending password reset email:", JSON.stringify(error));
     throw error;
