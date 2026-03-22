@@ -33,6 +33,7 @@ const defaultTab: TTab = {
   startingFretNum: defaultStartingFretNum,
   voicingIdx: 0,
   voicesChord: true,
+  calculatedChordName: "",
 };
 const defaultSong: TSong = {
   chords: {
