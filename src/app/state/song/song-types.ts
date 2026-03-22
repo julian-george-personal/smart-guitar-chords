@@ -3,6 +3,7 @@ import { ChordTab } from "../../logic/music_util";
 
 export type TTab = {
   chordName: string;
+  calculatedChordName: string;
   manualStringNotes: ChordTab;
   fretCount: number;
   startingFretNum: number;

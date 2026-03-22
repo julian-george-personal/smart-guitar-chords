@@ -36,6 +36,10 @@ export function useTabById(id: string) {
     () => song.chords[id]?.tab?.voicingIdx,
     [id, song.chords]
   );
+  const calculatedChordName = useMemo(
+    () => song.chords[id]?.tab?.calculatedChordName,
+    [id, song.chords]
+  );
   const voicesChord = useMemo(
     () => song.chords[id]?.tab?.voicesChord,
     [id, song.chords]
@@ -54,6 +58,7 @@ export function useTabById(id: string) {
         startingFretNum: startingFretNum || 0,
         voicingIdx: voicingIdx || 0,
         voicesChord: voicesChord ?? true,
+        calculatedChordName: calculatedChordName || "",
       } as Required<TTab>),
     [
       song.fretCount,
@@ -63,6 +68,7 @@ export function useTabById(id: string) {
       startingFretNum,
       voicingIdx,
       voicesChord,
+      calculatedChordName,
       filteredStringTunings,
     ]
   );
@@ -114,6 +120,12 @@ export function useTabById(id: string) {
       }),
     [updateTab]
   );
+  const setCalculatedChordName = useCallback(
+    (name: string) => {
+      updateTab(() => ({ calculatedChordName: name }));
+    },
+    [updateTab]
+  );
   const resetVoicingIdx = useCallback(() => {
     updateTab(() => {
       return {
@@ -152,5 +164,6 @@ export function useTabById(id: string) {
     resetVoicingIdx,
     incrementVoicingIdx,
     setVoicesChord,
+    setCalculatedChordName,
   };
 }
