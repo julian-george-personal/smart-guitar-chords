@@ -146,14 +146,14 @@ export function getBassNoteFromChordName(chordName: string): NoteLiteral {
   return bassNote;
 }
 
-export function getChordNameFromNotes(
+export function getChordNamesFromNotes(
   notes: NoteLiteral[],
   inputtedChordName: string | null
 ) {
   const detectedChords = Chord.detect(notes as string[], {
     assumePerfectFifth: true,
   });
-  if (!inputtedChordName) return detectedChords[0];
+  if (!inputtedChordName) return detectedChords;
   const chord = Chord.get(inputtedChordName);
   return (
     detectedChords.filter(
@@ -161,7 +161,7 @@ export function getChordNameFromNotes(
         chordName.indexOf(
           chord?.tonic ? (normalizeNote(chord.tonic) as string) : "X"
         ) == 0
-    )?.[0] || detectedChords?.[0]
+    ) || detectedChords
   );
 }
 

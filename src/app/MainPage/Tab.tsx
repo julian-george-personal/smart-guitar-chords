@@ -13,7 +13,7 @@ import {
   sanitizeNoteNameForDisplay,
 } from "../logic/music_util";
 import {
-  getChordNameFromNotes,
+  getChordNamesFromNotes,
   getBestTabsForChord,
   NotesAndBarredFret,
 } from "../logic/chord_calculator";
@@ -41,6 +41,7 @@ export default function Tab({ tabId }: TabProps) {
     incrementStartingFretNum,
     incrementVoicingIdx,
     setVoicesChord,
+    setCalculatedChordName,
   } = useTabById(tabId);
   const {
     stringTunings,
@@ -51,6 +52,7 @@ export default function Tab({ tabId }: TabProps) {
     manualStringNotes,
     voicingIdx,
     voicesChord,
+    calculatedChordName,
   } = tab;
 
   const [voicingOptions, setVoicingOptions] = useState<NotesAndBarredFret[]>(
@@ -63,6 +65,23 @@ export default function Tab({ tabId }: TabProps) {
     () => voicingOptions[voicingIdx],
     [voicingIdx, voicingOptions]
   );
+
+  const chordNames = useMemo(
+    () =>
+      currentVoicing
+        ? getChordNamesFromNotes(
+            currentVoicing.stringNotes.filter((note) => note != null),
+            chordName
+          )
+        : [],
+    [currentVoicing, chordName]
+  );
+
+  useEffect(() => {
+    if (chordNames.length > 0 && !chordNames.includes(calculatedChordName)) {
+      setCalculatedChordName(chordNames[0]);
+    }
+  }, [chordNames]);
 
   const tabBaseNotes = useMemo(
     () =>
@@ -207,24 +226,45 @@ export default function Tab({ tabId }: TabProps) {
             })}
           </div>
           <div className="centered-col">
-            <div
-              className="w-full text-center"
-              style={
-                Object.keys(manualStringNotes).length > 0
-                  ? {
-                      fontStyle: "italic",
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                    }
-                  : {}
-              }
-              onClick={resetAllManualStringNotes}
-            >
-              {getChordNameFromNotes(
-                currentVoicing.stringNotes.filter((note) => note != null),
-                chordName
-              ) ?? "???"}
-            </div>
+            {chordNames.length <= 1 ? (
+              <div
+                className="w-full text-center"
+                style={
+                  Object.keys(manualStringNotes).length > 0
+                    ? {
+                        fontStyle: "italic",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                      }
+                    : {}
+                }
+                onClick={resetAllManualStringNotes}
+              >
+                {chordNames[0] ?? "???"}
+              </div>
+            ) : (
+              <select
+                className="text-center"
+                style={{
+                  background: "transparent",
+                  width: "fit-content",
+                  maxWidth: "100%",
+                  textAlignLast: "center",
+                  padding: "0 0.5em",
+                  ...(Object.keys(manualStringNotes).length > 0
+                    ? { fontStyle: "italic", fontWeight: "bold" }
+                    : {}),
+                }}
+                value={calculatedChordName}
+                onChange={(e) => setCalculatedChordName(e.target.value)}
+              >
+                {chordNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            )}
             <div className="flex flex-row items-center justify-center gap-2 w-full text-sm">
               {voicesChord ? (
                 <>
