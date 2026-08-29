@@ -58,6 +58,8 @@ export default function Tab({ tabId }: TabProps) {
   const [voicingOptions, setVoicingOptions] = useState<NotesAndBarredFret[]>(
     []
   );
+  const [chordDropdownOpen, setChordDropdownOpen] = useState(false);
+  const chordDropdownRef = useRef<HTMLDivElement>(null);
   // This is used to keep the displayed fret number centered on the first fret
   const [firstFretRect, setFirstRowRect] = useState<DOMRect | null>();
 
@@ -147,6 +149,19 @@ export default function Tab({ tabId }: TabProps) {
     },
     [setManualStringNote, tabBaseNotes, startingFretNum, stringTunings]
   );
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        chordDropdownRef.current &&
+        !chordDropdownRef.current.contains(e.target as Node)
+      ) {
+        setChordDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // This should only happen when the app is first loading
   if (!currentVoicing) return null;
@@ -243,27 +258,47 @@ export default function Tab({ tabId }: TabProps) {
                 {chordNames[0] ?? "???"}
               </div>
             ) : (
-              <select
-                className="text-center"
-                style={{
-                  background: "transparent",
-                  width: "fit-content",
-                  maxWidth: "100%",
-                  textAlignLast: "center",
-                  padding: "0 0.5em",
-                  ...(Object.keys(manualStringNotes).length > 0
-                    ? { fontStyle: "italic", fontWeight: "bold" }
-                    : {}),
-                }}
-                value={calculatedChordName}
-                onChange={(e) => setCalculatedChordName(e.target.value)}
+              <div
+                ref={chordDropdownRef}
+                className="relative flex items-center justify-center"
               >
-                {chordNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+                <span
+                  style={
+                    Object.keys(manualStringNotes).length > 0
+                      ? {
+                          fontStyle: "italic",
+                          cursor: "pointer",
+                          fontWeight: "bold",
+                        }
+                      : {}
+                  }
+                  onClick={resetAllManualStringNotes}
+                >
+                  {calculatedChordName}
+                </span>
+                <button
+                  className="ml-1 cursor-pointer leading-none"
+                  onClick={() => setChordDropdownOpen((o) => !o)}
+                >
+                  ▾
+                </button>
+                {chordDropdownOpen && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 bg-white border border-gray-300 shadow z-10 min-w-full">
+                    {chordNames.map((name) => (
+                      <div
+                        key={name}
+                        className="cursor-pointer px-3 py-1 hover:bg-gray-100 text-center whitespace-nowrap"
+                        onClick={() => {
+                          setCalculatedChordName(name);
+                          setChordDropdownOpen(false);
+                        }}
+                      >
+                        {name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
             <div className="flex flex-row items-center justify-center gap-2 w-full text-sm">
               {voicesChord ? (
